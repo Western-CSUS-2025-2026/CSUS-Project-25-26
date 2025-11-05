@@ -1,0 +1,86 @@
+import datetime
+from typing import Annotated
+
+from annotated_types import MaxLen
+from pydantic import field_validator
+
+from api.schemas.base import Base
+from api.settings import get_settings
+
+
+settings = get_settings()
+
+
+class RegistrationInitiate(Base):
+    email: Annotated[str, MaxLen(settings.MAX_NAME_LENGTH)]
+
+    @field_validator('email')
+    @classmethod
+    def validate_email(cls, value: str):
+        restricted: set[str] = {
+            '"',
+            '#',
+            '&',
+            "'",
+            '(',
+            ')',
+            '*',
+            ',',
+            '/',
+            ';',
+            '<',
+            '>',
+            '?',
+            '[',
+            '\\',
+            ']',
+            '^',
+            '`',
+            '{',
+            '|',
+            '}',
+            '~',
+            '\n',
+            '\r',
+        }
+        if "@" not in value:
+            raise ValueError()
+        if set(value) & restricted:
+            raise ValueError()
+        if not value.endswith(tuple(settings.ALLOWED_EMAIL_DOMAINS)):
+            raise ValueError()
+        return value
+
+
+class RegistrationVerify(RegistrationInitiate):
+    first_name: Annotated[str, MaxLen(settings.MAX_NAME_LENGTH)]
+    last_name: Annotated[str, MaxLen(settings.MAX_NAME_LENGTH)]
+    verification_token: int
+    password: str
+
+
+class UserLogin(Base):
+    email: Annotated[str, MaxLen(settings.MAX_NAME_LENGTH)]
+    password: str
+
+
+class UserSessionGet(Base):
+    user_id: int
+    expires: datetime.datetime
+    token: str
+
+
+class UserSessionsGet(Base):
+    sessions: list[UserSessionGet]
+
+
+class MyUserGet(Base):
+    id: int
+    email: str
+    first_name: str
+    last_name: str
+
+
+class UserGet(Base):
+    id: int
+    username: str

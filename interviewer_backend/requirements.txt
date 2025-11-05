@@ -1,0 +1,11 @@
+alembic
+aiohttp
+fastapi
+fastapi-sqlalchemy
+gunicorn
+psycopg2-binary
+pydantic
+pydantic-settings
+SQLAlchemy
+uvicorn
+retrying
