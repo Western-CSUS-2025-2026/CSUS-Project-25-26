@@ -11,6 +11,7 @@ export default function Home() {
       <h2>Heading 2 (25 pt)</h2>
       <h3>Heading 3 (20 pt)</h3>
       <p>Paragraph (16 pt)</p>
+
       <div style={{ display: "flex", flexDirection: "row" }}>
         <LoadingText width="10em" loading presetHeight="H2">
           <h2>Test</h2>

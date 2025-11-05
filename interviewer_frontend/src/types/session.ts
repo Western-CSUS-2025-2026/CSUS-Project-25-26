@@ -2,6 +2,7 @@ import { defaultTemplate, Template } from "./template";
 
 // A completed session that has been processed and contains all the data
 export interface Session {
+  title: string;
   template: Template;
   overallGrade: Grading;
   grades: Grading[];
@@ -81,6 +82,7 @@ export const defaultGrading: Grading = {
 };
 
 export const defaultSession: Session = {
+  title: "Session #1",
   overallGrade: defaultGrading,
   template: defaultTemplate,
   grades: [defaultGrading, defaultGrading, defaultGrading],
