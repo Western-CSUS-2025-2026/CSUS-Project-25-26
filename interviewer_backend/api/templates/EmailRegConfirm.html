@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WesternPrep Email Verification</title>
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    background: #121214;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #f5f5f7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :root {
+    --bg: #121214;
+    --card: #18181a;
+    --accent: #CFA8FF;
+    --accent-dark: #7F4EC9;
+    --text-primary: #f5f5f7;
+    --text-secondary: #9c9a98;
+  }
+
+  .container {
+    max-width: 520px;
+    margin: 40px auto;
+    padding: 28px 32px;
+    background: var(--card);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, var(--accent-dark), var(--accent));
+    color: #fff;
+    font-weight: 800;
+    font-size: 20px;
+    box-shadow: inset 0 -6px 18px rgba(0,0,0,0.25);
+    margin-bottom: 12px;
+  }
+
+  .title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  .content {
+    text-align: center;
+    margin-top: 32px;
+  }
+
+  .content p {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
+  .code-box {
+    margin: 26px auto 18px;
+    background: linear-gradient(180deg, rgba(127,78,201,0.08), rgba(127,78,201,0.03));
+    border: 1px solid rgba(127,78,201,0.12);
+    padding: 20px 0;
+    border-radius: 8px;
+    text-align: center;
+    width: 80%;
+  }
+
+  .code-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .code {
+    font-family: "Courier New", monospace;
+    font-size: 34px;
+    letter-spacing: 6px;
+    color: var(--accent-dark);
+    font-weight: 700;
+  }
+
+  .footer {
+    margin-top: 28px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding-top: 16px;
+  }
+
+  @media (max-width: 480px) {
+    .code { font-size: 28px; letter-spacing: 5px; }
+    .title { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">WP</div>
+      <h1 class="title">WesternPrep</h1>
+      <div class="subtitle">CSUS - Email Verification</div>
+    </div>
+
+    <div class="content">
+      <p>Use the 6-digit code below to verify your email address for WesternPrep.</p>
+
+      <div class="code-box">
+        <div class="code-label">Your verification code</div>
+        <div class="code">{{token}}</div>
+      </div>
+
+      <p>This code will expire in <strong>{{token_TTL}} minutes</strong>.</p>
+    </div>
+
+    <div class="footer">
+      If you didn’t request this, you can safely ignore this email.<br/>
+      © 2025 WesternPrep - CSUS
+    </div>
+  </div>
+</body>
+</html>
