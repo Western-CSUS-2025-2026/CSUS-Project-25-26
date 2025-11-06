@@ -1,0 +1,44 @@
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  height: 100%;
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.SessionNum {
+  flex: 1;
+}
+
+.SessionNum h2 {
+  margin: 0;
+}
+
+.statusBox {
+  text-align: right;
+}
+
+.statusBox p {
+  margin: 0;
+  padding: 0.25rem 0.75rem;
+}
+
+.middleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dateBox {
+  margin-left: auto;
+}
+
+.dateBox p {
+  margin: 0;
+}
