@@ -1,4 +1,5 @@
 import styles from "./page.module.css";
+import PastSessionsGrid from "./_components/pastSessions/pastSessions";
 
 function SessionPage() {
   return (
@@ -7,7 +8,9 @@ function SessionPage() {
       <section className={styles.recentTemplatesContainer}></section>
 
       {/* remove this component and replace with past sessions component */}
-      <section className={styles.pastSessionsContainer}></section>
+      <section className={styles.pastSessionsContainer}>
+        <PastSessionsGrid />
+      </section>
     </div>
   );
 }
