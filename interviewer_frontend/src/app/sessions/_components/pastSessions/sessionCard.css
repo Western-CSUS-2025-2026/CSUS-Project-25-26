@@ -1,44 +1,57 @@
 .cardContent {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1.25rem;
-  height: 100%;
-}
-
-.topRow {
-  display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: flex-start;
+  padding: 5px;
+  gap: 0.5rem;
 }
 
-.SessionNum {
-  flex: 1;
-}
-
-.SessionNum h2 {
-  margin: 0;
-}
 
 .statusBox {
   text-align: right;
 }
 
-.statusBox p {
+.statusBox h3 {
   margin: 0;
-  padding: 0.25rem 0.75rem;
 }
 
-.middleRow {
+
+.rightColumn {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;
+
+}
+
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  
 }
 
 .dateBox {
-  margin-left: auto;
+  display: block;
 }
 
-.dateBox p {
+.dateBox h3 {
   margin: 0;
+}
+
+.SessionBox {
+  display: block;
+}
+
+.SessionBox p {
+  margin: 0;
+}
+
+.SessionBox h2 {
+  margin-bottom: 4px;
+  margin-top: 0;
+}
+
+.ProccessingText p {
+  margin-top: 30px;
 }

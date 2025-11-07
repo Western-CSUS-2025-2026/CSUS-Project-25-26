@@ -1,33 +1,45 @@
 import Card from "@/components/card/card";
 import type { SimpleSession } from "@/types/simpleSession";
-import { defaultProcessingSimpleSession } from "@/types/simpleSession";
+import {
+  defaultCompletedSimpleSession,
+} from "@/types/simpleSession";
 import "./sessionCard.css";
 
 interface SessionCardProps {
   session?: SimpleSession;
 }
 
-export default function SessionCard({ session = defaultProcessingSimpleSession }: SessionCardProps) {
+export default function SessionCard({
+  session = defaultCompletedSimpleSession,
+}: SessionCardProps) {
   return (
     <Card>
       <div className="cardContent">
-        <div className="topRow">
-          <div className="SessionNum">
+        {/* LEFT COLUMN */}
+        <div className="leftColumn">
+          <div className="SessionBox">
             <h2>{session.title}</h2>
+            <p>{session.template.title}</p>
+            <p>{session.template.id}</p>
           </div>
-          <div className="statusBox">
-            <p>{session.state}</p>
+          <div className="ProccessingText">
+            <p>This may take a few minutes...</p>
           </div>
         </div>
-        <div className="middleRow">
+
+        {/* RIGHT COLUMN */}
+        <div className="rightColumn">
+          <div className="statusBox">
+            <h3 style={{ color: "var(--secondary-text)" }}>{session.state}</h3>
+          </div>
           <div className="dateBox">
-            <p>
+            <h3 style={{ color: "var(--secondary-text)",fontWeight:400 }} >
               {new Date(session.createTime).toLocaleDateString("en-US", {
                 month: "2-digit",
                 day: "2-digit",
                 year: "2-digit",
               })}
-            </p>
+            </h3>
           </div>
         </div>
       </div>
