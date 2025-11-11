@@ -85,6 +85,8 @@ export const defaultGrading: Grading = {
 
 export const defaultSession: Session = {
   title: "Session #1",
+  id: "this is an id",
+  creationDate: Date().toString(),
   overallGrade: defaultGrading,
   template: defaultTemplate,
   grades: [defaultGrading, defaultGrading, defaultGrading],
