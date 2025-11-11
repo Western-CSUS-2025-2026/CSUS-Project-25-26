@@ -7,7 +7,9 @@ export interface Session {
   overallGrade: Grading;
   grades: Grading[];
   transcript: string;
+  creationDate: string;
   videos: SessionVideo[];
+  id: string;
 }
 
 // a video of the session
