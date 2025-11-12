@@ -1,10 +1,6 @@
 "use client";
 
-type Template = {
-  id: number;
-  title: string;
-  description: string;
-};
+import { Template } from "@/types/template"; // ✅ shared type import
 
 export default function RecentTemplateCard({ template }: { template: Template }) {
   return (

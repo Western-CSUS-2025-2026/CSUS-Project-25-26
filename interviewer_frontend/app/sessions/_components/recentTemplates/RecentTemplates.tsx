@@ -1,17 +1,11 @@
 import RecentTemplateCard from "./RecentTemplateCard";
 import NewSessionButton from "./NewSessionButton";
-
-// Simulate fetching recent templates from the backend
-async function getRecentTemplates() {
-  await new Promise((r) => setTimeout(r, 2000));
-  return [
-    { id: 1, title: "SWE Internship", description: "Software Engineer Internship template" },
-    { id: 2, title: "SWE Internship", description: "Software Engineer Internship template" },
-  ];
-}
+import { getRecentTemplates } from "@/lib/recentTemplates"; 
+import { Template } from "@/types/template";
 
 export default async function RecentTemplates() {
-  const templates = await getRecentTemplates();
+  
+  const templates: Template[] = await getRecentTemplates();
 
   return (
     <section
