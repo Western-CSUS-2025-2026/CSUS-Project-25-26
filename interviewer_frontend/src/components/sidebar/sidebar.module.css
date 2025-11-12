@@ -1,0 +1,21 @@
+.sidebar {
+  width: 17em;
+  height: 100%;
+  background-color: var(--foreground);
+  border-right: 1px solid var(--border);
+}
+.sidebarProvider {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  width: 100vw;
+}
+.mainContent {
+  margin: 1em;
+  margin-left: 2em;
+  padding-right: 2em;
+  margin-right: 0em;
+  width: 100%;
+  max-height: 100%;
+  overflow-y: scroll;
+}
