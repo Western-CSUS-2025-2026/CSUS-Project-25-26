@@ -11,6 +11,7 @@ from api.schemas.models import (
     MyUserGet,
     RegistrationInitiate,
     RegistrationVerify,
+    RegistrationVerifyCode,
     UserLogin,
     UserSessionGet,
     UserSessionsGet,
@@ -57,16 +58,19 @@ async def registration_initiate(
         else:
             return StatusResponseModel(status="Success", message=f"Email verification token: {verification_token}")
 
-<<<<<<< HEAD
-=======
 @user.get("/registration/code-verify", response_model=StatusResponseModel)
-async def registration_verify_code(verification_token: int) -> StatusResponseModel:
-    user: User | None = User.query(session=db.session).filter(User.verification_token == verification_token).one_or_none()
+async def registration_verify_code(verification_token: int, email: str) -> StatusResponseModel:
+    RegistrationVerifyCode(email=email, verification_token=verification_token)
+    user: User | None = User.query(session=db.session).filter(User.email == email).one_or_none()
     if not user:
         raise AuthFailed("Incorrect verification token")
+    if (
+        user.create_ts < datetime.now(tz=timezone.utc) - timedelta(minutes=settings.VERIFICATION_TOKEN_TTL)
+        or user.verification_token != verification_token
+    ):
+        raise AuthFailed("Incorrect or expired verification token")
     
     return StatusResponseModel(status="Success", message="Email verified")
->>>>>>> d25de9d (Add code verification endpoint)
 
 @user.put("/registration/verify", response_model=StatusResponseModel)
 async def registration_verify(user_data: RegistrationVerify) -> StatusResponseModel:

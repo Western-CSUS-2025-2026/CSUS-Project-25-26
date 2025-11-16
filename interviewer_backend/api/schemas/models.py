@@ -59,6 +59,10 @@ class RegistrationVerify(RegistrationInitiate):
     password: str
 
 
+class RegistrationVerifyCode(RegistrationInitiate):
+    verification_token: int
+
+
 class UserLogin(Base):
     email: Annotated[str, MaxLen(settings.MAX_NAME_LENGTH)]
     password: str
