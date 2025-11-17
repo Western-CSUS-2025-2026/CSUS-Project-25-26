@@ -1,60 +1,20 @@
 "use client";
 
 import { Template } from "@/types/template";
+import styles from "./templateCard.module.css";
 
+// Card for displaying a single recent template
 export default function TemplateCard({ template }: { template: Template }) {
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100px",
-        backgroundColor: "var(--foreground)",
-        border: "1px solid var(--border)",
-        borderRadius: "12px",
-        padding: "1.25rem",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        color: "var(--primary-text)",
-        transition: "transform 0.2s ease",
-        cursor: "pointer",
-      }}
-      onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
-      onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-    >
+    <div className={styles.card}>
+      {/* Text section */}
       <div>
-        <h3
-          style={{
-            margin: 0,
-            fontSize: "var(--h3-font-size)",
-            fontWeight: 600,
-          }}
-        >
-          {template.title}
-        </h3>
-
-        <p
-          style={{
-            margin: 0,
-            fontSize: "var(--p-font-size)",
-            color: "var(--secondary-text)",
-          }}
-        >
-          {template.description}
-        </p>
+        <h3 className={styles.title}>{template.title}</h3>
+        <p className={styles.subtitle}>{template.description}</p>
       </div>
 
-      <div
-        style={{
-          backgroundColor: "var(--accent)",
-          borderRadius: "50%",
-          width: "28px",
-          height: "28px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      {/* Plus icon button */}
+      <div className={styles.plusIcon}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
           <path
             d="M12 5v14m-7-7h14"
