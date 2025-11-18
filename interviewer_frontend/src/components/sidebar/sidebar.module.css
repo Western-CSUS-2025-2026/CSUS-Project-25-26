@@ -3,7 +3,10 @@
   height: 100%;
   background-color: var(--foreground);
   border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
 }
+
 .sidebarProvider {
   display: flex;
   flex-direction: row;
@@ -18,4 +21,100 @@
   width: 100%;
   max-height: 100%;
   overflow-y: scroll;
+}
+
+/* User Profile Section */
+.userProfile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5em 0;
+  gap: 0.5em;
+}
+
+.avatar {
+  width: 3em;
+  height: 3em;
+  border-radius: 50%;
+  background-color: var(--accent);
+}
+
+.userName {
+  font-size: 0.9em;
+  color: var(--primary-text);
+}
+
+/* Navigation Section */
+.navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  padding: 0 1em;
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  padding: 0.75em 1em;
+  border-radius: 0.5em;
+  text-decoration: none;
+  color: var(--primary-text);
+  transition: background-color 0.2s;
+}
+
+.navButton:hover {
+  background-color: rgba(203, 159, 230, 0.1);
+}
+
+.navButton.active {
+  background-color: var(--accent);
+  color: var(--accent-primary-text);
+}
+
+/* Bottom Section */
+.bottomSection {
+  margin-top: auto;
+  padding: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.helpButton,
+.logoutButton {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  padding: 0.75em 1em;
+  border-radius: 0.5em;
+  background: none;
+  border: none;
+  color: var(--secondary-text);
+  cursor: pointer;
+  font-size: 1em;
+  text-align: left;
+  transition: background-color 0.2s;
+}
+
+.helpButton:hover,
+.logoutButton:hover {
+  background-color: rgba(203, 159, 230, 0.1);
+}
+
+.credit {
+  text-align: center;
+  font-size: 0.75em;
+  color: var(--secondary-text);
+  margin-top: 0.5em;
+}
+
+
+.navButton img {
+  opacity: 0.5;
+}
+
+.navButton.active img {
+  opacity: 1;
+  filter: brightness(0.3);
 }
