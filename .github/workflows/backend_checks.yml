@@ -1,21 +1,32 @@
-name: Python tests
+name: Backend Python lint
 
 on:
   pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/**"
 
 
 jobs:
   linting:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: interviewer_backend
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.11
-      - uses: isort/isort-action@master
-        with:
-          requirementsFiles: "requirements.txt requirements.dev.txt"
-      - uses: psf/black@stable
+      - name: Install dev dependencies
+        run: |
+          pip install -r requirements.txt -r requirements.dev.txt
+      - name: Run isort
+        run: |
+          isort .
+      - name: Run black
+        run: |
+          black --check .
       - name: Comment if linting failed
         if: failure()
         uses: thollander/actions-comment-pull-request@v2
