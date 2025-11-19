@@ -11,7 +11,7 @@
 2) Create virtual environment and install the dependencies:
 ```bash
 make venv
-make format
+make configure
 ```
 
 3) Create db and implement migrations:
