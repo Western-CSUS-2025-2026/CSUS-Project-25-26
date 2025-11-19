@@ -1,5 +1,7 @@
 .sidebar {
-  width: 17em;
+  width: 22%;
+  min-width: 15em;
+  max-width: 20em;
   height: 100%;
   background-color: var(--foreground);
   border-right: 1px solid var(--border);
@@ -55,16 +57,16 @@
 .navButton {
   display: flex;
   align-items: center;
-  gap: 0.75em;
-  padding: 0.75em 1em;
+  gap: 1.5em;
+  padding: 0.85em 1.1em;
   border-radius: 0.5em;
   text-decoration: none;
-  color: var(--primary-text);
+  color: var(--secondary-text);
   transition: background-color 0.2s;
 }
 
 .navButton:hover {
-  background-color: rgba(203, 159, 230, 0.1);
+  background-color: var(--border);
 }
 
 .navButton.active {
@@ -85,16 +87,20 @@
 .logoutButton {
   display: flex;
   align-items: center;
-  gap: 0.75em;
-  padding: 0.75em 1em;
-  border-radius: 0.5em;
-  background: none;
+  gap: 1em;
+  padding: 1em 1em;
+  border-radius: 0.75em;
+  background-color: var(--border);
   border: none;
   color: var(--secondary-text);
   cursor: pointer;
-  font-size: 1em;
+  font-size: 0.9em;
+  font-weight: 500;
   text-align: left;
   transition: background-color 0.2s;
+}
+.logoutText {
+  color: #cd6060;
 }
 
 .helpButton:hover,
@@ -109,7 +115,6 @@
   margin-top: 0.5em;
 }
 
-
 .navButton img {
   opacity: 0.5;
 }
@@ -118,3 +123,4 @@
   opacity: 1;
   filter: brightness(0.3);
 }
+
