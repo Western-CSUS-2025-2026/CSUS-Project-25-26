@@ -58,7 +58,6 @@ async def registration_initiate(
         else:
             return StatusResponseModel(status="Success", message=f"Email verification token: {verification_token}")
 
-
 @user.get("/registration/code-verify", response_model=StatusResponseModel)
 async def registration_verify_code(verification_token: int, email: str) -> StatusResponseModel:
     RegistrationVerifyCode(email=email, verification_token=verification_token)
@@ -70,9 +69,8 @@ async def registration_verify_code(verification_token: int, email: str) -> Statu
         or user.verification_token != verification_token
     ):
         raise AuthFailed("Incorrect or expired verification token")
-
+    
     return StatusResponseModel(status="Success", message="Email verified")
-
 
 @user.put("/registration/verify", response_model=StatusResponseModel)
 async def registration_verify(user_data: RegistrationVerify) -> StatusResponseModel:
