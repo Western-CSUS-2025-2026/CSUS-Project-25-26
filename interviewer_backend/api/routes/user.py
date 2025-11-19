@@ -40,7 +40,10 @@ async def registration_initiate(
             if user.password_hash:
                 raise AlreadyExists(User, user_data.email)
             else:
+                if user.create_ts > datetime.now(tz=timezone.utc) - timedelta(minutes=settings.VERIFICATION_TOKEN_TTL):
+                    raise AlreadyExists(User, user_data.email)
                 user.verification_token = verification_token
+                user.create_ts = datetime.now(tz=timezone.utc)
         else:
             user = User.create(session=txn, email=user_data.email, verification_token=verification_token)
         if settings.EMAIL:
