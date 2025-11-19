@@ -13,7 +13,7 @@ app = FastAPI(
     title='WesternPrep',
     version=__version__,
     root_path=settings.ROOT_PATH if __version__ != 'dev' else '/',
-    docs_url='/' if __version__ != 'dev' else '/docs',
+    docs_url=None if __version__ != 'dev' else '/docs',
     redoc_url=None,
 )
 
