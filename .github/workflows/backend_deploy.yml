@@ -2,7 +2,7 @@ name: Build and deploy docker
 
 on:
   push:
-    branches: ['backend']
+    branches: ['main']
 
 
 env:
@@ -88,6 +88,6 @@ jobs:
             --restart on-failure:3 \
             --network=web \
             --env DB_DSN='${{ secrets.DB_DSN }}' \
-            --env ROOT_PATH='/' \
+            --env ROOT_PATH='' \
             --name ${{ env.CONTAINER_NAME }} \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
