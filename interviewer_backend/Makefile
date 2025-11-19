@@ -10,12 +10,12 @@ venv:
 	python3.11 -m venv venv
 
 format:
-	autoflake -r --in-place --remove-all-unused-imports ./api
-	isort ./api
-	black ./api
-	autoflake -r --in-place --remove-all-unused-imports ./migrations
-	isort ./migrations
-	black ./migrations
+	source ./venv/bin/activate && autoflake -r --in-place --remove-all-unused-imports ./api
+	source ./venv/bin/activate && isort ./api
+	source ./venv/bin/activate && black ./api
+	source ./venv/bin/activate && autoflake -r --in-place --remove-all-unused-imports ./migrations
+	source ./venv/bin/activate && isort ./migrations
+	source ./venv/bin/activate && black ./migrations
 	
 db:
 	docker run -d -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust --name western_prep_db postgres:15
