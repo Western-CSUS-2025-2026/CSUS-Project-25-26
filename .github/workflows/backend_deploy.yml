@@ -1,0 +1,86 @@
+name: Build and deploy docker
+
+on:
+  push:
+    branches: ['backend']
+
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}_backend
+
+
+jobs:
+  build-and-push-image:
+    name: Build and push backend image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable=true
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./interviewer_backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ github.ref_name }}
+
+  deploy:
+    name: Deploy backend
+    needs: build-and-push-image
+    runs-on: [self-hosted, Linux]
+    environment:
+      name: production
+    env:
+      CONTAINER_NAME: csus_backend
+    permissions:
+      packages: read
+
+    steps:
+      - name: Pull latest backend image
+        run: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest 
+
+      - name: Run DB migrations
+        run: |
+          docker run \
+            --rm \
+            --network=web \
+            --env DB_DSN=${{ secrets.DB_DSN }} \
+            --name ${{ env.CONTAINER_NAME }}_migration \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest  \
+            alembic upgrade head
+
+      - name: Run backend container
+        run: |
+          docker stop ${{ env.CONTAINER_NAME }} || true
+          docker rm ${{ env.CONTAINER_NAME }} || true
+
+          docker run \
+            --detach \
+            --restart on-failure:3 \
+            --network=web \
+            --env DB_DSN='${{ secrets.DB_DSN }}' \
+            --env ROOT_PATH='/' \
+            --name ${{ env.CONTAINER_NAME }} \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
