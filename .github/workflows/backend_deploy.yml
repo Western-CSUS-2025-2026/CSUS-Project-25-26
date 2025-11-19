@@ -2,7 +2,7 @@ name: Build and deploy docker
 
 on:
   push:
-    branches: ['backend']
+    branches: ['main']
 
 
 env:
