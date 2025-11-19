@@ -1,21 +1,21 @@
-// use @lib/pastSesssion function to fetch past sessions
-'use client';
-
 import styles from "./pastSessions.module.css";
 import SessionCard from "./sessionCard";
+import type { SimpleSession } from "@/types/simpleSession";
+import { getPastSessions } from "@/lib/pastSessions";
 
-export default function PastSessionsGrid() {
+// ✅ server component with async data fetch
+export default async function PastSessionsGrid() {
+  const sessions: SimpleSession[] = await getPastSessions();
+
   return (
     <div className={styles.frame}>
       <h1 style={{ marginBottom: 0 }}>Past Sessions</h1>
 
-
       <div className={styles.grid}>
-        {Array.from({ length: 9 }).map((_, i) => (
-          <SessionCard key={i} />
+        {sessions.map((session, index) => (
+          <SessionCard key={index} session={session} />
         ))}
       </div>
-      
     </div>
   );
 }

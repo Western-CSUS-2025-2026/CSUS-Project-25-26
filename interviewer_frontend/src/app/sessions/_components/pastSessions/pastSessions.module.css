@@ -1,18 +1,20 @@
 
 /* Frame to match Figma artboard for the Past Sessions area */
 .frame {
-	width: 1490px;
-	height: 740px;
-	transform: rotate(0deg);
-	opacity: 1;
-	box-sizing: border-box;
+  width: 103.36em;
+  height: 52em;
+  padding: 2.22em;
 
-    display: flex;
-    flex-direction: column;   /* stack heading + content vertically */
-    align-items: flex-start;  /* align to the left */
-    justify-content: flex-start; /* keep content at the top */
-    padding: 32px;   
+  transform: rotate(0deg);
+  opacity: 1;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
+
 
 /* Grid layout for 9 session cards */
 .grid {

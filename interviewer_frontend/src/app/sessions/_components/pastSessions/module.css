@@ -1,0 +1,245 @@
+.cardContent {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  /* 5px → 0.3125em × 1.11 correction = 0.347em */
+  padding: 0.347em;
+
+  gap: 0.5rem;
+}
+
+.statusBox {
+  text-align: right;
+}
+
+.statusBox h3 {
+  margin: 0;
+}
+
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  height: 100%;          /* important */
+}
+
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.dateBox {
+  display: block;
+  flex-grow: 1;
+}
+
+.dateBox h3 {
+  margin: 0;
+}
+
+.SessionBox {
+  display: block;
+}
+
+.SessionBox p {
+  margin: 0;
+}
+
+.SessionBox h2 {
+  /* 4px bottom margin → 0.25em × 1.11 = 0.277em */
+  margin-bottom: 0.2em;
+  margin-top: 0;
+}
+
+.ProccessingText p {
+  /* 30px top margin → 1.875em × 1.11 = 2.081em */
+  margin-top: 2.081em;
+}
+
+.buttonBackground {
+  width: 18.94em;       /* 273px corrected */
+  height: 3.19em;       /* 46px corrected */
+  background: #303030;
+
+  border-radius: 6.94em; /* 100px corrected */
+  opacity: 1;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.gauge{
+  width: 7.6358em;
+  height: 7.6358em;
+
+  
+  margin-top: 1.8em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.gauge::after {
+  content: "";
+  position: absolute;
+  
+  inset: 13.5%;                 /* how big the hole is */
+  background: var(--foreground);
+  border-radius: 100%;
+  z-index: 1;                 /* above pills, below text */
+}
+
+/* wrapper just fills the gauge */
+.gauge-ring {
+  position: absolute;
+  inset: 0;
+}
+
+.gauge-segment {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  /* segment length = arc length */
+  width: 3em;          /* adjust for longer/shorter */
+  height: 1.2em;       /* thicker curve height */
+
+  /* turn rectangle into CURVED pill following a circle */
+  border-radius: 999px;
+  background: var(--accent);
+
+  /* THIS curves the shape into a circular arc instead of a straight bar */
+  clip-path: ellipse(50% 50% at 50% 65%);
+
+  transform-origin: center center;
+}
+
+/*
+  We:
+    1. move to the center (translate(-50%, -50%))
+    2. rotate to the correct angle
+    3. translate outward along -Y to sit on the circle
+  Angles chosen so the bottom segment is missing,
+  and 5 segments sit around the rest of the circle.
+*/
+
+/* top-left */
+.gauge-segment-1 {
+  transform: translate(-50%, -50%) rotate(-120deg) translateY(-3.1em);
+}
+
+/* upper-left / left-ish */
+.gauge-segment-2 {
+  transform: translate(-50%, -50%) rotate(-60deg) translateY(-3.1em);
+}
+
+/* top */
+.gauge-segment-3 {
+  transform: translate(-50%, -50%) rotate(0deg) translateY(-3.1em);
+}
+
+/* upper-right */
+.gauge-segment-4 {
+  transform: translate(-50%, -50%) rotate(60deg) translateY(-3.1em);
+}
+
+/* top-right / right-ish */
+.gauge-segment-5 {
+  transform: translate(-50%, -50%) rotate(120deg) translateY(-3.1em);
+}
+
+
+.gauge h1 {
+  position: relative;      /* above the ring */
+  margin: 0;
+  font-size: var(--h1-font-size);
+  color: var(--accent);    /* you already set this inline */
+  z-index: 2;
+}
+
+
+
+/* PROCESSING LOADER */
+.loader {
+  margin-top: 1.8em;
+  width: 7.6358em;            /* same width as gauge */
+  aspect-ratio: 1;
+  display: grid;
+  border-radius: 50%;
+  --c1: color-mix(in srgb, var(--accent) 80%, transparent);
+  --c2: color-mix(in srgb, var(--accent) 50%, transparent);
+  --c3: color-mix(in srgb, var(--accent) 25%, transparent);
+  --c3: color-mix(in srgb, var(--accent) 0%, transparent);
+
+  background:
+    linear-gradient(0deg ,var(--c1) 30%, #0000 0 70%, var(--c3) 0) 50%/8% 100%,
+    linear-gradient(90deg,var(--c2) 30%, #0000 0 70%, var(--c1) 0) 50%/100% 8%;
+  background-repeat: no-repeat;
+
+  animation: spinner-anim 1s infinite steps(12);
+}
+
+.loader::before,
+.loader::after {
+  content: "";
+  grid-area: 1/1;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.8;
+  transform: rotate(30deg);
+}
+
+.loader::after {
+  opacity: 0.6;
+  transform: rotate(60deg);
+}
+
+@keyframes spinner-anim {
+  100% { transform: rotate(1turn); }
+}
+
+
+
+/* --- Proccessing Shapes --- */
+.pill {
+  position: relative;
+  display: inline-block;
+  background: #ede4ff; /* soft lavender base */
+  border-radius: 999px;
+  overflow: hidden;
+}
+.pill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  animation: shimmer 1.2s linear infinite;
+}
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* sizing */
+.pill-title { width: 240px; height: 18px; margin-bottom: 8px; }
+.pill-line  { width: 200px; height: 14px; margin-bottom: 6px; }
+.pill-line.short { width: 140px; }
+.pill-helper { width: 180px; height: 14px; margin-top: 14px; }
+.pill-status { width: 90px; height: 18px; margin-bottom: 8px; }
+.pill-date   { width: 80px; height: 14px; }
+
+/* optional dark theme variant */
+@media (prefers-color-scheme: dark) {
+  .pill {
+    background: #3b2b5c;
+  }
+  .pill::after {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  }
+}
