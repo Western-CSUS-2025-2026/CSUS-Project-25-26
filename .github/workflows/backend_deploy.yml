@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ toLower(github.repository) }}_backend
+  IMAGE_NAME: western-csus-2025-2026/csus-project-25-26_backend
 
 
 jobs:
