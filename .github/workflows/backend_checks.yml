@@ -1,4 +1,4 @@
-name: Backend Python lint
+name: Backend lint check
 
 on:
   pull_request:
@@ -24,9 +24,11 @@ jobs:
       - name: Run isort
         run: |
           isort ./api
+          isort ./migrations
       - name: Run black
         run: |
           black --check ./api
+          black --check ./migrations
       - name: Comment if linting failed
         if: failure()
         uses: thollander/actions-comment-pull-request@v2
