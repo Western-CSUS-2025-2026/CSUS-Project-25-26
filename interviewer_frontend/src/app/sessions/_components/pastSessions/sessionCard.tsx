@@ -72,9 +72,16 @@ export default function SessionCard({ session }: SessionCardProps) {
           </div>
         )}
 
-      {session.state === "PROCESSING" && (
-        <div className="loader"></div>
-      )}
+              {session.state === "PROCESSING" && (
+          <div className="spinner-wrapper">
+            <div className="lds-spinner">
+              <div></div><div></div><div></div><div></div>
+              <div></div><div></div><div></div><div></div>
+              <div></div><div></div><div></div><div></div>
+            </div>
+          </div>
+        )}
+
         </div>
       </div>
       

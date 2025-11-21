@@ -11,3 +11,4 @@ export function convertToLetterGrade(score: number): string {
   if (score >= 0.60) return "D";
   return "F";
 }
+
