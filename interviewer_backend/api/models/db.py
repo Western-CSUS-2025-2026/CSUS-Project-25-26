@@ -96,7 +96,7 @@ class Grade(BaseDbModel):
     overall_score: Mapped[int] = mapped_column(Integer, nullable=False)
     feedback_id: Mapped[int] = mapped_column(Integer, ForeignKey("feedback.id"), nullable=False)
     session_id: Mapped[int] = mapped_column(Integer, ForeignKey("session.id"), nullable=False)
-    feed_back: Mapped["Feedback"] = relationship(
+    feedback: Mapped["Feedback"] = relationship(
         "Feedback",
         foreign_keys=[feedback_id],
         back_populates="grade",
