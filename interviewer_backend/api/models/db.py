@@ -137,9 +137,3 @@ class Session(BaseDbModel):
     grades: Mapped[list["Grade"]] = relationship(
         "Grade", foreign_keys="Grade.session_id", back_populates="session", cascade="all, delete"
     )
-    user: Mapped[User] = relationship(
-        "User",
-        foreign_keys=[user_id],
-        back_populates="interview_sessions",
-        primaryjoin="Session.user_id==User.id",
-    )
