@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     EMAIL_DELAY_TIME_IN_MINUTES: float = 1
     EMAIL_DELAY_COUNT: int = 3
 
+    TWELVE_LABS_API_KEYS: str | None = None
+    TWELVE_LABS_INDEX_NAME: str = "school"
+
     model_config = ConfigDict(case_sensitive=True, env_file=".env", extra="ignore")
 
 

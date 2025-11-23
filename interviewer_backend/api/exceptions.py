@@ -47,3 +47,18 @@ class RegistrationIncomplete(APIError):
 class AuthFailed(APIError):
     def __init__(self, error_msg: str):
         super().__init__(error_msg)
+
+
+class FailToConnectTwelveLabs(APIError):
+    def __init__(self, error_msg: str = "Failed to connect TwelveLabs API"):
+        super().__init__(error_msg)
+
+
+class IndexCreatingFail(APIError):
+    def __init__(self, error_msg: str = "Failed to create an index"):
+        super().__init__(error_msg)
+
+
+class FailToCreateTask(APIError):
+    def __init__(self, error_msg: str = "Failed to create task"):
+        super().__init__(error_msg)
