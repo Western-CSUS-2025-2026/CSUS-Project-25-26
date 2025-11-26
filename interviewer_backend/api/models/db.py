@@ -115,7 +115,7 @@ class Feedback(BaseDbModel):
     point: Mapped[str] = mapped_column(Text, nullable=False)
     ways_to_improve: Mapped[str] = mapped_column(Text, nullable=True)
     grade: Mapped["Grade"] = relationship(
-        "Grade", foreign_keys="Grade.feedback_id", back_populates="feed_back", uselist=False
+        "Grade", foreign_keys="Grade.feedback_id", back_populates="feedback", uselist=False
     )
 
 class SessionState(enum.Enum):
