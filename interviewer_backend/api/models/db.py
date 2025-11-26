@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import datetime
+import enum
 import logging
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -28,6 +29,9 @@ class User(BaseDbModel):
     )
     sessions: Mapped[list[UserSession]] = relationship(
         "UserSession", foreign_keys="UserSession.user_id", back_populates="user", cascade='all, delete'
+    )
+    interview_sessions: Mapped[list["Session"]] = relationship(
+        "Session", foreign_keys="Session.user_id", cascade='all, delete'
     )
 
 
