@@ -3,11 +3,14 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 0;
+  column-gap: 3.75em;
 
   /* 5px → 0.3125em × 1.11 correction = 0.347em */
   padding: 0.347em;
-
-  gap: 0.5rem;
+  padding-bottom: 0;
+  min-width: 30.95em;
+  min-height: 12.26em;
 }
 
 .statusBox {
@@ -24,12 +27,14 @@
   align-items: flex-end;
   justify-content: flex-start;
   height: 100%;          /* important */
+  
 }
 
 .leftColumn {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  
 }
 
 .dateBox {
@@ -71,6 +76,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.buttonText {
+  color: var(--primary-text);   /* white */
+  font-weight: 600;             /* bold */
+  margin: 0;                    /* remove global margins */
 }
 
 .gauge {
@@ -280,16 +291,19 @@ align-items: center;
 
 .loading-button{
 background-color: var(--accent-primary-text);
-margin-top: 3.1875em;
+margin-top: 4.3em;
 
 width: 17.0625em;
 height: 2.875em;
 border-radius: .625em;
+top: 9.375em;
+left: 1.3125em;
 opacity: 1;
 
 display: flex;
 justify-content: center;
 align-items: center;
+margin-bottom: 0.2em;
 }
 
 .loading-4{

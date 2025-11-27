@@ -36,7 +36,7 @@ export default function SessionCard({ session }: SessionCardProps) {
             {session.state === "PROCESSING" ? (
               <p>Generating Report...</p>
             ) : (
-              <p style = {{fontWeight:400}}>View Full Report</p>   /* non-breaking space keeps layout consistent */
+              <p style = {{fontWeight:400, color:"white"}}>View Full Report</p>   /* non-breaking space keeps layout consistent */
             )}
           </div>
         </div>
