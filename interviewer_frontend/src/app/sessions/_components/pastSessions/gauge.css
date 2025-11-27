@@ -1,0 +1,93 @@
+.gauge {
+  width: 7.6358em;
+  height: 7.6358em;
+  margin-top: 1.8em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* Hollow center (Inner hole) */
+.gauge::after {
+  content: "";
+  position: absolute;
+  inset: 13.5%;               /* Hollow center size */
+  background: var(--foreground);
+  border-radius: 100%;
+  z-index: 1;                 /* Above segments, below text */
+}
+
+/* Wrapper for segments */
+.gauge-ring {
+  position: absolute;
+  inset: 0;
+}
+
+/* Ghost segments (static, dimmed at 0.3 opacity) */
+.gauge-segment--ghost {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3em;
+  height: 1.2em;
+  background: var(--accent);  /* Base background color for ghost segments */
+  opacity: 0.3;               /* Ghost appearance */
+  border-radius: 50em;
+  clip-path: ellipse(50% 50% at 50% 65%);
+  transform-origin: center center;
+  z-index: 1;
+}
+
+/* Filled segments (dynamic, fully bright) */
+.gauge-segment--fill {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3em;
+  height: 1.2em;
+  background: var(--foreground); /* Background color for filled segments */
+  opacity: 1;
+  border-radius: 50em;
+  clip-path: ellipse(50% 50% at 50% 65%);
+  transform-origin: center center;
+  z-index: 0;
+}
+
+/* Inner fill: actual progress */
+.gauge-fill {
+  width: 100%;
+  height: 100%;
+  background: var(--accent); /* Smooth transition to the accent color */
+  z-index: 2;
+}
+
+/* Segment positions around the arc (5 segments total) */
+.gauge-segment-1 {
+  transform: translate(-50%, -50%) rotate(-120deg) translateY(-3.1em);
+}
+
+.gauge-segment-2 {
+  transform: translate(-50%, -50%) rotate(-60deg) translateY(-3.1em);
+}
+
+.gauge-segment-3 {
+  transform: translate(-50%, -50%) rotate(0deg) translateY(-3.1em);
+}
+
+.gauge-segment-4 {
+  transform: translate(-50%, -50%) rotate(60deg) translateY(-3.1em);
+}
+
+.gauge-segment-5 {
+  transform: translate(-50%, -50%) rotate(120deg) translateY(-3.1em);
+}
+
+/* Letter grade in the center */
+.gauge-letter {
+  position: relative;
+  z-index: 3;
+  margin: 0;
+  font-size: var(--h1-font-size);
+  color: var(--accent);
+}

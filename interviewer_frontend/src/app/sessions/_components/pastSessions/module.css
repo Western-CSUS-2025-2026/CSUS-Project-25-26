@@ -73,11 +73,10 @@
   align-items: center;
 }
 
-.gauge{
+.gauge {
   width: 7.6358em;
   height: 7.6358em;
 
-  
   margin-top: 1.8em;
   display: flex;
   justify-content: center;
@@ -85,179 +84,151 @@
   position: relative;
 }
 
+/* INNER HOLE */
 .gauge::after {
   content: "";
   position: absolute;
-  
-  inset: 13.5%;                 /* how big the hole is */
+  inset: 13.5%;              /* size of inner hollow */
   background: var(--foreground);
   border-radius: 100%;
-  z-index: 1;                 /* above pills, below text */
+  z-index: 1;                /* above segments, below text */
 }
 
-/* wrapper just fills the gauge */
+/* wrapper */
 .gauge-ring {
   position: absolute;
   inset: 0;
 }
 
+/* base pill segment */
 .gauge-segment {
   position: absolute;
   top: 50%;
   left: 50%;
 
-  /* segment length = arc length */
-  width: 3em;          /* adjust for longer/shorter */
-  height: 1.2em;       /* thicker curve height */
+  width: 3em;         /* arc length */
+  height: 1.2em;      /* thickness */
 
-  /* turn rectangle into CURVED pill following a circle */
-  border-radius: 999px;
+  border-radius: 50em;
   background: var(--accent);
 
-  /* THIS curves the shape into a circular arc instead of a straight bar */
+  /* curved pill */
   clip-path: ellipse(50% 50% at 50% 65%);
 
   transform-origin: center center;
+  z-index: 0;
 }
 
-/*
-  We:
-    1. move to the center (translate(-50%, -50%))
-    2. rotate to the correct angle
-    3. translate outward along -Y to sit on the circle
-  Angles chosen so the bottom segment is missing,
-  and 5 segments sit around the rest of the circle.
-*/
+/* 5 evenly-spaced arc segments around circle (bottom missing) */
 
-/* top-left */
 .gauge-segment-1 {
   transform: translate(-50%, -50%) rotate(-120deg) translateY(-3.1em);
 }
 
-/* upper-left / left-ish */
 .gauge-segment-2 {
   transform: translate(-50%, -50%) rotate(-60deg) translateY(-3.1em);
 }
 
-/* top */
 .gauge-segment-3 {
   transform: translate(-50%, -50%) rotate(0deg) translateY(-3.1em);
 }
 
-/* upper-right */
 .gauge-segment-4 {
   transform: translate(-50%, -50%) rotate(60deg) translateY(-3.1em);
 }
 
-/* top-right / right-ish */
 .gauge-segment-5 {
   transform: translate(-50%, -50%) rotate(120deg) translateY(-3.1em);
 }
 
+.gauge-segment-1.filled-33 {
+  background: linear-gradient(
+    to right,
+    var(--accent) 33%,
+    #3a3a3a 33%,
+    #3a3a3a 100%
+  );
+}
 
 .gauge h1 {
-  position: relative;      /* above the ring */
+  position: relative;
+  z-index: 2;
   margin: 0;
   font-size: var(--h1-font-size);
-  color: var(--accent);    /* you already set this inline */
-  z-index: 2;
+  color: var(--accent);
 }
 
 
 
+/* Wrapper to center spinner  */
 .spinner-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;        /* full width */
-  margin-top: 1.8em;  /* keep your spacing */
-}
-
-.lds-spinner {
-  /* change color here */
-  color: var(--accent);
+  width: 100%;
   margin-top: 1.8em;
 }
+
+/* Main spinner */
+.lds-spinner {
+  color: var(--accent);
+  position: relative;       /* required for absolute children */
+  width: 100px;             /* spinner box */
+  height: 100px;
+  display: inline-block;
+
+  /* centers inside its own box */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .lds-spinner,
 .lds-spinner div,
 .lds-spinner div:after {
   box-sizing: border-box;
 }
-.lds-spinner {
-  color: var(--accent);
-  display: inline-block;
-  position: relative;
-  width: 100px;
-  height: 100px;
-}
+
+/* Spinning bars */
 .lds-spinner div {
-  transform-origin: 45px 28px;
+  transform-origin: 0px 0px;   /* rotation center */
   animation: lds-spinner 1.2s linear infinite;
 }
+
+/* Bar shape */
 .lds-spinner div:after {
   content: " ";
   display: block;
   position: absolute;
-  top: 51px; /*distance from center - 22*/ 
-  left: 45px; /*center of bar*/
-  width: 6px; 
-  height: 25px; /*bar length*/
-  border-radius: 20%;
-  background: currentColor;
+
+  /* position of bar relative to center */
+  top: 1.527em;     /* distance from center = 22px offset */
+  left: 0px;    /* center horizontally */
+
+  width: 0.417em; /* bar thickness */
+  height: 1.736em;  /* bar length */
+  border-radius: 0.5em;
+  background: currentColor; /* inherits var(--accent) */
 }
-.lds-spinner div:nth-child(1) {
-  transform: rotate(0deg);
-  animation-delay: -1.1s;
-}
-.lds-spinner div:nth-child(2) {
-  transform: rotate(30deg);
-  animation-delay: -1s;
-}
-.lds-spinner div:nth-child(3) {
-  transform: rotate(60deg);
-  animation-delay: -0.9s;
-}
-.lds-spinner div:nth-child(4) {
-  transform: rotate(90deg);
-  animation-delay: -0.8s;
-}
-.lds-spinner div:nth-child(5) {
-  transform: rotate(120deg);
-  animation-delay: -0.7s;
-}
-.lds-spinner div:nth-child(6) {
-  transform: rotate(150deg);
-  animation-delay: -0.6s;
-}
-.lds-spinner div:nth-child(7) {
-  transform: rotate(180deg);
-  animation-delay: -0.5s;
-}
-.lds-spinner div:nth-child(8) {
-  transform: rotate(210deg);
-  animation-delay: -0.4s;
-}
-.lds-spinner div:nth-child(9) {
-  transform: rotate(240deg);
-  animation-delay: -0.3s;
-}
-.lds-spinner div:nth-child(10) {
-  transform: rotate(270deg);
-  animation-delay: -0.2s;
-}
-.lds-spinner div:nth-child(11) {
-  transform: rotate(300deg);
-  animation-delay: -0.1s;
-}
-.lds-spinner div:nth-child(12) {
-  transform: rotate(330deg);
-  animation-delay: 0s;
-}
+
+/* 12 rotated bars */
+
+.lds-spinner div:nth-child(1)  { transform: rotate(0deg);   animation-delay: -1.1s; }
+.lds-spinner div:nth-child(2)  { transform: rotate(30deg);  animation-delay: -1s; }
+.lds-spinner div:nth-child(3)  { transform: rotate(60deg);  animation-delay: -0.9s; }
+.lds-spinner div:nth-child(4)  { transform: rotate(90deg);  animation-delay: -0.8s; }
+.lds-spinner div:nth-child(5)  { transform: rotate(120deg); animation-delay: -0.7s; }
+.lds-spinner div:nth-child(6)  { transform: rotate(150deg); animation-delay: -0.6s; }
+.lds-spinner div:nth-child(7)  { transform: rotate(180deg); animation-delay: -0.5s; }
+.lds-spinner div:nth-child(8)  { transform: rotate(210deg); animation-delay: -0.4s; }
+.lds-spinner div:nth-child(9)  { transform: rotate(240deg); animation-delay: -0.3s; }
+.lds-spinner div:nth-child(10) { transform: rotate(270deg); animation-delay: -0.2s; }
+.lds-spinner div:nth-child(11) { transform: rotate(300deg); animation-delay: -0.1s; }
+.lds-spinner div:nth-child(12) { transform: rotate(330deg); animation-delay: 0s; }
+
+/* Fading effect */
 @keyframes lds-spinner {
-  0% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+  0%   { opacity: 1; }
+  91.67% { opacity: 0; }
+  100% { opacity: 0; }
 }

@@ -3,7 +3,8 @@
 import Card from "@/components/card/card";
 import type { SimpleSession } from "@/types/simpleSession";
 import "./module.css";
-import { convertToLetterGrade } from "./gradeConvert";
+import Gauge from "./gauge";
+
 
 
 interface SessionCardProps {
@@ -56,21 +57,10 @@ export default function SessionCard({ session }: SessionCardProps) {
           </div>
 
 
-          {session.state === "COMPLETED" && (
-          <div className="gauge">
-            <div className="gauge-ring">
-              <span className="gauge-segment gauge-segment-1" />
-              <span className="gauge-segment gauge-segment-2" />
-              <span className="gauge-segment gauge-segment-3" />
-              <span className="gauge-segment gauge-segment-4" />
-              <span className="gauge-segment gauge-segment-5" />
-            </div>
+            {session.state === "COMPLETED" && (
+      <Gauge score={session.overallGrade.overallGrade} />
+    )}
 
-            <h1 style={{ color: "var(--accent)" }}>
-              {convertToLetterGrade(session.overallGrade.overallGrade)}
-            </h1>
-          </div>
-        )}
 
               {session.state === "PROCESSING" && (
           <div className="spinner-wrapper">
