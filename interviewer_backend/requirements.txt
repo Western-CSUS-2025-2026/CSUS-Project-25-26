@@ -6,6 +6,7 @@ gunicorn
 psycopg2-binary
 pydantic
 pydantic-settings
+python-multipart
 SQLAlchemy
 uvicorn
 retrying
