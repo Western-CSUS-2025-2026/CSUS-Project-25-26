@@ -2,6 +2,7 @@
 
 import { Template } from "@/types/template";
 import styles from "./templateCard.module.css";
+import InvertedPlusIcon from "@/components/icons/invertedPlusIcon";
 
 // Card for displaying a single recent template
 export default function TemplateCard({ template }: { template: Template }) {
@@ -14,16 +15,11 @@ export default function TemplateCard({ template }: { template: Template }) {
       </div>
 
       {/* Plus icon button */}
-      <div className={styles.plusIcon}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M12 5v14m-7-7h14"
-            stroke="var(--accent-primary-text)"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
+      <InvertedPlusIcon
+        size="2.3em"
+        foreground={"var(--foreground)"}
+        background={"var(--accent)"}
+      ></InvertedPlusIcon>
     </div>
   );
 }

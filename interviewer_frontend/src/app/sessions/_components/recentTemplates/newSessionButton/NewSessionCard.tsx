@@ -1,11 +1,12 @@
 "use client";
 
-import styles from "./newSessionButton.module.css";
+import InvertedPlusIcon from "@/components/icons/invertedPlusIcon";
+import styles from "./newSessionCard.module.css";
 
 // Button to start a new session
-export default function NewSessionButton() {
+export default function NewSessionCard() {
   return (
-    <button
+    <div
       className={styles.button}
       onClick={() => alert("New Session modal will open soon")}
     >
@@ -18,16 +19,11 @@ export default function NewSessionButton() {
       </div>
 
       {/* Plus icon */}
-      <div className={styles.plusIcon}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M12 5v14m-7-7h14"
-            stroke="var(--primary-text)"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
-    </button>
+      <InvertedPlusIcon
+        size={"2.3em"}
+        foreground="var(--accent)"
+        background="var(--accent-primary-text)"
+      ></InvertedPlusIcon>
+    </div>
   );
 }

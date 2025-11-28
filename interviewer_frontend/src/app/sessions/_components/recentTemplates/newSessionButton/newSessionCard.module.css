@@ -12,10 +12,7 @@
   cursor: pointer;
   transition: transform 0.2s ease;
   text-align: left;
-}
-
-.button:hover {
-  transform: scale(1.02);
+  box-sizing: border-box;
 }
 
 .labelGroup {
@@ -35,6 +32,7 @@
   color: var(--accent-secondary-text);
   min-width: 0;
   flex-shrink: 0;
+  margin-top: 0.1em;
 }
 
 .plusIcon {
