@@ -5,6 +5,8 @@ from twelvelabs.tasks import TasksRetrieveResponse
 from api.exceptions import FailToConnectTwelveLabs, IndexCreatingFail, FailToCreateTask
 from api.settings import get_settings, Settings
 
+from fastapi import UploadFile
+
 
 class VideoAnalysis:
     """
@@ -22,6 +24,16 @@ class VideoAnalysis:
     settings: Settings = get_settings()
 
     def __init__(self):
+        """
+        Initialize the VideoAnalysis client.
+        
+        Sets up the TwelveLabs API client using the API key from settings.
+        Initializes the index_id to None (will be set when an index is created).
+        
+        Raises:
+            FailToConnectTwelveLabs: If API key is not set in settings or
+                                    connection to TwelveLabs API fails
+        """
         if not self.settings.TWELVE_LABS_API_KEYS:
             raise FailToConnectTwelveLabs("TWELVE_LABS_API_KEYS is not set")
         
@@ -44,9 +56,11 @@ class VideoAnalysis:
                         from settings. Defaults to None.
         
         Returns:
-            The created index id and other metadata.
+            The created index object with id and other metadata.
+        
+        Raises:
+            IndexCreatingFail: If index creation fails due to API error
         """
-
         if index_name is None:
             index_name = self.settings.TWELVE_LABS_INDEX_NAME
         
@@ -65,76 +79,88 @@ class VideoAnalysis:
         except Exception as e:
             raise IndexCreatingFail(str(e))
 
-
-    def create_task(self, video_file_path: str = None, video_url: str = None, index_id: str = None):
-        """"
-        Create a task to upload and index a video.
+    
+    def list_indexes(self):
+        """
+        List all available indexes.
         
-        This method creates a task that will upload the video to TwelveLabs
-        and index it for analysis. Can accept either a local file path or
-        a video URL.
-        
-        Args:
-            video_file_path: Path to local video file to upload. Defaults to None.
-            video_url: URL of the video to index. Defaults to None.
-            index_id: Get it from create_index() method.
+        Retrieves all indexes that have been created in the TwelveLabs account.
         
         Returns:
-            Task object containing task_id and other metadata.
+            List of strings, each containing index ID and name in format:
+            "Index: {id} - {index_name}"
         """
-        if index_id is None:
-            if self.index_id is None:
-                self.create_index()
-            index_id = self.index_id
-        
-        try:
-            # SDK handles both URL and file uploads
-            if video_file_path:
-                with open(video_file_path, "rb") as video_file:
-                    task = self.client.tasks.create(
-                        index_id=index_id,
-                        video_file=video_file
-                    )
-            elif video_url:
-                task = self.client.tasks.create(
-                    index_id=index_id,
-                    video_url=video_url
-                )
-            else:
-                raise FailToCreateTask("Either video_file_path or video_url must be provided")
+        indexes = []
+        for index in self.client.indexes.list():
+            indexes.append(f"Index: {index.id} - {index.index_name}")
+        return indexes
 
-            return task
-        except Exception as e:
-            raise FailToCreateTask(str(e))
-
-
-    def wait_for_task(self, task, sleep_interval: int = 5):
+    
+    def upload_asset(self, file: UploadFile):
         """
-        Wait for a task to complete and return the result.
+        Upload a video file to TwelveLabs assets.
         
-        Polls the task status until it completes (ready) or fails.
-        Uses the task's wait_for_done method with a callback for status updates.
+        Uploads a video file directly to TwelveLabs using the direct upload method.
+        This is the first step before indexing a video for analysis.
         
         Args:
-            task: Task object to wait for (from create_task).
-            sleep_interval: Seconds to wait between status checks. Defaults to 5.
+            file: FastAPI UploadFile object containing the video file to upload.
         
         Returns:
-            Completed task object with video_id and status.
+            Asset object containing asset_id and other metadata.
+        
+        Raises:
+            Exception: If asset upload fails (e.g., file too large, invalid format)
         """
-        try:
-            def on_task_update(task: TasksRetrieveResponse):
-                print(f"Status={task.status}")
-            
-            # Use task.wait_for_done() directly on the task object
-            task.wait_for_done(sleep_interval=sleep_interval)
-            
-            if task.status != "ready":
-                raise RuntimeError(f"Indexing failed with status {task.status}")
-            
-            return task
-        except Exception as e:
-            raise FailToCreateTask(str(e))
+        asset = self.client.assets.create(
+            method="direct",
+            file=file.file
+        )
+
+        return asset
+
+        
+    def index_asset(self, index_id: str, asset_id: str):
+        """
+        Index an uploaded asset into an index.
+        
+        Associates an uploaded video asset with an index, enabling it for
+        analysis. The indexing process runs asynchronously.
+        
+        Args:
+            index_id: The unique identifier of the index to add the asset to.
+            asset_id: The unique identifier of the uploaded asset.
+        
+        Returns:
+            IndexedAsset object containing indexed_asset_id and status.
+        
+        Raises:
+            Exception: If indexing fails (e.g., invalid index_id or asset_id)
+        """
+        indexed_asset = self.client.indexes.indexed_assets.create(
+            index_id=index_id,
+            asset_id=asset_id,
+            enable_video_stream=True
+        )
+        return indexed_asset
+
+
+    def list_indexed_assets(self, index_id: str):
+        """
+        List all indexed assets in an index.
+        
+        Retrieves all video assets that have been indexed in the specified index.
+        
+        Args:
+            index_id: The unique identifier of the index to list assets from.
+        
+        Returns:
+            Response object containing list of indexed assets with their metadata.
+        """
+        response = self.client.indexes.indexed_assets.list(
+            index_id=index_id,
+        )
+        return response
 
 
     def generate_interview_analysis(self, video_id: str, question: str):
@@ -160,19 +186,35 @@ class VideoAnalysis:
             - voice_tone: Score 1-10 for voice tone
             - relevant_to_question: Score 1-10 for answer relevance
             - imp_points: List of important points from the answer
+        
+        Raises:
+            FailToCreateTask: If analysis generation fails
         """
         try:
-            prompt = f"""You're an Interviewer, Analyze the video clip of the interview answer for the question - {question}.
+            prompt = f"""You are an Interviewer and a professional communication analyst. Your task is to analyze the video clip of the interview answer provided for the question: "{question}".
 
-If the face is not present in the video then do provide the lower points in all categories, Do provide less than 5 for all the other categories if the face is not visible in the video.
+Your response must be a single JSON object.
 
-Do provide the response in the json format with the number assigned as the value. 
+### Scoring Criteria:
+Analyze and score the candidate on the following categories from 1 (Needs significant improvement) to 10 (Excellent).
 
-After analyzing from 1-10. The keys of the json as confidence, clarity, speech_rate, eye_contact, body_language, voice_tone, relevant_to_question, imp_points.
+### Conditional Logic (CRITICAL):
+If a visible face is **not** present in the video, you **must** assign a score of less than 5 (e.g., 1, 2, 3, or 4) for ALL numerical categories (confidence, clarity, speech_rate, eye_contact, body_language, voice_tone, relevant_to_question, imp_points).
 
-The imp_points will contain the exact sentence in a summarized points by the speaker, also do remove the filler words and provide it in a list format which is important from video."""
-            
-            result = self.client.generate.text(
+### JSON Output Keys:
+The final JSON object must contain the following keys:
+1.  **confidence** (Number 1-10)
+2.  **clarity** (Number 1-10)
+3.  **speech_rate** (Number 1-10)
+4.  **eye_contact** (Number 1-10)
+5.  **body_language** (Number 1-10)
+6.  **voice_tone** (Number 1-10)
+7.  **relevant_to_question** (Number 1-10)
+8.  **imp_points** (List of Strings): A list containing the exact, summarized sentences spoken by the speaker. **Remove all filler words** ("um," "like," "you know," etc.) from these sentences.
+9.  **overall_summary** (String): A one-paragraph, high-level assessment of the answer, including its key strengths and weaknesses.
+10. **actionable_feedback** (String): Specific, constructive advice pointing out areas for improvement (e.g., "Increase vocal projection," "Maintain steady eye contact," or "Structure the answer using the STAR method").
+"""
+            result = self.client.analyze(
                 video_id=video_id,
                 prompt=prompt
             )

@@ -1,3 +1,5 @@
+video.py
+
 import os
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 
@@ -18,61 +20,59 @@ async def create_index(index_name: str = None) -> StatusResponseModel:
     )
 
 
-@video.post("/upload_url", response_model=StatusResponseModel)
-async def upload_video(
-    video_url: str,
-    index_id: str = None,
-    user_session = Depends(Auth())
-) -> StatusResponseModel:
-    """Upload and index a video"""
+@video.get("/list_indexes", response_model=StatusResponseModel)
+async def list_indexes():
     analyzer = VideoAnalysis()
-    task = analyzer.create_task(video_url=video_url, index_id=index_id)
-    
-    # Wait for task to complete
-    completed_task = analyzer.wait_for_task(task_id=task.id)
-    
+    indexes = analyzer.list_indexes()
     return StatusResponseModel(
         status="Success",
-        message=f"Video uploaded and indexed. Video ID: {completed_task.video_id}"
+        message=f"Indexes listed: {str(indexes)}"
+    )
+
+
+@video.post("/upload_video", response_model=StatusResponseModel)
+async def upload_video(video: UploadFile = File(...)):
+    analyzer = VideoAnalysis()
+    asset = analyzer.upload_asset(file=video)
+    return StatusResponseModel(
+        status="Success",
+        message=f"Video uploaded: {asset.id}"
+    )
+
+
+@video.post("/index_video", response_model=StatusResponseModel)
+async def index_video(asset_id: str, index_id: str):
+    analyzer = VideoAnalysis()
+    indexed_asset = analyzer.index_asset(index_id=index_id, asset_id=asset_id)
+    return StatusResponseModel(
+        status="Success",
+        message=f"Video indexed: {indexed_asset.id}"
+    )
+
+
+@video.get("/list_indexed_assets", response_model=StatusResponseModel)
+async def list_indexed_assets(index_id: str):
+    analyzer = VideoAnalysis()
+    indexed_assets = analyzer.list_indexed_assets(index_id=index_id)
+    return StatusResponseModel(
+        status="Success",
+        message=f"Indexed assets listed: {str(indexed_assets)}"
     )
 
 
 @video.post("/analyze")
-async def analyze_video(video: UploadFile = File(...), question: str = Form(...), index_id: str = None):
+async def analyze_video(indexed_asset_id: str = None, question: str = None):
     analyzer = VideoAnalysis()
-    video_path = None
 
     try:
-        os.makedirs("uploads", exist_ok=True)
-        video_path = os.path.join("uploads", video.filename)
-
-        with open(video_path, "wb") as f:
-            content = await video.read()
-            f.write(content)
-
-        if not os.path.exists(video_path) or os.path.getsize(video_path) == 0:
-            raise HTTPException(
-                status_code=400,
-                detail="Failed to save video file or file is empty"
-            )
-
-        with open(video_path, 'rb') as video_file:
-            task = analyzer.client.tasks.create(
-                index_id=index_id or analyzer.index_id,
-                file=video_file
-            )
-            
-        completed_task = analyzer.wait_for_task(task, sleep_interval=5)
-
         result = analyzer.generate_interview_analysis(
-            video_id=completed_task.video_id,
+            video_id=indexed_asset_id,
             question=question
         )
-
-        return {
-            "video_id": completed_task.video_id,
-            "analysis": result.data if hasattr(result, 'data') else result
-        }
+        return StatusResponseModel(
+            status="Success",
+            message=f"Video analyzed: {result.data if hasattr(result, 'data') else result}"
+        )
         
     except FailToCreateTask as e:
         # Handle TwelveLabs API errors
@@ -88,10 +88,4 @@ async def analyze_video(video: UploadFile = File(...), question: str = Form(...)
             status_code=500,
             detail=f"Error processing video: {str(e)}"
         )
-    finally:
-        # Clean up temp file
-        if video_path and os.path.exists(video_path):
-            try:
-                os.remove(video_path)
-            except:
-                pass
+
