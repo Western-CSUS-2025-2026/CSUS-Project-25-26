@@ -1,5 +1,6 @@
 import Link from "next/link";
 import styles from "./page.module.css";
+import PastSessionsGrid from "./_components/pastSessions/pastSessions";
 import RecentTemplates from "./_components/recentTemplates/recentTemplates";
 
 import Modal from "@/components/modal/modal";
@@ -23,7 +24,9 @@ async function SessionPage({ searchParams }: SearchParamProps) {
 
 
       {/* remove this component and replace with past sessions component */}
-      <section className={styles.pastSessionsContainer}></section>
+      <section className={styles.pastSessionsContainer}>
+        <PastSessionsGrid />
+      </section>
 
       {/* This is where the modal is going to appear */}
       {show && <Modal height="20em" width="20em" />}
