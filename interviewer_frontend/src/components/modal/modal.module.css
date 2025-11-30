@@ -1,0 +1,50 @@
+.modalContainer {
+  width: 100vw;
+  height: 100vh;
+
+  background-color: #00000020;
+  position: fixed;
+  left: 0;
+  top: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000000 !important;
+}
+.modalContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  align-items: flex-start;
+
+  position: relative;
+  animation-name: ShowAnimation;
+  animation-duration: 0.34s;
+  animation-timing-function: ease-in-out;
+  animation-play-state: running;
+}
+@keyframes ShowAnimation {
+  0% {
+    margin-top: 1500px;
+  }
+  100% {
+    margin-top: unset;
+  }
+}
+
+.modalIcon {
+  color: var(--secondary-text);
+  position: absolute;
+  top: 0.9em;
+  right: 0.9em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 2em;
+  height: 2em;
+
+  cursor: pointer;
+}

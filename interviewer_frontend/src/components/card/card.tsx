@@ -1,5 +1,3 @@
-import style from "./card.module.css";
-
 interface CardProps {
   height?: string;
   width?: string;
@@ -14,16 +12,19 @@ interface CardProps {
  */
 function Card(props: CardProps) {
   return (
-    <div
-      className={style.card}
-      style={{
-        height: props.fillHeight ? "calc(100% - 2em)" : props.height,
-        width: props.fillWidth ? "calc(100% - 2em)" : props.width,
-        margin: props.margin,
-      }}
-    >
-      {props.children}
-    </div>
+    <>
+      {/* cardStyle is located in global.css */}
+      <div
+        className="cardStyle"
+        style={{
+          height: props.fillHeight ? "calc(100% - 2em)" : props.height,
+          width: props.fillWidth ? "calc(100% - 2em)" : props.width,
+          margin: props.margin,
+        }}
+      >
+        {props.children}
+      </div>
+    </>
   );
 }
 

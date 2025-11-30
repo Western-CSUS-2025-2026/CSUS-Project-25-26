@@ -7,5 +7,13 @@ import { sleep } from "./sleep";
 export async function getTemplates(): Promise<Template[]> {
   // will replace with network call
   await sleep(2000);
-  return [defaultTemplate, defaultTemplate, defaultTemplate, defaultTemplate];
+  return [
+    defaultTemplate,
+    defaultTemplate,
+    defaultTemplate,
+    defaultTemplate,
+    defaultTemplate,
+    defaultTemplate,
+    defaultTemplate,
+  ];
 }
