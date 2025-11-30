@@ -12,10 +12,10 @@
 .gauge::after {
   content: "";
   position: absolute;
-  inset: 13.5%;               /* Hollow center size */
+  inset: 13.5%; /* Hollow center size */
   background: var(--foreground);
   border-radius: 100%;
-  z-index: 1;                 /* Above segments, below text */
+  z-index: 1; /* Above segments, below text */
 }
 
 /* Wrapper for segments */
@@ -31,8 +31,8 @@
   left: 50%;
   width: 3em;
   height: 1.2em;
-  background: var(--accent);  /* Base background color for ghost segments */
-  opacity: 0.3;               /* Ghost appearance */
+  background: var(--accent); /* Base background color for ghost segments */
+  opacity: 0.3; /* Ghost appearance */
   border-radius: 50em;
   clip-path: ellipse(50% 50% at 50% 65%);
   transform-origin: center center;
@@ -92,17 +92,19 @@
   color: var(--accent);
 }
 
-
 .gaugeSegmentLoading {
   position: absolute;
   top: 50%;
   left: 50%;
   width: 3em;
   height: 1.2em;
-  background:var(--accent-primary-text);  /* Base background color for ghost segments */
-  opacity: 1;               /* Ghost appearance */
+  background: var(
+    --accent-primary-text
+  ); /* Base background color for ghost segments */
+  opacity: 1; /* Ghost appearance */
   border-radius: 50em;
   clip-path: ellipse(50% 50% at 50% 65%);
   transform-origin: center center;
   z-index: 1;
 }
+

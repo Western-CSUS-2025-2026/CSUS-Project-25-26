@@ -1,5 +1,3 @@
-"use client";
-
 import styles from "./gauge.module.css";
 
 interface GaugeProps {
@@ -54,8 +52,10 @@ export default function Gauge({ score }: GaugeProps) {
     const end = start + segmentSize;
 
     let rawFill: number;
-    if (clamped >= end) rawFill = 1; // fully filled
-    else if (clamped <= start) rawFill = 0; // empty
+    if (clamped >= end)
+      rawFill = 1; // fully filled
+    else if (clamped <= start)
+      rawFill = 0; // empty
     else rawFill = (clamped - start) / segmentSize; // partial 0–1
 
     return snapFill(rawFill);
@@ -75,7 +75,7 @@ export default function Gauge({ score }: GaugeProps) {
       <div className={styles.gaugeRing}>
         {fills.map((fill, index) => {
           // .gaugeSegment-1, .gaugeSegment-2, ... in CSS
-          const positionClass = (styles as any)[`gaugeSegment-${index + 1}`];
+          const positionClass = styles[`gaugeSegment-${index + 1}`];
 
           return (
             <div key={index}>
@@ -85,9 +85,7 @@ export default function Gauge({ score }: GaugeProps) {
               />
 
               {/* Filled segment */}
-              <span
-                className={`${styles.gaugeSegmentFill} ${positionClass}`}
-              >
+              <span className={`${styles.gaugeSegmentFill} ${positionClass}`}>
                 <div
                   className={styles.gaugeFill}
                   style={{ width: `${fill * 100}%` }}
