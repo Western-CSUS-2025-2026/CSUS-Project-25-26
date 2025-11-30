@@ -1,12 +1,10 @@
 import Card from "@/components/card/card";
 import LoadingText from "@/components/loadingText/loadingText";
-import PastSessionsGrid from "./sessions/_components/pastSessions/pastSessions";
 
 export default function Home() {
   return (
     <>
-    {/***
-       <Card height="30em" width="20em">
+      <Card height="30em" width="20em">
         <p>
           The pt size is what it is in the figma to help you decide what to use
         </p>
@@ -25,10 +23,6 @@ export default function Home() {
           </LoadingText>
         </div>
       </Card>
-    ***/}
-      <div style={{ marginTop: "2rem" }}>
-        <PastSessionsGrid />
-      </div>
     </>
   );
 }

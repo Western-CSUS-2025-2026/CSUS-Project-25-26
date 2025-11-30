@@ -26,9 +26,11 @@ export default function SessionCard({ session }: SessionCardProps) {
             <p>{session.template.id}</p>
           </div>
 
-          <div className={styles.processingText}>
+          <div className={styles.proccessingText}>
             {session.state === "PROCESSING" ? (
-              <p>This may take a few minutes...</p>
+              <p className={styles.proccessingText}>
+                This may take a few minutes...
+              </p>
             ) : (
               <p>&nbsp;</p>
             )}

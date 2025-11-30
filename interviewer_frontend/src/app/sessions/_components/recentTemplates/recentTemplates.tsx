@@ -23,13 +23,13 @@ export default function RecentTemplates() {
     <div className={styles.container}>
       {/* Left column — New Session */}
       <div className={`${styles.innerContainer} ${styles.flex1}`}>
-        <h2 style={{ margin: 0 }}>New Session</h2>
+        <h2>New Session</h2>
         <NewSessionCard></NewSessionCard>
       </div>
 
       {/* Right column — Recent Templates */}
       <div className={`${styles.innerContainer} ${styles.flex2}`}>
-        <h2 style={{ margin: 0 }}>Recent Templates</h2>
+        <h2>Recent Templates</h2>
 
         <Suspense fallback={<LoadingCards></LoadingCards>}>
           <RecentTemplatesContent />

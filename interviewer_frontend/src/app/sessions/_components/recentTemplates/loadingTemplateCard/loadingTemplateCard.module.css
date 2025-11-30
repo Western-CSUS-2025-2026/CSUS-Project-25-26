@@ -1,13 +1,14 @@
 .card {
   width: 100%;
-  height: calc(100px - 2.5rem);
+  height: 8em;
   background-color: var(--foreground);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 1.25rem;
+  padding: 1.25em;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  box-sizing: border-box;
 }
 
 .textGroup {

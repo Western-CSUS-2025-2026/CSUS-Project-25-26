@@ -1,9 +1,9 @@
 .button {
   width: 100%;
-  height: 100px;
+  height: 7em;
   background-color: var(--accent);
   border: none;
-  border-radius: 12px;
+  border-radius: 1em;
   padding: 1.25rem;
   display: flex;
   align-items: center;

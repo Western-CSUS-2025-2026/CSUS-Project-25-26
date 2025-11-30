@@ -26,11 +26,13 @@
   display: flex;
   flex-direction: column;
   align-items: start;
+  height: 100%;
 }
 
 .dateBox {
   display: block;
   flex-grow: 1;
+  margin-bottom: auto;
 }
 
 .dateBox h3 {
@@ -40,8 +42,9 @@
 }
 
 .SessionBox {
-  display: block;
-  margin-bottom: 1em;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: auto;
 }
 
 .SessionBox p {
@@ -54,9 +57,10 @@
   margin-top: 0;
 }
 
-.ProccessingText p {
+.proccessingText p {
   /* 30px top margin → 1.875em × 1.11 = 2.081em */
-  margin-bottom: 0;
+  margin-bottom: 0.4em;
+  font-size: 0.7em;
 }
 
 .buttonBackground {

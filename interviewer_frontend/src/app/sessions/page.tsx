@@ -22,7 +22,6 @@ async function SessionPage({ searchParams }: SearchParamProps) {
         <RecentTemplates />
       </section>
 
-
       {/* remove this component and replace with past sessions component */}
       <section className={styles.pastSessionsContainer}>
         <PastSessionsGrid />
