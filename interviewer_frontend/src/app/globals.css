@@ -96,8 +96,8 @@ span {
   font-weight: 600;
 }
 .cardStyle {
-  border-radius: 1em;
-  padding: 1em;
+  border-radius: 0.6em;
+  padding: 1.3em;
   background-color: var(--foreground);
   border: 1px solid var(--border);
 }
