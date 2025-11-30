@@ -1,7 +1,7 @@
 .gauge {
   width: 7.6358em;
   height: 7.6358em;
-  margin-top: 1.8em;
+  margin-top: 1.5375em;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -19,13 +19,13 @@
 }
 
 /* Wrapper for segments */
-.gauge-ring {
+.gaugeRing {
   position: absolute;
   inset: 0;
 }
 
 /* Ghost segments (static, dimmed at 0.3 opacity) */
-.gauge-segment--ghost {
+.gaugeSegmentGhost {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -40,7 +40,7 @@
 }
 
 /* Filled segments (dynamic, fully bright) */
-.gauge-segment--fill {
+.gaugeSegmentFill {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -55,7 +55,7 @@
 }
 
 /* Inner fill: actual progress */
-.gauge-fill {
+.gaugeFill {
   width: 100%;
   height: 100%;
   background: var(--accent); /* Smooth transition to the accent color */
@@ -63,28 +63,28 @@
 }
 
 /* Segment positions around the arc (5 segments total) */
-.gauge-segment-1 {
+.gaugeSegment-1 {
   transform: translate(-50%, -50%) rotate(-120deg) translateY(-3.1em);
 }
 
-.gauge-segment-2 {
+.gaugeSegment-2 {
   transform: translate(-50%, -50%) rotate(-60deg) translateY(-3.1em);
 }
 
-.gauge-segment-3 {
+.gaugeSegment-3 {
   transform: translate(-50%, -50%) rotate(0deg) translateY(-3.1em);
 }
 
-.gauge-segment-4 {
+.gaugeSegment-4 {
   transform: translate(-50%, -50%) rotate(60deg) translateY(-3.1em);
 }
 
-.gauge-segment-5 {
+.gaugeSegment-5 {
   transform: translate(-50%, -50%) rotate(120deg) translateY(-3.1em);
 }
 
 /* Letter grade in the center */
-.gauge-letter {
+.gaugeLetter {
   position: relative;
   z-index: 3;
   margin: 0;
@@ -93,7 +93,7 @@
 }
 
 
-.gauge-segment--loading {
+.gaugeSegmentLoading {
   position: absolute;
   top: 50%;
   left: 50%;

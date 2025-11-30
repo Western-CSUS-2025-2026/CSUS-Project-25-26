@@ -2,52 +2,51 @@
 
 import Card from "@/components/card/card";
 import type { SimpleSession } from "@/types/simpleSession";
-import "./module.css";
+import styles from "./sessionCard.module.css";
 import Gauge from "./gauge";
 
-
-
 interface SessionCardProps {
-  session: SimpleSession; // now always passed from parent
+  session: SimpleSession;
 }
 
 export default function SessionCard({ session }: SessionCardProps) {
   return (
     <Card>
-      <div className="cardContent">
+      <div className={styles.cardContent}>
+
         {/* LEFT COLUMN */}
-        <div className="leftColumn">
-          <div className="SessionBox">
+        <div className={styles.leftColumn}>
+          <div className={styles.SessionBox}>
             <h2>{session.title}</h2>
             <p>{session.template.title}</p>
             <p>{session.template.id}</p>
           </div>
 
-          {/* Processing message OR empty space */}
-          <div className="ProccessingText">
+          <div className={styles.processingText}>
             {session.state === "PROCESSING" ? (
               <p>This may take a few minutes...</p>
             ) : (
-              <p>&nbsp;</p>   /* non-breaking space keeps layout consistent */
+              <p>&nbsp;</p>
             )}
           </div>
-          
-          <div className = 'buttonBackground'>
+
+          <div className={styles.buttonBackground}>
             {session.state === "PROCESSING" ? (
-              <p>Generating Report...</p>
+              <p className={styles.buttonGenText}>Generating Report...</p>
             ) : (
-              <p style = {{fontWeight:400, color:"white"}}>View Full Report</p>   /* non-breaking space keeps layout consistent */
+              <p className={styles.buttonText}>View Full Report</p>
             )}
           </div>
         </div>
 
         {/* RIGHT COLUMN */}
-        <div className="rightColumn">
-          <div className="statusBox">
-            <h3 style={{ color: "var(--secondary-text)" }}>{session.state}</h3>
+        <div className={styles.rightColumn}>
+          <div className={styles.statusBox}>
+            <h3 className={styles.statusText}>{session.state}</h3>
           </div>
-          <div className="dateBox">
-            <h3 style={{ color: "var(--secondary-text)", fontWeight: 400 }}>
+
+          <div className={styles.dateBox}>
+            <h3 className={styles.dateText}>
               {new Date(session.createTime).toLocaleDateString("en-US", {
                 month: "2-digit",
                 day: "2-digit",
@@ -56,26 +55,22 @@ export default function SessionCard({ session }: SessionCardProps) {
             </h3>
           </div>
 
+          {session.state === "COMPLETED" && (
+            <Gauge score={session.overallGrade.overallGrade} />
+          )}
 
-            {session.state === "COMPLETED" && (
-      <Gauge score={session.overallGrade.overallGrade} />
-    )}
-
-
-              {session.state === "PROCESSING" && (
-          <div className="spinner-wrapper">
-            <div className="lds-spinner">
-              <div></div><div></div><div></div><div></div>
-              <div></div><div></div><div></div><div></div>
-              <div></div><div></div><div></div><div></div>
+          {session.state === "PROCESSING" && (
+            <div className={styles.spinnerWrapper}>
+              <div className={styles.ldsSpinner}>
+                <div></div><div></div><div></div><div></div>
+                <div></div><div></div><div></div><div></div>
+                <div></div><div></div><div></div><div></div>
+              </div>
             </div>
-          </div>
-        )}
-
+          )}
         </div>
+
       </div>
-      
     </Card>
   );
-  
 }

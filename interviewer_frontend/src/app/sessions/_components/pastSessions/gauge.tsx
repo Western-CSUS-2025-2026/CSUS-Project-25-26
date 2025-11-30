@@ -1,6 +1,6 @@
 "use client";
 
-import "./gauge.css";
+import styles from "./gauge.module.css";
 
 interface GaugeProps {
   score: number; // 0.0–1.0
@@ -43,26 +43,25 @@ function snapFill(value: number): number {
 }
 
 export default function Gauge({ score }: GaugeProps) {
-  const clamped = Math.max(0, Math.min(1, score)); // Clamp the score between 0 and 1
-  const letter = convertToLetterGrade(clamped);    // Convert score to letter grade
+  const clamped = Math.max(0, Math.min(1, score)); // Clamp between 0 and 1
+  const letter = convertToLetterGrade(clamped);
 
-  const NUM_SEGMENTS = 5;  // Total of 5 segments
+  const NUM_SEGMENTS = 5;
   const segmentSize = 1 / NUM_SEGMENTS;
 
-  // Calculate how much fill should go into each segment
   const fills = Array.from({ length: NUM_SEGMENTS }, (_, i) => {
     const start = i * segmentSize;
     const end = start + segmentSize;
 
     let rawFill: number;
-    if (clamped >= end) rawFill = 1;              // this segment fully filled
-    else if (clamped <= start) rawFill = 0;       // this segment empty
-    else rawFill = (clamped - start) / segmentSize; // partial [0,1]
+    if (clamped >= end) rawFill = 1; // fully filled
+    else if (clamped <= start) rawFill = 0; // empty
+    else rawFill = (clamped - start) / segmentSize; // partial 0–1
 
-    return snapFill(rawFill);  // Snap fill to 0, 1/3, 2/3, or 1
+    return snapFill(rawFill);
   });
 
-  // If score is exactly 0.5, manually set it so 2 segments are filled and 3rd is half-filled
+  // Special case: exactly 0.5 → 2 full, 3rd half
   if (clamped === 0.5) {
     fills[0] = 1;
     fills[1] = 1;
@@ -72,25 +71,26 @@ export default function Gauge({ score }: GaugeProps) {
   }
 
   return (
-    <div className="gauge">
-      <div className="gauge-ring">
+    <div className={styles.gauge}>
+      <div className={styles.gaugeRing}>
         {fills.map((fill, index) => {
-          const segClass = `gauge-segment-${index + 1}`;
+          // .gaugeSegment-1, .gaugeSegment-2, ... in CSS
+          const positionClass = (styles as any)[`gaugeSegment-${index + 1}`];
 
           return (
             <div key={index}>
-              {/* Ghost segment (dimmed at 30% opacity) */}
+              {/* Ghost/background segment */}
               <span
-                className={`gauge-segment ${segClass} gauge-segment--ghost`}
+                className={`${styles.gaugeSegmentGhost} ${positionClass}`}
               />
 
-              {/* Filled segment (overlaid on ghost) */}
+              {/* Filled segment */}
               <span
-                className={`gauge-segment ${segClass} gauge-segment--fill`}
+                className={`${styles.gaugeSegmentFill} ${positionClass}`}
               >
                 <div
-                  className="gauge-fill"
-                  style={{ width: `${fill * 100}%` }} // Dynamically adjust fill
+                  className={styles.gaugeFill}
+                  style={{ width: `${fill * 100}%` }}
                 />
               </span>
             </div>
@@ -98,7 +98,7 @@ export default function Gauge({ score }: GaugeProps) {
         })}
       </div>
 
-      <h1 className="gauge-letter">{letter}</h1>
+      <h1 className={styles.gaugeLetter}>{letter}</h1>
     </div>
   );
 }

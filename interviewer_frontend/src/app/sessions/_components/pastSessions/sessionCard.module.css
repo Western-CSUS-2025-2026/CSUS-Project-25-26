@@ -19,6 +19,7 @@
 
 .statusBox h3 {
   margin: 0;
+  color: var(--secondary-text);
 }
 
 .rightColumn {
@@ -44,15 +45,19 @@
 
 .dateBox h3 {
   margin: 0;
+  color: var(--secondary-text);
 }
 
 .SessionBox {
   display: block;
+  margin-bottom: 1em;
 }
 
 .SessionBox p {
   margin: 0;
 }
+
+
 
 .SessionBox h2 {
   /* 4px bottom margin → 0.25em × 1.11 = 0.277em */
@@ -62,7 +67,7 @@
 
 .ProccessingText p {
   /* 30px top margin → 1.875em × 1.11 = 2.081em */
-  margin-top: 2.081em;
+  margin-bottom: 0;
 }
 
 .buttonBackground {
@@ -75,7 +80,8 @@
 
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: center;;
+  margin-top: 0;
 }
 
 .buttonText {
@@ -84,11 +90,17 @@
   margin: 0;                    /* remove global margins */
 }
 
+.buttonGenText {
+  color: var(--secondary-text);         /* accent color */
+  font-weight: 600;             /* bold */
+  margin: 0;                    /* remove global margins */
+}
+
 .gauge {
   width: 7.6358em;
   height: 7.6358em;
 
-  margin-top: 1.8em;
+  margin-top: 1.8625em;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -106,13 +118,13 @@
 }
 
 /* wrapper */
-.gauge-ring {
+.gaugeRing {
   position: absolute;
   inset: 0;
 }
 
 /* base pill segment */
-.gauge-segment {
+.gaugeSegment {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -121,7 +133,7 @@
   height: 1.2em;      /* thickness */
 
   border-radius: 50em;
-  background: var(--accent);
+  background: var(--accent-primary-text);
 
   /* curved pill */
   clip-path: ellipse(50% 50% at 50% 65%);
@@ -132,27 +144,27 @@
 
 /* 5 evenly-spaced arc segments around circle (bottom missing) */
 
-.gauge-segment-1 {
+.gaugeSegment1 {
   transform: translate(-50%, -50%) rotate(-120deg) translateY(-3.1em);
 }
 
-.gauge-segment-2 {
+.gaugeSegment2 {
   transform: translate(-50%, -50%) rotate(-60deg) translateY(-3.1em);
 }
 
-.gauge-segment-3 {
+.gaugeSegment3 {
   transform: translate(-50%, -50%) rotate(0deg) translateY(-3.1em);
 }
 
-.gauge-segment-4 {
+.gaugeSegment4 {
   transform: translate(-50%, -50%) rotate(60deg) translateY(-3.1em);
 }
 
-.gauge-segment-5 {
+.gaugeSegment5 {
   transform: translate(-50%, -50%) rotate(120deg) translateY(-3.1em);
 }
 
-.gauge-segment-1.filled-33 {
+.gaugeSegment1.filled-33 {
   background: linear-gradient(
     to right,
     var(--accent) 33%,
@@ -172,7 +184,7 @@
 
 
 /* Wrapper to center spinner  */
-.spinner-wrapper {
+.spinnerWrapper {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -181,7 +193,7 @@
 }
 
 /* Main spinner */
-.lds-spinner {
+.ldsSpinner {
   color: var(--accent);
   position: relative;       /* required for absolute children */
   width: 100px;             /* spinner box */
@@ -194,20 +206,20 @@
   align-items: center;
 }
 
-.lds-spinner,
-.lds-spinner div,
-.lds-spinner div:after {
+.ldsSpinner,
+.ldsSpinner div,
+.ldsSpinner div:after {
   box-sizing: border-box;
 }
 
 /* Spinning bars */
-.lds-spinner div {
+.ldsSpinner div {
   transform-origin: 0px 0px;   /* rotation center */
-  animation: lds-spinner 1.2s linear infinite;
+  animation: ldsSpinner 1.2s linear infinite;
 }
 
 /* Bar shape */
-.lds-spinner div:after {
+.ldsSpinner div:after {
   content: " ";
   display: block;
   position: absolute;
@@ -224,28 +236,28 @@
 
 /* 12 rotated bars */
 
-.lds-spinner div:nth-child(1)  { transform: rotate(0deg);   animation-delay: -1.1s; }
-.lds-spinner div:nth-child(2)  { transform: rotate(30deg);  animation-delay: -1s; }
-.lds-spinner div:nth-child(3)  { transform: rotate(60deg);  animation-delay: -0.9s; }
-.lds-spinner div:nth-child(4)  { transform: rotate(90deg);  animation-delay: -0.8s; }
-.lds-spinner div:nth-child(5)  { transform: rotate(120deg); animation-delay: -0.7s; }
-.lds-spinner div:nth-child(6)  { transform: rotate(150deg); animation-delay: -0.6s; }
-.lds-spinner div:nth-child(7)  { transform: rotate(180deg); animation-delay: -0.5s; }
-.lds-spinner div:nth-child(8)  { transform: rotate(210deg); animation-delay: -0.4s; }
-.lds-spinner div:nth-child(9)  { transform: rotate(240deg); animation-delay: -0.3s; }
-.lds-spinner div:nth-child(10) { transform: rotate(270deg); animation-delay: -0.2s; }
-.lds-spinner div:nth-child(11) { transform: rotate(300deg); animation-delay: -0.1s; }
-.lds-spinner div:nth-child(12) { transform: rotate(330deg); animation-delay: 0s; }
+.ldsSpinner div:nth-child(1)  { transform: rotate(0deg);   animation-delay: -1.1s; }
+.ldsSpinner div:nth-child(2)  { transform: rotate(30deg);  animation-delay: -1s; }
+.ldsSpinner div:nth-child(3)  { transform: rotate(60deg);  animation-delay: -0.9s; }
+.ldsSpinner div:nth-child(4)  { transform: rotate(90deg);  animation-delay: -0.8s; }
+.ldsSpinner div:nth-child(5)  { transform: rotate(120deg); animation-delay: -0.7s; }
+.ldsSpinner div:nth-child(6)  { transform: rotate(150deg); animation-delay: -0.6s; }
+.ldsSpinner div:nth-child(7)  { transform: rotate(180deg); animation-delay: -0.5s; }
+.ldsSpinner div:nth-child(8)  { transform: rotate(210deg); animation-delay: -0.4s; }
+.ldsSpinner div:nth-child(9)  { transform: rotate(240deg); animation-delay: -0.3s; }
+.ldsSpinner div:nth-child(10) { transform: rotate(270deg); animation-delay: -0.2s; }
+.ldsSpinner div:nth-child(11) { transform: rotate(300deg); animation-delay: -0.1s; }
+.ldsSpinner div:nth-child(12) { transform: rotate(330deg); animation-delay: 0s; }
 
 /* Fading effect */
-@keyframes lds-spinner {
+@keyframes ldsSpinner {
   0%   { opacity: 1; }
   91.67% { opacity: 0; }
   100% { opacity: 0; }
 }
 
 
-.loading-1 {
+.loading1 {
   
   background-color: var(--accent-primary-text);
 
@@ -260,7 +272,7 @@
   align-items: center;
 }          
 
-.loading-2{
+.loading2{
 background-color: var(--accent-primary-text);
 margin-top: 0.5em;
 
@@ -275,7 +287,7 @@ align-items: center;
 
 }
 
-.loading-3{
+.loading3{
 background-color: var(--accent-primary-text);
 margin-top: 0.5em;
 
@@ -289,7 +301,7 @@ justify-content: center;
 align-items: center;
 }
 
-.loading-button{
+.loadingButton{
 background-color: var(--accent-primary-text);
 margin-top: 4.3em;
 
@@ -306,7 +318,7 @@ align-items: center;
 margin-bottom: 0.2em;
 }
 
-.loading-4{
+.loading4{
 background-color: var(--accent-primary-text);
 
 width: 7.4375em;
@@ -319,7 +331,7 @@ justify-content: center;
 align-items: center;
 }
 
-.loading-5{
+.loading5{
 background-color: var(--accent-primary-text);
 margin-top: 0.5em;
 
@@ -333,7 +345,7 @@ justify-content: center;
 align-items: center;
 }
 
-.loading-grade{
+.loadingGrade{
   border-radius: .625em;
   background-color: var(--accent-primary-text);
   opacity: 1;
