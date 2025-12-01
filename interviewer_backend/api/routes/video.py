@@ -1,12 +1,12 @@
-video.py
-
-import os
+import json
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 
 from api.exceptions import FailToConnectTwelveLabs, IndexCreatingFail, FailToCreateTask
 from api.schemas.base import StatusResponseModel
 from api.utils.security import Auth
 from api.utils.twelveLabs import VideoAnalysis
+from api.schemas.models import VideoAnalysisResponseModel, AnalysisResult
+from pydantic import ValidationError
 
 video = APIRouter(prefix="/video", tags=["Video"])
 
@@ -60,29 +60,48 @@ async def list_indexed_assets(index_id: str):
     )
 
 
-@video.post("/analyze")
-async def analyze_video(indexed_asset_id: str = None, question: str = None):
+@video.post("/analyze", response_model=VideoAnalysisResponseModel)
+async def analyze_video(indexed_asset_id: str = Form(...),question: str = Form(...)) -> VideoAnalysisResponseModel:
     analyzer = VideoAnalysis()
 
     try:
+        # Get raw analysis result from TwelveLabs
         result = analyzer.generate_interview_analysis(
             video_id=indexed_asset_id,
             question=question
         )
-        return StatusResponseModel(
+
+        data_string = result.data if hasattr(result, 'data') else result
+
+        try:
+            analysis_dict = json.loads(data_string)
+        except json.JSONDecodeError as e:
+            # Handle cases where the analysis service returns bad/empty data
+            raise HTTPException(
+                status_code=500,
+                detail=f"Analysis failed: Service returned invalid data. Details: {e}"
+            )
+
+        
+        try:
+            analysis_data = AnalysisResult(**analysis_dict)
+        except ValidationError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Analysis failed: Data structure mismatch. Expected fields: confidence, clarity, speech_rate, eye_contact, body_language, voice_tone, relevant_to_question, imp_points, overall_summary, actionable_feedback. Details: {str(e)}"
+            )
+
+        return VideoAnalysisResponseModel(
             status="Success",
-            message=f"Video analyzed: {result.data if hasattr(result, 'data') else result}"
+            analysis_data=analysis_data
         )
         
     except FailToCreateTask as e:
-        # Handle TwelveLabs API errors
-        error_msg = str(e)
-        if "video_file_broken" in error_msg or "Unable to process video file" in error_msg:
-            raise HTTPException(
-                status_code=400,
-                detail="Video file is invalid or corrupted. Please check the file format and try again."
-            )
-        raise HTTPException(status_code=500, detail=f"Error processing video: {error_msg}")
+        # Handle specific errors from the TwelveLabs API wrapper
+        raise HTTPException(status_code=500, detail=f"TwelveLabs API Error: {str(e)}")
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
