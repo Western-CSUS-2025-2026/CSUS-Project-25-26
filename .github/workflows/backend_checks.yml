@@ -1,0 +1,37 @@
+name: Backend lint check
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/**"
+
+
+jobs:
+  linting:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: interviewer_backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Install dev dependencies
+        run: |
+          pip install -r requirements.txt -r requirements.dev.txt
+      - name: Run isort
+        run: |
+          isort ./api
+          isort ./migrations
+      - name: Run black
+        run: |
+          black --check ./api
+          black --check ./migrations
+      - name: Comment if linting failed
+        if: failure()
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            :poop: Code linting failed, use `black` and `isort` to fix it.

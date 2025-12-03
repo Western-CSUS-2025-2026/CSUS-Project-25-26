@@ -86,6 +86,28 @@ class Question(BaseDbModel):
         back_populates="questions",
         primaryjoin="Question.template_id==Template.id",
     )
+    
+class Grade(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    body_language_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    speech_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    material_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    brevity_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    overall_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    feedback_id: Mapped[int] = mapped_column(Integer, ForeignKey("feedback.id"), nullable=False)
+    session_id: Mapped[int] = mapped_column(Integer, ForeignKey("session.id"), nullable=False)
+    feedback: Mapped["Feedback"] = relationship(
+        "Feedback",
+        foreign_keys=[feedback_id],
+        back_populates="grade",
+        primaryjoin="Grade.feedback_id==Feedback.id",
+    )
+    session: Mapped["Session"] = relationship(
+        "Session",
+        foreign_keys=[session_id],
+        back_populates="grades",
+        primaryjoin="Grade.session_id==Session.id",
+    )
 
 
 class Feedback(BaseDbModel):
@@ -93,16 +115,14 @@ class Feedback(BaseDbModel):
     point: Mapped[str] = mapped_column(Text, nullable=False)
     ways_to_improve: Mapped[str] = mapped_column(Text, nullable=True)
     grade: Mapped["Grade"] = relationship(
-        "Grade", foreign_keys="Grade.feedback_id", back_populates="feed_back", uselist=False
+        "Grade", foreign_keys="Grade.feedback_id", back_populates="feedback", uselist=False
     )
-
 
 class SessionState(enum.Enum):
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     GRADED = "graded"
-
 
 class Session(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -117,26 +137,9 @@ class Session(BaseDbModel):
     grades: Mapped[list["Grade"]] = relationship(
         "Grade", foreign_keys="Grade.session_id", back_populates="session", cascade="all, delete"
     )
-
-
-class Grade(BaseDbModel):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    body_language_score: Mapped[int] = mapped_column(Integer, nullable=False)
-    speech_score: Mapped[int] = mapped_column(Integer, nullable=False)
-    material_score: Mapped[int] = mapped_column(Integer, nullable=False)
-    brevity_score: Mapped[int] = mapped_column(Integer, nullable=False)
-    overall_score: Mapped[int] = mapped_column(Integer, nullable=False)
-    feedback_id: Mapped[int] = mapped_column(Integer, ForeignKey("feedback.id"), nullable=False)
-    session_id: Mapped[int] = mapped_column(Integer, ForeignKey("session.id"), nullable=False)
-    feed_back: Mapped["Feedback"] = relationship(
-        "Feedback",
-        foreign_keys=[feedback_id],
-        back_populates="grade",
-        primaryjoin="Grade.feedback_id==Feedback.id",
-    )
-    session: Mapped["Session"] = relationship(
-        "Session",
-        foreign_keys=[session_id],
-        back_populates="grades",
-        primaryjoin="Grade.session_id==Session.id",
+    user: Mapped[User] = relationship(
+        "User",
+        foreign_keys=[user_id],
+        back_populates="interview_sessions",
+        primaryjoin="Session.user_id==User.id",
     )
