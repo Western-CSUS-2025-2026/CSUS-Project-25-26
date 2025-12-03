@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import datetime
+import enum
 import logging
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -28,6 +29,9 @@ class User(BaseDbModel):
     )
     sessions: Mapped[list[UserSession]] = relationship(
         "UserSession", foreign_keys="UserSession.user_id", back_populates="user", cascade='all, delete'
+    )
+    interview_sessions: Mapped[list["Session"]] = relationship(
+        "Session", foreign_keys="Session.user_id", cascade='all, delete'
     )
 
 
@@ -61,3 +65,78 @@ class UserMessageDelay(BaseDbModel):
     )
     user_email: Mapped[str] = mapped_column(String, unique=False, nullable=False)
     user_ip: Mapped[str] = mapped_column(String, unique=False, nullable=False)
+
+
+class Template(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    job_title: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    questions: Mapped[list["Question"]] = relationship(
+        "Question", foreign_keys="Question.template_id", back_populates="template", cascade="all, delete"
+    )
+
+
+class Question(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    template_id: Mapped[int] = mapped_column(Integer, ForeignKey("template.id"), nullable=False)
+    template: Mapped[Template] = relationship(
+        "Template",
+        foreign_keys=[template_id],
+        back_populates="questions",
+        primaryjoin="Question.template_id==Template.id",
+    )
+
+
+class Feedback(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    point: Mapped[str] = mapped_column(Text, nullable=False)
+    ways_to_improve: Mapped[str] = mapped_column(Text, nullable=True)
+    grade: Mapped["Grade"] = relationship(
+        "Grade", foreign_keys="Grade.feedback_id", back_populates="feed_back", uselist=False
+    )
+
+
+class SessionState(enum.Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    GRADED = "graded"
+
+
+class Session(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
+    video_url: Mapped[str] = mapped_column(String, nullable=True)
+    transcript: Mapped[str] = mapped_column(Text, nullable=True)
+    state: Mapped[SessionState] = mapped_column(Enum(SessionState), nullable=False, default=SessionState.PENDING)
+    overall_grade: Mapped[int] = mapped_column(Integer, nullable=True)
+    create_ts: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc), nullable=False
+    )
+    grades: Mapped[list["Grade"]] = relationship(
+        "Grade", foreign_keys="Grade.session_id", back_populates="session", cascade="all, delete"
+    )
+
+
+class Grade(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    body_language_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    speech_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    material_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    brevity_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    overall_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    feedback_id: Mapped[int] = mapped_column(Integer, ForeignKey("feedback.id"), nullable=False)
+    session_id: Mapped[int] = mapped_column(Integer, ForeignKey("session.id"), nullable=False)
+    feed_back: Mapped["Feedback"] = relationship(
+        "Feedback",
+        foreign_keys=[feedback_id],
+        back_populates="grade",
+        primaryjoin="Grade.feedback_id==Feedback.id",
+    )
+    session: Mapped["Session"] = relationship(
+        "Session",
+        foreign_keys=[session_id],
+        back_populates="grades",
+        primaryjoin="Grade.session_id==Session.id",
+    )

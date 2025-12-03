@@ -1,7 +1,7 @@
 """Init auth
 
 Revision ID: bc726b00803a
-Revises: 
+Revises:
 Create Date: 2025-11-05 02:45:03.579823
 
 """

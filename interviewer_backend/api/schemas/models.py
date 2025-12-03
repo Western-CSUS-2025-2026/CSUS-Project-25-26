@@ -84,3 +84,41 @@ class MyUserGet(Base):
 class UserGet(Base):
     id: int
     username: str
+
+
+class SimpleSession(Base):
+    id: int
+    state: str
+    overall_grade: int | None
+    create_ts: datetime.datetime
+
+
+class FeedbackGet(Base):
+    id: int
+    point: str
+    ways_to_improve: str | None
+
+
+class GradeGet(Base):
+    id: int
+    body_language_score: int
+    speech_score: int
+    material_score: int
+    brevity_score: int
+    overall_score: int
+    feed_back: FeedbackGet
+
+
+class SessionObject(Base):
+    id: int
+    user_id: int
+    video_url: str | None
+    transcript: str | None
+    state: str
+    overall_grade: int | None
+    grades: list[GradeGet]
+    create_ts: datetime.datetime
+
+
+class SessionsList(Base):
+    sessions: list[SimpleSession]
