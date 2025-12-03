@@ -143,3 +143,7 @@ class Session(BaseDbModel):
         back_populates="interview_sessions",
         primaryjoin="Session.user_id==User.id",
     )
+
+class Video(BaseDbModel):
+    video_url: Mapped[str] = mapped_column(String, nullable=True)
+    question_timestamps: Mapped[list[int]] = mapped_column(Integer)
