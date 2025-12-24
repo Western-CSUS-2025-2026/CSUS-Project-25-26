@@ -1,0 +1,13 @@
+.topBar {
+  height: 108px;
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: 396px 331px 257px; /* still okay if you want */
+  column-gap: 12px;
+}
+.slot {
+  height: 108px;
+  min-width: 0;
+}
+
