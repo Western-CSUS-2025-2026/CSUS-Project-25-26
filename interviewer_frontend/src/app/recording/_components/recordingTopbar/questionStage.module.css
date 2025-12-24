@@ -1,0 +1,40 @@
+.stageBox,
+.stageBoxActive {
+  width: 10.4167em;        
+  height: 3.445em;        
+  border-radius: 0.6944em;
+
+  display: flex;                 /* ← required */
+  align-items: center;           /* vertical center */
+  justify-content: center;       /* horizontal center */
+
+  opacity: 1;
+  background-color: var(--foreground);
+  
+}
+
+.stageBoxActive {
+  background-color: var(--accent);
+}
+
+.activeText {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.inactiveText {
+  color: white;
+  font-weight: 600;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  width: 100%;
+  gap:0.7176em;
+}
+
+.boxTitle {
+  margin-bottom: 0.25em; 
+}

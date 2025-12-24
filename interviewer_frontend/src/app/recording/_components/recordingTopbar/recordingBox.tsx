@@ -1,3 +1,7 @@
+import Card from "@/components/card/card";
+
 export default function RecordingBox() {
-  return <h3>Recording</h3>;
+  return(
+    <Card></Card>
+  )
 }

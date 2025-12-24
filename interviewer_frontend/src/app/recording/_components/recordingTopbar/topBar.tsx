@@ -12,7 +12,7 @@ export default function TopBar() {
       </div>
 
       <div className={styles.slot}>
-        <QuestionStage />
+        <QuestionStage stage="answering" />  
       </div>
 
       <div className={styles.slot}>
