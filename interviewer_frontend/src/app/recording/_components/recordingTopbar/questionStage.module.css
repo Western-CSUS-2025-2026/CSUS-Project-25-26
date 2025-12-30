@@ -1,7 +1,7 @@
 .stageBox,
 .stageBoxActive {
   width: 10.4167em;        
-  height: 3.445em;        
+  height: 3.236em;    
   border-radius: 0.6944em;
 
   display: flex;                 /* ← required */

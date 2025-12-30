@@ -24,7 +24,7 @@ export default function CurrentQuestions({
             if (questionNumber < current) {
               return (
                 <div key={questionNumber} className={styles.circleDone}>
-                  <CheckMark size={28} stroke={9} />
+                  <CheckMark size={28} stroke={15} />
                 </div>
               );
             }

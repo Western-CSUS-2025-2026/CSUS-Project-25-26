@@ -19,8 +19,8 @@
 
 
 .circle {
-  width: 3.4375em;
-  height: 3.4375em;
+  width: 3.236em;
+  height: 3.236em;
   border-radius: 9999em;
 
   display: flex;
@@ -35,8 +35,8 @@
 
 
 .circleCurrent {
-  width: 3.4375em;
-  height: 3.4375em;
+  width: 3.236em;
+  height: 3.236em;
   border-radius: 9999em;
 
   display: flex;
@@ -52,8 +52,8 @@
 
 
 .circleDone {
-  width: 3.4375em;
-  height: 3.4375em;
+  width: 3.236em;
+  height: 3.236em;
   border-radius: 9999em;
 
   display: flex;

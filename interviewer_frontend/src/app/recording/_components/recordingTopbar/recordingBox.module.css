@@ -1,0 +1,109 @@
+.boxTitle {
+  margin-bottom: 0.25em;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.recordingRow{
+  display: flex;
+  gap: 1em;
+}
+
+
+.left {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 0.5em;
+}
+
+
+.circleButton {
+  width: 3.236em;
+  height: 3.236em;
+  border-radius: 9999em;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 600;
+  background-color: #984A4A;
+  overflow: visible;
+
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.circle:active {
+  transform: scale(0.96);
+}
+
+/* Pause: two tiny pills */
+.pause {
+  display: flex;
+  gap: 0.175em;
+}
+
+.pause span {
+  width: 0.25em;
+  height: 0.9em;
+  background-color: white;
+  border-radius: 9999em;
+}
+
+/* Play: small triangle */
+.play {
+  width: 0;
+  height: 0;
+  border-top: 0.6em solid transparent;
+  border-bottom: 0.6em solid transparent;
+  border-left: 0.8em solid white;
+  transform: translateX(0.1em);
+}
+
+.timeText{
+  color: var(--primary-text);
+  margin: 0;
+}
+
+.recordingIndicator {
+  width: 3.4em;
+  height: 1.46em;
+
+  border-radius: 10px;
+  opacity: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+
+  background-color: var(--border);
+}
+
+.recordingDot {
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 9999em;
+
+  display: flex;
+  background-color: #984A4A;
+}
+
+.recText{
+  color: var(--secondary-text);
+  font-size: 0.69em;
+  font-weight: 600;
+}
+
+
+.waveform{
+  width: 11em;
+  height: 1.41em;
+  background-color: var(--secondary-text);
+  margin: 0;
+}
+
