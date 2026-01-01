@@ -5,9 +5,14 @@ from fastapi_sqlalchemy import db
 
 from api.exceptions import ObjectNotFound
 from api.models.db import Session, UserSession
-from api.schemas.models import FeedbackGet, GradeGet, SessionObject, SessionsList, SimpleSession
+from api.schemas.models import (
+    FeedbackGet,
+    GradeGet,
+    SessionObject,
+    SessionsList,
+    SimpleSession,
+)
 from api.utils.security import Auth
-
 
 logger = logging.getLogger(__name__)
 session = APIRouter(prefix="/sessions", tags=["Sessions"])
@@ -16,7 +21,9 @@ session = APIRouter(prefix="/sessions", tags=["Sessions"])
 @session.get("", response_model=SessionsList)
 async def get_user_sessions(
     user_session: UserSession = Depends(Auth()),
-    length: int = Query(default=10, ge=1, le=100, description="Number of sessions to return"),
+    length: int = Query(
+        default=10, ge=1, le=100, description="Number of sessions to return"
+    ),
     skip: int = Query(default=0, ge=0, description="Number of sessions to skip"),
 ) -> SessionsList:
     """

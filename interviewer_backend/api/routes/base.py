@@ -6,6 +6,8 @@ from api import __version__
 from api.settings import Settings, get_settings
 
 from .session import session as session_router
+from .template import template as templates_router
+from .question import question as questions_router
 from .user import user as user_router
 
 
@@ -34,3 +36,5 @@ app.add_middleware(
 
 app.include_router(user_router)
 app.include_router(session_router)
+app.include_router(templates_router)
+app.include_router(questions_router)

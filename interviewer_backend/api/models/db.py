@@ -4,14 +4,13 @@ import datetime
 import enum
 import logging
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from api.utils.user_session import calc_session_expire_date
 
 from .base import BaseDbModel
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,20 +24,27 @@ class User(BaseDbModel):
     salt: Mapped[str] = mapped_column(String, nullable=True)
     verification_token: Mapped[int] = mapped_column(Integer, nullable=False)
     create_ts: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc), nullable=False
+        DateTime(timezone=True),
+        default=datetime.datetime.now(tz=datetime.timezone.utc),
+        nullable=False,
     )
     sessions: Mapped[list[UserSession]] = relationship(
-        "UserSession", foreign_keys="UserSession.user_id", back_populates="user", cascade='all, delete'
+        "UserSession",
+        foreign_keys="UserSession.user_id",
+        back_populates="user",
+        cascade="all, delete",
     )
     interview_sessions: Mapped[list["Session"]] = relationship(
-        "Session", foreign_keys="Session.user_id", cascade='all, delete'
+        "Session", foreign_keys="Session.user_id", cascade="all, delete"
     )
 
 
 class UserSession(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"))
-    expires: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=calc_session_expire_date)
+    expires: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=calc_session_expire_date
+    )
     token: Mapped[str] = mapped_column(String, unique=True)
     last_activity: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc)
@@ -72,21 +78,27 @@ class Template(BaseDbModel):
     job_title: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
     questions: Mapped[list["Question"]] = relationship(
-        "Question", foreign_keys="Question.template_id", back_populates="template", cascade="all, delete"
+        "Question",
+        foreign_keys="Question.template_id",
+        back_populates="template",
+        cascade="all, delete",
     )
 
 
 class Question(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     question: Mapped[str] = mapped_column(Text, nullable=False)
-    template_id: Mapped[int] = mapped_column(Integer, ForeignKey("template.id"), nullable=False)
+    template_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("template.id"), nullable=False
+    )
     template: Mapped[Template] = relationship(
         "Template",
         foreign_keys=[template_id],
         back_populates="questions",
         primaryjoin="Question.template_id==Template.id",
     )
-    
+
+
 class Grade(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     body_language_score: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -94,8 +106,12 @@ class Grade(BaseDbModel):
     material_score: Mapped[int] = mapped_column(Integer, nullable=False)
     brevity_score: Mapped[int] = mapped_column(Integer, nullable=False)
     overall_score: Mapped[int] = mapped_column(Integer, nullable=False)
-    feedback_id: Mapped[int] = mapped_column(Integer, ForeignKey("feedback.id"), nullable=False)
-    session_id: Mapped[int] = mapped_column(Integer, ForeignKey("session.id"), nullable=False)
+    feedback_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("feedback.id"), nullable=False
+    )
+    session_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("session.id"), nullable=False
+    )
     feedback: Mapped["Feedback"] = relationship(
         "Feedback",
         foreign_keys=[feedback_id],
@@ -115,8 +131,12 @@ class Feedback(BaseDbModel):
     point: Mapped[str] = mapped_column(Text, nullable=False)
     ways_to_improve: Mapped[str] = mapped_column(Text, nullable=True)
     grade: Mapped["Grade"] = relationship(
-        "Grade", foreign_keys="Grade.feedback_id", back_populates="feedback", uselist=False
+        "Grade",
+        foreign_keys="Grade.feedback_id",
+        back_populates="feedback",
+        uselist=False,
     )
+
 
 class SessionState(enum.Enum):
     PENDING = "pending"
@@ -124,18 +144,26 @@ class SessionState(enum.Enum):
     COMPLETED = "completed"
     GRADED = "graded"
 
+
 class Session(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
     video_url: Mapped[str] = mapped_column(String, nullable=True)
     transcript: Mapped[str] = mapped_column(Text, nullable=True)
-    state: Mapped[SessionState] = mapped_column(Enum(SessionState), nullable=False, default=SessionState.PENDING)
+    state: Mapped[SessionState] = mapped_column(
+        Enum(SessionState), nullable=False, default=SessionState.PENDING
+    )
     overall_grade: Mapped[int] = mapped_column(Integer, nullable=True)
     create_ts: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc), nullable=False
+        DateTime(timezone=True),
+        default=datetime.datetime.now(tz=datetime.timezone.utc),
+        nullable=False,
     )
     grades: Mapped[list["Grade"]] = relationship(
-        "Grade", foreign_keys="Grade.session_id", back_populates="session", cascade="all, delete"
+        "Grade",
+        foreign_keys="Grade.session_id",
+        back_populates="session",
+        cascade="all, delete",
     )
     user: Mapped[User] = relationship(
         "User",
@@ -144,6 +172,12 @@ class Session(BaseDbModel):
         primaryjoin="Session.user_id==User.id",
     )
 
+
 class Video(BaseDbModel):
-    video_url: Mapped[str] = mapped_column(String, nullable=True)
-    question_timestamps: Mapped[list[int]] = mapped_column(Integer)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    video_url: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    question_timestamps: Mapped[list[int]] = mapped_column(
+        JSON, nullable=False, default=list
+    )

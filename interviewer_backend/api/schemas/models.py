@@ -7,41 +7,40 @@ from pydantic import field_validator
 from api.schemas.base import Base
 from api.settings import get_settings
 
-
 settings = get_settings()
 
 
 class RegistrationInitiate(Base):
     email: Annotated[str, MaxLen(settings.MAX_NAME_LENGTH)]
 
-    @field_validator('email')
+    @field_validator("email")
     @classmethod
     def validate_email(cls, value: str):
         restricted: set[str] = {
             '"',
-            '#',
-            '&',
+            "#",
+            "&",
             "'",
-            '(',
-            ')',
-            '*',
-            ',',
-            '/',
-            ';',
-            '<',
-            '>',
-            '?',
-            '[',
-            '\\',
-            ']',
-            '^',
-            '`',
-            '{',
-            '|',
-            '}',
-            '~',
-            '\n',
-            '\r',
+            "(",
+            ")",
+            "*",
+            ",",
+            "/",
+            ";",
+            "<",
+            ">",
+            "?",
+            "[",
+            "\\",
+            "]",
+            "^",
+            "`",
+            "{",
+            "|",
+            "}",
+            "~",
+            "\n",
+            "\r",
         }
         if "@" not in value:
             raise ValueError()
@@ -90,13 +89,6 @@ class UserGet(Base):
     username: str
 
 
-class SimpleSession(Base):
-    id: int
-    state: str
-    overall_grade: int | None
-    create_ts: datetime.datetime
-
-
 class FeedbackGet(Base):
     id: int
     point: str
@@ -113,6 +105,13 @@ class GradeGet(Base):
     feed_back: FeedbackGet
 
 
+class SimpleSession(Base):
+    id: int
+    state: str
+    overall_grade: int | None
+    create_ts: datetime.datetime
+
+
 class SessionObject(Base):
     id: int
     user_id: int
@@ -126,3 +125,50 @@ class SessionObject(Base):
 
 class SessionsList(Base):
     sessions: list[SimpleSession]
+
+
+class SessionCreate(Base):
+    pass
+
+
+class SessionStateUpdate(Base):
+    state: str
+
+
+class TemplateBase(Base):
+    job_title: str
+    description: str | None = None
+
+
+class TemplateCreate(TemplateBase):
+    pass
+
+
+class TemplateUpdate(Base):
+    job_title: str | None = None
+    description: str | None = None
+
+
+class TemplateGet(TemplateBase):
+    id: int
+
+
+class QuestionBase(Base):
+    question: str
+
+
+class QuestionCreate(QuestionBase):
+    template_id: int
+
+
+class QuestionUpdate(Base):
+    question: str | None = None
+
+
+class QuestionGet(QuestionBase):
+    id: int
+    template_id: int
+
+
+class TemplateWithQuestionsGet(TemplateGet):
+    questions: list[QuestionGet]
