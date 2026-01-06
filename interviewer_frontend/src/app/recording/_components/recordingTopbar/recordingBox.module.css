@@ -100,10 +100,15 @@
 }
 
 
-.waveform{
+.waveform {
   width: 11em;
   height: 1.41em;
-  background-color: var(--secondary-text);
-  margin: 0;
-}
+  border-radius: 0.35em;
+  overflow: hidden;
 
+
+  /* controls for JS */
+  --wave-color: var(--secondary-text);
+  --bar-thickness: 0.1em; /* set to 0.10em or 0.20em */
+  --bar-gap: 0.2em;       /* optional */
+}

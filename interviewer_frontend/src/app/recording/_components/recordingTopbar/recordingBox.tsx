@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Card from "@/components/card/card";
 import styles from "./recordingBox.module.css";
+import MicWaveform from "./MicWaveform";
 
 function formatTime(totalSeconds: number) {
   const m = Math.floor(totalSeconds / 60);
@@ -54,7 +55,8 @@ export default function RecordingBox() {
           <p className={styles.timeText}>{formatTime(elapsedSeconds)}</p>
           </div>
 
-          <div className={styles.waveform}></div>
+         <div className={styles.waveform}> <MicWaveform enabled={isPlaying} /> </div>
+
         </div>
 
         <button
