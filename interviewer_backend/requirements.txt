@@ -9,3 +9,5 @@ pydantic-settings
 SQLAlchemy
 uvicorn
 retrying
+SpeechRecognition
+pydub
