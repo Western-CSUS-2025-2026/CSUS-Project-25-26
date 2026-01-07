@@ -131,7 +131,7 @@ async def me(user_session: UserSession = Depends(Auth())) -> MyUserGet:
 @user.get("/sessions", response_model=UserSessionsGet)
 async def get_sessions(user_session: UserSession = Depends(Auth())) -> UserSessionsGet:
     response = UserSessionsGet(sessions=[])
-    for session in user_session.user.sessions:
+    for session in user_session.user.user_sessions:
         response.sessions.append(
             UserSessionGet(
                 user_id=session.user_id,
