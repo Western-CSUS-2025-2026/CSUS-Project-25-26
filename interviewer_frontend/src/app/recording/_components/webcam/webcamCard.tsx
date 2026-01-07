@@ -18,6 +18,7 @@ function WebcamCard({ webRef }: WebcamCardProps) {
   return (
     <Card>
       <Webcam
+        audio={true}
         className={styles.webcam}
         ref={webRef}
         videoConstraints={videoConstraints}
