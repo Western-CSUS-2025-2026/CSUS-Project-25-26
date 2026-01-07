@@ -103,6 +103,13 @@ class AnalysisResult(Base):
     actionable_feedback: str
 
 
-class VideoAnalysisResponseModel(Base):
+class VideoAnalysisStateResponse(Base):
     status: str
-    analysis_data: AnalysisResult
+    session_id: int
+    analysis_data: AnalysisResult | None = None
+    error: str | None = None
+
+
+class VideoUploadResponse(Base):
+    asset_id: str
+    session_id: int

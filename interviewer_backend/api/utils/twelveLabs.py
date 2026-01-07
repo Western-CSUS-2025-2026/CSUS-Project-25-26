@@ -1,11 +1,14 @@
 from twelvelabs import TwelveLabs
 from twelvelabs.indexes import IndexesCreateRequestModelsItem
 from twelvelabs.tasks import TasksRetrieveResponse
+from api.models.db import TwelveLabsIndex
 
 from api.exceptions import FailToConnectTwelveLabs, IndexCreatingFail, FailToCreateTask
 from api.settings import get_settings, Settings
 
 from fastapi import UploadFile
+
+import datetime
 
 
 class VideoAnalysis:
@@ -94,6 +97,31 @@ class VideoAnalysis:
         for index in self.client.indexes.list():
             indexes.append(f"Index: {index.id} - {index.index_name}")
         return indexes
+
+    
+    def get_or_create_index(self, user_id: int, session):
+        existing_index = (
+            TwelveLabsIndex.query(session=session).filter(TwelveLabsIndex.user_id == user_id).one_or_none()
+        )
+        
+        if existing_index:
+            expiration_date = existing_index.create_ts + datetime.timedelta(days=90)
+            is_expired = datetime.datetime.now(tz=datetime.timezone.utc) >= expiration_date
+
+            if not is_expired:
+                return existing_index.index_id
+
+        index = self.create_index(index_name=f"user_{user_id}_index")
+        index_id = index.id
+
+        # Delete old index if exists
+        if existing_index:
+            session.delete(existing_index)
+            session.flush()
+
+        TwelveLabsIndex.create(session=session, user_id=user_id, index_id=index_id)
+        
+        return index_id
 
     
     def upload_asset(self, file: UploadFile):

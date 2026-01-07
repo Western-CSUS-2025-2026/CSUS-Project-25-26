@@ -1,52 +1,31 @@
 import json
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 
-from api.exceptions import FailToConnectTwelveLabs, IndexCreatingFail, FailToCreateTask
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
+from fastapi import Request
+from fastapi_sqlalchemy import db
+
+
+from api.exceptions import FailToCreateTask
 from api.schemas.base import StatusResponseModel
 from api.utils.security import Auth
 from api.utils.twelveLabs import VideoAnalysis
-from api.schemas.models import VideoAnalysisResponseModel, AnalysisResult
+from api.schemas.models import VideoAnalysisResponseModel, AnalysisResult, VideoUploadResponse
+from api.models.db import SessionState, Session, UserSession
 from pydantic import ValidationError
 
+
 video = APIRouter(prefix="/video", tags=["Video"])
-
-@video.post("/index/create", response_model=StatusResponseModel)
-async def create_index(index_name: str = None) -> StatusResponseModel:
-    analyzer = VideoAnalysis()
-    index = analyzer.create_index(index_name)
-    return StatusResponseModel(
-        status="success",
-        message=f"Index created: {index.id}"
-    )
+analyzer = VideoAnalysis()
 
 
+########
 @video.get("/list_indexes", response_model=StatusResponseModel)
 async def list_indexes():
     analyzer = VideoAnalysis()
     indexes = analyzer.list_indexes()
-    return StatusResponseModel(
+    return StatusResponseModel( 
         status="Success",
         message=f"Indexes listed: {str(indexes)}"
-    )
-
-
-@video.post("/upload_video", response_model=StatusResponseModel)
-async def upload_video(video: UploadFile = File(...)):
-    analyzer = VideoAnalysis()
-    asset = analyzer.upload_asset(file=video)
-    return StatusResponseModel(
-        status="Success",
-        message=f"Video uploaded: {asset.id}"
-    )
-
-
-@video.post("/index_video", response_model=StatusResponseModel)
-async def index_video(asset_id: str, index_id: str):
-    analyzer = VideoAnalysis()
-    indexed_asset = analyzer.index_asset(index_id=index_id, asset_id=asset_id)
-    return StatusResponseModel(
-        status="Success",
-        message=f"Video indexed: {indexed_asset.id}"
     )
 
 
@@ -58,11 +37,49 @@ async def list_indexed_assets(index_id: str):
         status="Success",
         message=f"Indexed assets listed: {str(indexed_assets)}"
     )
+##For development
+
+
+
+@video.post("/upload_video", status_code=202)
+async def upload_video(video: UploadFile = File(...), 
+    user_session: UserSession = Depends(Auth()),
+    question: str = Form(...)):
+    
+    index_id = analyzer.get_or_create_index(user_session.user_id, session=db.session)
+    
+    asset = analyzer.upload_asset(file=video)
+
+    indexed_asset = analyzer.index_asset(index_id=index_id, asset_id=asset.id)
+
+    session = Session.create(
+        session=db.session,
+        user_id=user_session.user_id,
+        indexed_asset_id=indexed_asset.id,
+        question=question,
+        state=SessionState.PENDING,
+        video_url=None #TODO
+    )
+    db.session.commit()
+    
+    return VideoUploadResponse(
+        asset_id=asset.id,
+        session_id=session.id
+    )
+
+
+@video.post("/webhook/twelvelabs")
+async def twelvelabs_webhook(request: Request):
+
+    data = await request.json()
+
+    indexed_asset_id = data.get("indexed_asset_id")
+
+
 
 
 @video.post("/analyze", response_model=VideoAnalysisResponseModel)
 async def analyze_video(indexed_asset_id: str = Form(...),question: str = Form(...)) -> VideoAnalysisResponseModel:
-    analyzer = VideoAnalysis()
 
     try:
         # Get raw analysis result from TwelveLabs
@@ -107,4 +124,3 @@ async def analyze_video(indexed_asset_id: str = Form(...),question: str = Form(.
             status_code=500,
             detail=f"Error processing video: {str(e)}"
         )
-

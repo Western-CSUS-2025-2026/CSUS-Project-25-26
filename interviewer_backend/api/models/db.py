@@ -33,6 +33,10 @@ class User(BaseDbModel):
     interview_sessions: Mapped[list["Session"]] = relationship(
         "Session", foreign_keys="Session.user_id", cascade='all, delete'
     )
+    twelve_labs_index: Mapped["TwelveLabsIndex"] = relationship(
+        "TwelveLabsIndex", foreign_keys="TwelveLabsIndex.user_id", back_populates="user", uselist=False, 
+        cascade="all, delete"
+    )
 
 
 class UserSession(BaseDbModel):
@@ -180,4 +184,22 @@ class Session(BaseDbModel):
         foreign_keys=[user_id],
         back_populates="interview_sessions",
         primaryjoin="Session.user_id==User.id",
+    )
+    indexed_asset_id: Mapped[str] = mapped_column(String, nullable=True)
+    question: Mapped[str] = mapped_column(Text, nullable=True)
+    analysis_data: Mapped[str] = mapped_column(Text, nullable=True)
+
+
+class TwelveLabsIndex(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
+    create_ts: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc), nullable=False
+    )
+    user: Mapped[User] = relationship(
+        "User",
+        foreign_keys=[user_id],
+        back_populates="twelve_labs_index",
+        primaryjoin="TwelveLabsIndex.user_id==User.id",
+        uselist=False,
     )
