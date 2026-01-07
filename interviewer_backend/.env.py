@@ -1,1 +1,0 @@
-DB_DSN=postgresql://postgres@127.0.0.1:5432/postgres

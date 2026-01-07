@@ -1,0 +1,2965 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.github/workflows/backend_checks.yml
+.github/workflows/backend_deploy.yml
+interviewer_backend/.env.py
+interviewer_backend/.gitignore
+interviewer_backend/alembic.ini
+interviewer_backend/api/__init__.py
+interviewer_backend/api/__main__.py
+interviewer_backend/api/exceptions.py
+interviewer_backend/api/models/__init__.py
+interviewer_backend/api/models/base.py
+interviewer_backend/api/models/db.py
+interviewer_backend/api/routes/__init__.py
+interviewer_backend/api/routes/base.py
+interviewer_backend/api/routes/exc_handlers.py
+interviewer_backend/api/routes/question.py
+interviewer_backend/api/routes/session.py
+interviewer_backend/api/routes/template.py
+interviewer_backend/api/routes/user.py
+interviewer_backend/api/schemas/__init__.py
+interviewer_backend/api/schemas/base.py
+interviewer_backend/api/schemas/models.py
+interviewer_backend/api/settings.py
+interviewer_backend/api/templates/EmailRegConfirm.html
+interviewer_backend/api/utils/enc.py
+interviewer_backend/api/utils/security.py
+interviewer_backend/api/utils/smtp.py
+interviewer_backend/api/utils/token.py
+interviewer_backend/api/utils/user_session.py
+interviewer_backend/Dockerfile
+interviewer_backend/flake8.conf
+interviewer_backend/Makefile
+interviewer_backend/migrations/env.py
+interviewer_backend/migrations/README
+interviewer_backend/migrations/script.py.mako
+interviewer_backend/migrations/versions/0b24a728385d_add_user_id_and_create_ts_to_session.py
+interviewer_backend/migrations/versions/461d2e04c93e_add_templates_questions_grades_sessions.py
+interviewer_backend/migrations/versions/bc726b00803a_init_auth.py
+interviewer_backend/pyproject.toml
+interviewer_backend/README.md
+interviewer_backend/requirements.dev.txt
+interviewer_backend/requirements.txt
+interviewer_frontend/.gitignore
+interviewer_frontend/app/favicon.ico
+interviewer_frontend/app/globals.css
+interviewer_frontend/app/layout.tsx
+interviewer_frontend/app/page.module.css
+interviewer_frontend/app/page.tsx
+interviewer_frontend/eslint.config.mjs
+interviewer_frontend/next.config.ts
+interviewer_frontend/package.json
+interviewer_frontend/public/file.svg
+interviewer_frontend/public/globe.svg
+interviewer_frontend/public/next.svg
+interviewer_frontend/public/vercel.svg
+interviewer_frontend/public/window.svg
+interviewer_frontend/README.md
+interviewer_frontend/tsconfig.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".github/workflows/backend_checks.yml">
+name: Backend lint check
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/**"
+
+
+jobs:
+  linting:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: interviewer_backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Install dev dependencies
+        run: |
+          pip install -r requirements.txt -r requirements.dev.txt
+      - name: Run isort
+        run: |
+          isort ./api
+          isort ./migrations
+      - name: Run black
+        run: |
+          black --check ./api
+          black --check ./migrations
+      - name: Comment if linting failed
+        if: failure()
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            :poop: Code linting failed, use `black` and `isort` to fix it.
+</file>
+
+<file path=".github/workflows/backend_deploy.yml">
+name: Beckend build, publish and deploy docker
+
+on:
+  push:
+    branches: ['main']
+
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: western-csus-2025-2026/csus-project-25-26_backend
+
+
+jobs:
+  build-and-push-image:
+    name: Build and push backend image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable=true
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./interviewer_backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ github.ref_name }}
+
+  deploy:
+    name: Deploy backend
+    needs: build-and-push-image
+    runs-on: [self-hosted, Linux]
+    environment:
+      name: production
+    env:
+      CONTAINER_NAME: csus_backend
+    permissions:
+      packages: read
+
+    steps:
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull latest backend image
+        run: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest 
+
+      - name: Run DB migrations
+        run: |
+          docker run \
+            --rm \
+            --network=web \
+            --env DB_DSN=${{ secrets.DB_DSN }} \
+            --name ${{ env.CONTAINER_NAME }}_migration \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest  \
+            alembic upgrade head
+
+      - name: Run backend container
+        run: |
+          docker stop ${{ env.CONTAINER_NAME }} || true
+          docker rm ${{ env.CONTAINER_NAME }} || true
+
+          docker run \
+            --detach \
+            --restart on-failure:3 \
+            --network=web \
+            --env DB_DSN='${{ secrets.DB_DSN }}' \
+            --env ROOT_PATH='' \
+            --name ${{ env.CONTAINER_NAME }} \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+</file>
+
+<file path="interviewer_backend/.env.py">
+DB_DSN=postgresql://postgres@127.0.0.1:5432/postgres
+</file>
+
+<file path="interviewer_backend/.gitignore">
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   install all needed dependencies.
+#Pipfile.lock
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+</file>
+
+<file path="interviewer_backend/alembic.ini">
+# A generic, single database configuration.
+
+[alembic]
+# path to migration scripts
+script_location = migrations
+
+# template used to generate migration files
+# file_template = %%(rev)s_%%(slug)s
+
+# sys.path path, will be prepended to sys.path if present.
+# defaults to the current working directory.
+prepend_sys_path = .
+
+# timezone to use when rendering the date within the migration file
+# as well as the filename.
+# If specified, requires the python-dateutil library that can be
+# installed by adding `alembic[tz]` to the pip requirements
+# string value is passed to dateutil.tz.gettz()
+# leave blank for localtime
+# timezone =
+
+# max length of characters to apply to the
+# "slug" field
+# truncate_slug_length = 40
+
+# set to 'true' to run the environment during
+# the 'revision' command, regardless of autogenerate
+# revision_environment = false
+
+# set to 'true' to allow .pyc and .pyo files without
+# a source .py file to be detected as revisions in the
+# versions/ directory
+# sourceless = false
+
+# version location specification; This defaults
+# to migrations/versions.  When using multiple version
+# directories, initial revisions must be specified with --version-path.
+# The path separator used here should be the separator specified by "version_path_separator" below.
+# version_locations = %(here)s/bar:%(here)s/bat:migrations/versions
+
+# version path separator; As mentioned above, this is the character used to split
+# version_locations. The default within new alembic.ini files is "os", which uses os.pathsep.
+# If this key is omitted entirely, it falls back to the legacy behavior of splitting on spaces and/or commas.
+# Valid values for version_path_separator are:
+#
+# version_path_separator = :
+# version_path_separator = ;
+# version_path_separator = space
+version_path_separator = os  # Use os.pathsep. Default configuration used for new projects.
+
+# the output encoding used when revision files
+# are written from script.py.mako
+# output_encoding = utf-8
+
+sqlalchemy.url = driver://user:pass@localhost/dbname
+
+
+[post_write_hooks]
+# post_write_hooks defines scripts or Python functions that are run
+# on newly generated revision scripts.  See the documentation for further
+# detail and examples
+
+# format using "black" - use the console_scripts runner, against the "black" entrypoint
+# hooks = black
+# black.type = console_scripts
+# black.entrypoint = black
+# black.options = -l 79 REVISION_SCRIPT_FILENAME
+
+# Logging configuration
+[loggers]
+keys = root,sqlalchemy,alembic
+
+[handlers]
+keys = console
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = WARN
+handlers = console
+qualname =
+
+[logger_sqlalchemy]
+level = WARN
+handlers =
+qualname = sqlalchemy.engine
+
+[logger_alembic]
+level = INFO
+handlers =
+qualname = alembic
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[formatter_generic]
+format = %(levelname)-5.5s [%(name)s] %(message)s
+datefmt = %H:%M:%S
+</file>
+
+<file path="interviewer_backend/api/__init__.py">
+import os
+
+
+__version__ = os.getenv('APP_VERSION', 'dev')
+</file>
+
+<file path="interviewer_backend/api/__main__.py">
+import uvicorn
+
+from api.routes.base import app
+
+
+if __name__ == '__main__':
+    uvicorn.run(app)
+</file>
+
+<file path="interviewer_backend/api/exceptions.py">
+import datetime
+from typing import Type
+
+
+class APIError(Exception):
+    msg: str
+
+    def __init__(self, msg: str) -> None:
+        self.msg = msg
+        super().__init__(msg)
+
+
+class ObjectNotFound(APIError):
+    def __init__(self, obj: type, obj_id_or_name: int | str):
+        super().__init__(
+            f"Object {obj.__name__} {obj_id_or_name=} not found",
+        )
+
+
+class AlreadyExists(APIError):
+    def __init__(self, obj: type, obj_id_or_name: int | str):
+        super().__init__(
+            f"Object {obj.__name__}, {obj_id_or_name=} already exists",
+        )
+
+
+class ForbiddenAction(APIError):
+    def __init__(self, type: Type):
+        super().__init__(f"Forbidden action with {type.__name__}")
+
+
+class TooManyEmailRequests(APIError):
+    delay_time: datetime.timedelta
+
+    def __init__(self, dtime: datetime.timedelta):
+        self.delay_time = dtime
+        super().__init__(
+            f'Too many email requests. Delay: {dtime}',
+        )
+
+
+class RegistrationIncomplete(APIError):
+    def __init__(self):
+        super().__init__(f"User registration wasn't complete")
+
+
+class AuthFailed(APIError):
+    def __init__(self, error_msg: str):
+        super().__init__(error_msg)
+</file>
+
+<file path="interviewer_backend/api/models/__init__.py">
+from .base import Base, BaseDbModel
+from .db import *
+
+
+__all__ = [
+    "Base",
+    "BaseDbModel",
+    "User",
+    "UserSession",
+    "UserMessageDelay",
+    "Template",
+    "Question",
+    "Feedback",
+    "Session",
+    "SessionState",
+    "Grade",
+]
+</file>
+
+<file path="interviewer_backend/api/models/base.py">
+from __future__ import annotations
+
+import asyncio
+import re
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
+
+import sqlalchemy
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import Query, Session, as_declarative, declared_attr
+
+from api.exceptions import APIError, ObjectNotFound
+
+
+@as_declarative()
+class Base:
+    """Base class for all database entities"""
+
+    @declared_attr
+    def __tablename__(cls) -> str:  # pylint: disable=no-self-argument
+        """Generate database table name automatically.
+        Convert CamelCase class name to snake_case db table name.
+        """
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", cls.__name__).lower()
+
+    def __repr__(self):
+        attrs = []
+        for c in self.__table__.columns:
+            attrs.append(f"{c.name}={getattr(self, c.name)}")
+        return "{}({})".format(c.__class__.__name__, ', '.join(attrs))
+
+
+class BaseDbModel(Base):
+    __abstract__ = True
+
+    @classmethod
+    def create(cls, *, session: Session, **kwargs) -> BaseDbModel:
+        obj = cls(**kwargs)
+        session.add(obj)
+        session.flush()
+        return obj
+
+    @classmethod
+    def query(cls, *, session: Session) -> Query:
+        objs = session.query(cls)
+        return objs
+
+    @classmethod
+    def get(cls, id: int | str, *, session: Session) -> BaseDbModel:
+        objs = session.query(cls)
+        try:
+            return objs.filter(cls.id == id).one()
+        except NoResultFound:
+            raise ObjectNotFound(cls, id)
+
+    @classmethod
+    def update(cls, id: int | str, *, session: Session, **kwargs) -> BaseDbModel:
+        obj = cls.get(id, session=session)
+        for k, v in kwargs.items():
+            setattr(obj, k, v)
+        session.flush()
+        return obj
+
+    @classmethod
+    def delete(cls, id: int | str, *, session: Session) -> None:
+        obj = cls.get(id, session=session)
+        session.delete(obj)
+        session.flush()
+
+    @classmethod
+    @asynccontextmanager
+    async def lock(cls, session: Session) -> AsyncIterator[Session]:
+        """
+        First, we try to capture the table lock.
+
+        Since we are using synchronous alchemy, we will create a timeout and will not wait for it anymore.
+
+        If the lock is held by another coroutine, then eventually we will exit the timeout and block the coroutine with asynchronous sleep.
+
+        Thus, we will let the coroutine holding the lock finish its work.
+        """
+        for _ in range(3):
+            nested = session.begin_nested()
+            session.execute(sqlalchemy.text("SET LOCAL lock_timeout = '0.2s';"))
+            try:
+                session.execute(sqlalchemy.text(f'LOCK TABLE "{cls.__tablename__}" IN ACCESS EXCLUSIVE MODE;'))
+            except sqlalchemy.exc.OperationalError:
+                nested.rollback()
+                await asyncio.sleep(1.5)
+            else:
+                break
+        else:
+            raise APIError("Internal Server Error", "Произошла ошибка, попробуйте позже")
+        try:
+            yield session
+        except Exception:
+            nested.rollback()
+            session.rollback()
+            if session and session.is_active:
+                session.close()
+            raise
+        else:
+            nested.commit()
+            session.commit()
+            if session and session.is_active:
+                session.close()
+</file>
+
+<file path="interviewer_backend/api/models/db.py">
+from __future__ import annotations
+
+import datetime
+import enum
+import logging
+
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from api.utils.user_session import calc_session_expire_date
+
+from .base import BaseDbModel
+
+logger = logging.getLogger(__name__)
+
+
+class User(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    first_name: Mapped[str] = mapped_column(String, nullable=True)
+    last_name: Mapped[str] = mapped_column(String, nullable=True)
+    password_hash: Mapped[str] = mapped_column(String, nullable=True)
+    salt: Mapped[str] = mapped_column(String, nullable=True)
+    verification_token: Mapped[int] = mapped_column(Integer, nullable=False)
+    create_ts: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.datetime.now(tz=datetime.timezone.utc),
+        nullable=False,
+    )
+    sessions: Mapped[list[UserSession]] = relationship(
+        "UserSession",
+        foreign_keys="UserSession.user_id",
+        back_populates="user",
+        cascade="all, delete",
+    )
+    interview_sessions: Mapped[list["Session"]] = relationship(
+        "Session", foreign_keys="Session.user_id", cascade="all, delete"
+    )
+
+
+class UserSession(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"))
+    expires: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=calc_session_expire_date
+    )
+    token: Mapped[str] = mapped_column(String, unique=True)
+    last_activity: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc)
+    )
+    create_ts: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc)
+    )
+    user: Mapped[User] = relationship(
+        "User",
+        foreign_keys=[user_id],
+        back_populates="sessions",
+        primaryjoin="UserSession.user_id==User.id",
+    )
+
+    @hybrid_property
+    def expired(self) -> bool:
+        return self.expires <= datetime.datetime.now(tz=datetime.timezone.utc)
+
+
+class UserMessageDelay(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    delay_time: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc)
+    )
+    user_email: Mapped[str] = mapped_column(String, unique=False, nullable=False)
+    user_ip: Mapped[str] = mapped_column(String, unique=False, nullable=False)
+
+
+class Template(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    job_title: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    questions: Mapped[list["Question"]] = relationship(
+        "Question",
+        foreign_keys="Question.template_id",
+        back_populates="template",
+        cascade="all, delete",
+    )
+
+
+class Question(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    template_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("template.id"), nullable=False
+    )
+    template: Mapped[Template] = relationship(
+        "Template",
+        foreign_keys=[template_id],
+        back_populates="questions",
+        primaryjoin="Question.template_id==Template.id",
+    )
+
+
+class Grade(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    body_language_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    speech_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    material_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    brevity_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    overall_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    feedback_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("feedback.id"), nullable=False
+    )
+    session_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("session.id"), nullable=False
+    )
+    feedback: Mapped["Feedback"] = relationship(
+        "Feedback",
+        foreign_keys=[feedback_id],
+        back_populates="grade",
+        primaryjoin="Grade.feedback_id==Feedback.id",
+    )
+    session: Mapped["Session"] = relationship(
+        "Session",
+        foreign_keys=[session_id],
+        back_populates="grades",
+        primaryjoin="Grade.session_id==Session.id",
+    )
+
+
+class Feedback(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    point: Mapped[str] = mapped_column(Text, nullable=False)
+    ways_to_improve: Mapped[str] = mapped_column(Text, nullable=True)
+    grade: Mapped["Grade"] = relationship(
+        "Grade",
+        foreign_keys="Grade.feedback_id",
+        back_populates="feedback",
+        uselist=False,
+    )
+
+
+class SessionState(enum.Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    GRADED = "graded"
+
+
+class Session(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
+    video_url: Mapped[str] = mapped_column(String, nullable=True)
+    transcript: Mapped[str] = mapped_column(Text, nullable=True)
+    state: Mapped[SessionState] = mapped_column(
+        Enum(SessionState), nullable=False, default=SessionState.PENDING
+    )
+    overall_grade: Mapped[int] = mapped_column(Integer, nullable=True)
+    create_ts: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.datetime.now(tz=datetime.timezone.utc),
+        nullable=False,
+    )
+    grades: Mapped[list["Grade"]] = relationship(
+        "Grade",
+        foreign_keys="Grade.session_id",
+        back_populates="session",
+        cascade="all, delete",
+    )
+    user: Mapped[User] = relationship(
+        "User",
+        foreign_keys=[user_id],
+        back_populates="interview_sessions",
+        primaryjoin="Session.user_id==User.id",
+    )
+
+
+class Video(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    video_url: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    question_timestamps: Mapped[list[int]] = mapped_column(
+        JSON, nullable=False, default=list
+    )
+</file>
+
+<file path="interviewer_backend/api/routes/__init__.py">
+from . import exc_handlers
+from .base import app
+
+
+__all__ = ["app", "exc_handlers"]
+</file>
+
+<file path="interviewer_backend/api/routes/base.py">
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi_sqlalchemy import DBSessionMiddleware
+
+from api import __version__
+from api.settings import Settings, get_settings
+
+from .session import session as session_router
+from .template import template as templates_router
+from .question import question as questions_router
+from .user import user as user_router
+
+
+settings: Settings = get_settings()
+app = FastAPI(
+    title='WesternPrep',
+    version=__version__,
+    root_path=settings.ROOT_PATH if __version__ != 'dev' else '/',
+    docs_url='/' if __version__ != 'dev' else '/docs',
+    redoc_url=None,
+)
+
+app.add_middleware(
+    DBSessionMiddleware,
+    db_url=str(settings.DB_DSN),
+    engine_args={"pool_pre_ping": True},
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ALLOW_ORIGINS,
+    allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
+    allow_methods=settings.CORS_ALLOW_METHODS,
+    allow_headers=settings.CORS_ALLOW_HEADERS,
+)
+
+app.include_router(user_router)
+app.include_router(session_router)
+app.include_router(templates_router)
+app.include_router(questions_router)
+</file>
+
+<file path="interviewer_backend/api/routes/exc_handlers.py">
+import starlette.requests
+from starlette.responses import JSONResponse
+
+from api.exceptions import (
+    AlreadyExists,
+    AuthFailed,
+    ForbiddenAction,
+    ObjectNotFound,
+    RegistrationIncomplete,
+    TooManyEmailRequests,
+)
+from api.schemas.base import StatusResponseModel
+
+from .base import app
+
+
+@app.exception_handler(ObjectNotFound)
+async def not_found_handler(req: starlette.requests.Request, exc: ObjectNotFound):
+    return JSONResponse(content=StatusResponseModel(status="Error", message=exc.msg).model_dump(), status_code=404)
+
+
+@app.exception_handler(AlreadyExists)
+async def already_exists_handler(req: starlette.requests.Request, exc: AlreadyExists):
+    return JSONResponse(content=StatusResponseModel(status="Error", message=exc.msg).model_dump(), status_code=409)
+
+
+@app.exception_handler(ForbiddenAction)
+async def forbidden_action_handler(req: starlette.requests.Request, exc: ForbiddenAction):
+    return JSONResponse(content=StatusResponseModel(status="Error", message=exc.msg).model_dump(), status_code=403)
+
+
+@app.exception_handler(TooManyEmailRequests)
+async def too_many_requests_handler(req: starlette.requests.Request, exc: TooManyEmailRequests):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=429,
+    )
+
+
+@app.exception_handler(AuthFailed)
+async def auth_failed_handler(req: starlette.requests.Request, exc: AuthFailed):
+    return JSONResponse(content=StatusResponseModel(status="Error", message=exc.msg).model_dump(), status_code=401)
+
+
+@app.exception_handler(RegistrationIncomplete)
+async def registration_incomplete_handler(req: starlette.requests.Request, exc: RegistrationIncomplete):
+    return JSONResponse(
+        StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=403,
+    )
+
+
+@app.exception_handler(Exception)
+async def http_error_handler(req: starlette.requests.Request, exc: Exception):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message="Internal server error").model_dump(),
+        status_code=500,
+    )
+</file>
+
+<file path="interviewer_backend/api/routes/question.py">
+from fastapi import APIRouter, Depends
+from fastapi_sqlalchemy import db
+
+from api.exceptions import ObjectNotFound
+from api.models.db import Question, Session, SessionState, Template, UserSession
+from api.schemas.models import QuestionCreate, QuestionGet, SessionObject
+from api.utils.security import Auth
+
+question = APIRouter(prefix="/questions", tags=["Questions"])
+
+
+@question.post("", response_model=QuestionGet)
+def create_question(
+    payload: QuestionCreate,
+    _: UserSession = Depends(Auth),
+):
+    template = Template.query(session=db.session).get(payload.template_id)
+    if not template:
+        raise ObjectNotFound(Template, payload.template_id)
+
+    question = Question(**payload.model_dump())
+    db.session.add(question)
+    db.session.commit()
+    db.session.refresh(question)
+    return question
+
+
+@question.get("/template/{template_id}", response_model=list[QuestionGet])
+def get_questions_for_template(
+    template_id: int,
+    _: UserSession = Depends(Auth),
+):
+    return (
+        Question.query(session=db.session)
+        .filter(Question.template_id == template_id)
+        .all()
+    )
+
+
+@question.delete("/{question_id}")
+def delete_question(question_id: int, _: UserSession = Depends(Auth)):
+    question = Question.query(session=db.session).get(question_id)
+    if not question:
+        raise ObjectNotFound(Question, question_id)
+
+    db.session.delete(question)
+    db.session.commit()
+    return {"status": "deleted"}
+
+
+@question.post("", response_model=SessionObject)
+def create_session(
+    user_session: UserSession = Depends(Auth()),
+):
+    session_obj = Session(user_id=user_session.user_id)
+    db.session.add(session_obj)
+    db.session.commit()
+    db.session.refresh(session_obj)
+    return session_obj
+
+
+@question.patch("/{session_id}/state")
+def update_session_state(
+    session_id: int,
+    new_state: SessionState,
+    user_session: UserSession = Depends(Auth()),
+):
+    session_obj = (
+        Session.query(session=db.session)
+        .filter(Session.id == session_id)
+        .filter(Session.user_id == user_session.user_id)
+        .one_or_none()
+    )
+
+    if not session_obj:
+        raise ObjectNotFound(Session, session_id)
+
+    session_obj.state = new_state
+    db.session.commit()
+    return {"status": "updated"}
+</file>
+
+<file path="interviewer_backend/api/routes/session.py">
+import logging
+
+from fastapi import APIRouter, Depends, Query
+from fastapi_sqlalchemy import db
+
+from api.exceptions import ObjectNotFound
+from api.models.db import Session, UserSession
+from api.schemas.models import (
+    FeedbackGet,
+    GradeGet,
+    SessionObject,
+    SessionsList,
+    SimpleSession,
+)
+from api.utils.security import Auth
+
+logger = logging.getLogger(__name__)
+session = APIRouter(prefix="/sessions", tags=["Sessions"])
+
+
+@session.get("", response_model=SessionsList)
+async def get_user_sessions(
+    user_session: UserSession = Depends(Auth()),
+    length: int = Query(
+        default=10, ge=1, le=100, description="Number of sessions to return"
+    ),
+    skip: int = Query(default=0, ge=0, description="Number of sessions to skip"),
+) -> SessionsList:
+    """
+    Get all of a user's past sessions.
+
+    Returns an array of all the user's sessions with the specified length.
+    """
+    sessions_query = (
+        Session.query(session=db.session)
+        .filter(Session.user_id == user_session.user_id)
+        .order_by(Session.create_ts.desc())
+        .offset(skip)
+        .limit(length)
+    )
+    sessions = sessions_query.all()
+
+    simple_sessions = [
+        SimpleSession(
+            id=session.id,
+            state=session.state.value,
+            overall_grade=session.overall_grade,
+            create_ts=session.create_ts,
+        )
+        for session in sessions
+    ]
+
+    return SessionsList(sessions=simple_sessions)
+
+
+@session.get("/{session_id}", response_model=SessionObject)
+async def get_session(
+    session_id: int,
+    user_session: UserSession = Depends(Auth()),
+) -> SessionObject:
+    """
+    Get all the data about a specific session.
+
+    Returns a Session Object with all details including grades and feedback.
+    """
+    session_obj: Session | None = (
+        Session.query(session=db.session)
+        .filter(Session.id == session_id)
+        .filter(Session.user_id == user_session.user_id)
+        .one_or_none()
+    )
+
+    if not session_obj:
+        raise ObjectNotFound(Session, session_id)
+
+    # Build grades with feedback
+    grades = []
+    for grade in session_obj.grades:
+        feedback = grade.feed_back
+        grades.append(
+            GradeGet(
+                id=grade.id,
+                body_language_score=grade.body_language_score,
+                speech_score=grade.speech_score,
+                material_score=grade.material_score,
+                brevity_score=grade.brevity_score,
+                overall_score=grade.overall_score,
+                feed_back=FeedbackGet(
+                    id=feedback.id,
+                    point=feedback.point,
+                    ways_to_improve=feedback.ways_to_improve,
+                ),
+            )
+        )
+
+    return SessionObject(
+        id=session_obj.id,
+        user_id=session_obj.user_id,
+        video_url=session_obj.video_url,
+        transcript=session_obj.transcript,
+        state=session_obj.state.value,
+        overall_grade=session_obj.overall_grade,
+        grades=grades,
+        create_ts=session_obj.create_ts,
+    )
+</file>
+
+<file path="interviewer_backend/api/routes/template.py">
+from fastapi import APIRouter, Depends
+from fastapi_sqlalchemy import db
+
+from api.exceptions import ObjectNotFound
+from api.models.db import Template, UserSession
+from api.schemas.models import (
+    TemplateCreate,
+    TemplateGet,
+    TemplateUpdate,
+)
+from api.utils.security import Auth
+
+template = APIRouter(prefix="/templates", tags=["Templates"])
+
+
+@template.post("", response_model=TemplateGet)
+def create_template(
+    payload: TemplateCreate,
+    _: UserSession = Depends(Auth),
+):
+    template = Template(**payload.model_dump())
+    db.session.add(template)
+    db.session.commit()
+    db.session.refresh(template)
+    return template
+
+
+@template.get("", response_model=list[TemplateGet])
+def list_templates(_: UserSession = Depends(Auth)):
+    return Template.query(session=db.session).all()
+
+
+@template.get("/{template_id}", response_model=TemplateGet)
+def get_template(template_id: int, _: UserSession = Depends(Auth)):
+    template = Template.query(session=db.session).get(template_id)
+    if not template:
+        raise ObjectNotFound(Template, template_id)
+    return template
+
+
+@template.put("/{template_id}", response_model=TemplateGet)
+def update_template(
+    template_id: int,
+    payload: TemplateUpdate,
+    _: UserSession = Depends(Auth),
+):
+    template = Template.query(session=db.session).get(template_id)
+    if not template:
+        raise ObjectNotFound(Template, template_id)
+
+    for key, value in payload.model_dump().items():
+        setattr(template, key, value)
+
+    db.session.commit()
+    return template
+
+
+@template.delete("/{template_id}")
+def delete_template(template_id: int, _: UserSession = Depends(Auth)):
+    template = Template.query(session=db.session).get(template_id)
+    if not template:
+        raise ObjectNotFound(Template, template_id)
+
+    db.session.delete(template)
+    db.session.commit()
+    return {"status": "deleted"}
+</file>
+
+<file path="interviewer_backend/api/routes/user.py">
+import logging
+from datetime import datetime, timedelta, timezone
+
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
+from fastapi_sqlalchemy import db
+
+from api.exceptions import AlreadyExists, AuthFailed, ObjectNotFound, RegistrationIncomplete
+from api.models.db import User, UserSession
+from api.schemas.base import StatusResponseModel
+from api.schemas.models import (
+    MyUserGet,
+    RegistrationInitiate,
+    RegistrationVerify,
+    RegistrationVerifyCode,
+    UserLogin,
+    UserSessionGet,
+    UserSessionsGet,
+)
+from api.settings import get_settings
+from api.utils.enc import hash_password, validate_password
+from api.utils.security import Auth
+from api.utils.smtp import SendEmailMessage
+from api.utils.token import random_int, random_string
+
+
+settings = get_settings()
+
+logger = logging.getLogger(__name__)
+user = APIRouter(prefix="/user", tags=["User"])
+
+
+@user.post("/registration/initiate", response_model=StatusResponseModel)
+async def registration_initiate(
+    request: Request, user_data: RegistrationInitiate, background_tasks: BackgroundTasks
+) -> StatusResponseModel:
+    verification_token: int = random_int()
+    async with User.lock(db.session) as txn:
+        user: User | None = User.query(session=txn).filter(User.email == user_data.email).one_or_none()
+        if user:
+            if user.password_hash:
+                raise AlreadyExists(User, user_data.email)
+            else:
+                if user.create_ts > datetime.now(tz=timezone.utc) - timedelta(minutes=settings.VERIFICATION_TOKEN_TTL):
+                    raise AlreadyExists(User, user_data.email)
+                user.verification_token = verification_token
+                user.create_ts = datetime.now(tz=timezone.utc)
+        else:
+            user = User.create(session=txn, email=user_data.email, verification_token=verification_token)
+        if settings.EMAIL:
+            SendEmailMessage.send(
+                user_data.email,
+                request.client.host,
+                "EmailRegConfirm.html",
+                "Email Verification | WesternPrep",
+                txn,
+                background_tasks,
+                token=verification_token,
+                token_TTL=settings.VERIFICATION_TOKEN_TTL,
+            )
+            return StatusResponseModel(status="Success", message="Email verification token sent")
+        else:
+            return StatusResponseModel(status="Success", message=f"Email verification token: {verification_token}")
+
+
+@user.get("/registration/code-verify", response_model=StatusResponseModel)
+async def registration_verify_code(verification_token: int, email: str) -> StatusResponseModel:
+    RegistrationVerifyCode(email=email, verification_token=verification_token)
+    user: User | None = User.query(session=db.session).filter(User.email == email).one_or_none()
+    if not user:
+        raise AuthFailed("Incorrect or expired verification token")
+    if (
+        user.create_ts < datetime.now(tz=timezone.utc) - timedelta(minutes=settings.VERIFICATION_TOKEN_TTL)
+        or user.verification_token != verification_token
+    ):
+        raise AuthFailed("Incorrect or expired verification token")
+
+    return StatusResponseModel(status="Success", message="Email verified")
+
+
+@user.put("/registration/verify", response_model=StatusResponseModel)
+async def registration_verify(user_data: RegistrationVerify) -> StatusResponseModel:
+    user: User = User.query(session=db.session).filter(User.email == user_data.email).one_or_none()
+    if not user:
+        raise ObjectNotFound(User, user_data.email)
+    if user.password_hash:
+        raise AlreadyExists(User, user.id)
+    if (
+        user.create_ts < datetime.now(tz=timezone.utc) - timedelta(minutes=settings.VERIFICATION_TOKEN_TTL)
+        or user.verification_token != user_data.verification_token
+    ):
+        raise AuthFailed("Incorrect or expired verification token")
+    salt = random_string()
+
+    user.password_hash = hash_password(user_data.password, salt)
+    user.salt = salt
+    user.first_name = user_data.first_name
+    user.last_name = user_data.last_name
+
+    db.session.commit()
+    return StatusResponseModel(status="Success", message="Registration complete")
+
+
+@user.post("/login", response_model=UserSessionGet)
+async def login(user_data: UserLogin) -> UserSessionGet:
+    user: User | None = User.query(session=db.session).filter(User.email == user_data.email).one_or_none()
+    if user is None:
+        raise AuthFailed("Incorrect login or password")
+    if not user.password_hash:
+        raise RegistrationIncomplete()
+    if not validate_password(user_data.password, user.password_hash, user.salt):
+        raise AuthFailed("Incorrect login or password")
+    user_session = UserSession.create(session=db.session, user_id=user.id, token=random_string(settings.TOKEN_LENGTH))
+    db.session.commit()
+    return UserSessionGet(
+        user_id=user_session.user_id,
+        expires=user_session.expires,
+        token=user_session.token,
+    )
+
+
+@user.get("", response_model=MyUserGet)
+async def me(user_session: UserSession = Depends(Auth())) -> MyUserGet:
+    return MyUserGet(
+        id=user_session.user_id,
+        email=user_session.user.email,
+        first_name=user_session.user.first_name,
+        last_name=user_session.user.last_name,
+    )
+
+
+@user.get("/sessions", response_model=UserSessionsGet)
+async def get_sessions(user_session: UserSession = Depends(Auth())) -> UserSessionsGet:
+    response = UserSessionsGet(sessions=[])
+    for session in user_session.user.sessions:
+        response.sessions.append(
+            UserSessionGet(
+                user_id=session.user_id,
+                expires=session.expires,
+                token=session.token,
+            )
+        )
+    return UserSessionsGet.model_validate(response)
+
+
+@user.delete("", response_model=StatusResponseModel)
+async def delete_user(user_session: UserSession = Depends(Auth())) -> StatusResponseModel:
+    User.delete(session=db.session, id=user_session.user_id)
+    db.session.commit()
+    return StatusResponseModel(status="Success", message="User deleted")
+</file>
+
+<file path="interviewer_backend/api/schemas/__init__.py">
+
+</file>
+
+<file path="interviewer_backend/api/schemas/base.py">
+from pydantic import BaseModel, ConfigDict
+
+
+class Base(BaseModel):
+    def __repr__(self) -> str:
+        attrs = []
+        for k, v in self.__class__.model_json_schema().items():
+            attrs.append(f"{k}={v}")
+        return "{}({})".format(self.__class__.__name__, ', '.join(attrs))
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StatusResponseModel(Base):
+    status: str
+    message: str
+</file>
+
+<file path="interviewer_backend/api/schemas/models.py">
+import datetime
+from typing import Annotated
+
+from annotated_types import MaxLen
+from pydantic import field_validator
+
+from api.schemas.base import Base
+from api.settings import get_settings
+
+settings = get_settings()
+
+
+class RegistrationInitiate(Base):
+    email: Annotated[str, MaxLen(settings.MAX_NAME_LENGTH)]
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str):
+        restricted: set[str] = {
+            '"',
+            "#",
+            "&",
+            "'",
+            "(",
+            ")",
+            "*",
+            ",",
+            "/",
+            ";",
+            "<",
+            ">",
+            "?",
+            "[",
+            "\\",
+            "]",
+            "^",
+            "`",
+            "{",
+            "|",
+            "}",
+            "~",
+            "\n",
+            "\r",
+        }
+        if "@" not in value:
+            raise ValueError()
+        if set(value) & restricted:
+            raise ValueError()
+        if not value.endswith(tuple(settings.ALLOWED_EMAIL_DOMAINS)):
+            raise ValueError()
+        return value
+
+
+class RegistrationVerify(RegistrationInitiate):
+    first_name: Annotated[str, MaxLen(settings.MAX_NAME_LENGTH)]
+    last_name: Annotated[str, MaxLen(settings.MAX_NAME_LENGTH)]
+    verification_token: int
+    password: str
+
+
+class RegistrationVerifyCode(RegistrationInitiate):
+    verification_token: int
+
+
+class UserLogin(Base):
+    email: Annotated[str, MaxLen(settings.MAX_NAME_LENGTH)]
+    password: str
+
+
+class UserSessionGet(Base):
+    user_id: int
+    expires: datetime.datetime
+    token: str
+
+
+class UserSessionsGet(Base):
+    sessions: list[UserSessionGet]
+
+
+class MyUserGet(Base):
+    id: int
+    email: str
+    first_name: str
+    last_name: str
+
+
+class UserGet(Base):
+    id: int
+    username: str
+
+
+class FeedbackGet(Base):
+    id: int
+    point: str
+    ways_to_improve: str | None
+
+
+class GradeGet(Base):
+    id: int
+    body_language_score: int
+    speech_score: int
+    material_score: int
+    brevity_score: int
+    overall_score: int
+    feed_back: FeedbackGet
+
+
+class SimpleSession(Base):
+    id: int
+    state: str
+    overall_grade: int | None
+    create_ts: datetime.datetime
+
+
+class SessionObject(Base):
+    id: int
+    user_id: int
+    video_url: str | None
+    transcript: str | None
+    state: str
+    overall_grade: int | None
+    grades: list[GradeGet]
+    create_ts: datetime.datetime
+
+
+class SessionsList(Base):
+    sessions: list[SimpleSession]
+
+
+class SessionCreate(Base):
+    pass
+
+
+class SessionStateUpdate(Base):
+    state: str
+
+
+class TemplateBase(Base):
+    job_title: str
+    description: str | None = None
+
+
+class TemplateCreate(TemplateBase):
+    pass
+
+
+class TemplateUpdate(Base):
+    job_title: str | None = None
+    description: str | None = None
+
+
+class TemplateGet(TemplateBase):
+    id: int
+
+
+class QuestionBase(Base):
+    question: str
+
+
+class QuestionCreate(QuestionBase):
+    template_id: int
+
+
+class QuestionUpdate(Base):
+    question: str | None = None
+
+
+class QuestionGet(QuestionBase):
+    id: int
+    template_id: int
+
+
+class TemplateWithQuestionsGet(TemplateGet):
+    questions: list[QuestionGet]
+</file>
+
+<file path="interviewer_backend/api/settings.py">
+from functools import lru_cache
+from typing import Annotated
+
+from annotated_types import Gt
+from pydantic import ConfigDict, PostgresDsn
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    """Application settings"""
+
+    DB_DSN: PostgresDsn = 'postgresql://postgres@localhost:5432/postgres'
+    ROOT_PATH: str = '/api'
+    CORS_ALLOW_ORIGINS: list[str] = ['*']
+    CORS_ALLOW_CREDENTIALS: bool = True
+    CORS_ALLOW_METHODS: list[str] = ['*']
+    CORS_ALLOW_HEADERS: list[str] = ['*']
+    SESSION_TIME_IN_DAYS: int = 7
+    MAX_NAME_LENGTH: int = 32
+
+    EMAIL: str | None = None
+    APPLICATION_HOST: str = "localhost"
+    EMAIL_PASS: str | None = None
+    SMTP_HOST: str = 'smtp.gmail.com'
+    SMTP_PORT: int = 465
+    TOKEN_LENGTH: Annotated[int, Gt(8)] = 64
+    ALLOWED_EMAIL_DOMAINS: list[str] = ["@uwo.ca"]
+    VERIFICATION_TOKEN_TTL: int = 10
+
+    MAX_RETRIES: int = 10
+    STOP_MAX_DELAY: int = 10000
+    WAIT_MIN: int = 1000
+    WAIT_MAX: int = 2000
+
+    IP_DELAY_TIME_IN_MINUTES: float = 1
+    IP_DELAY_COUNT: int = 3
+    EMAIL_DELAY_TIME_IN_MINUTES: float = 1
+    EMAIL_DELAY_COUNT: int = 3
+
+    model_config = ConfigDict(case_sensitive=True, env_file=".env", extra="ignore")
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+</file>
+
+<file path="interviewer_backend/api/templates/EmailRegConfirm.html">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WesternPrep Email Verification</title>
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    background: #121214;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #f5f5f7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :root {
+    --bg: #121214;
+    --card: #18181a;
+    --accent: #CFA8FF;
+    --accent-dark: #7F4EC9;
+    --text-primary: #f5f5f7;
+    --text-secondary: #9c9a98;
+  }
+
+  .container {
+    max-width: 520px;
+    margin: 40px auto;
+    padding: 28px 32px;
+    background: var(--card);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, var(--accent-dark), var(--accent));
+    color: #fff;
+    font-weight: 800;
+    font-size: 20px;
+    box-shadow: inset 0 -6px 18px rgba(0,0,0,0.25);
+    margin-bottom: 12px;
+  }
+
+  .title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  .content {
+    text-align: center;
+    margin-top: 32px;
+  }
+
+  .content p {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
+  .code-box {
+    margin: 26px auto 18px;
+    background: linear-gradient(180deg, rgba(127,78,201,0.08), rgba(127,78,201,0.03));
+    border: 1px solid rgba(127,78,201,0.12);
+    padding: 20px 0;
+    border-radius: 8px;
+    text-align: center;
+    width: 80%;
+  }
+
+  .code-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .code {
+    font-family: "Courier New", monospace;
+    font-size: 34px;
+    letter-spacing: 6px;
+    color: var(--accent-dark);
+    font-weight: 700;
+  }
+
+  .footer {
+    margin-top: 28px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding-top: 16px;
+  }
+
+  @media (max-width: 480px) {
+    .code { font-size: 28px; letter-spacing: 5px; }
+    .title { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">WP</div>
+      <h1 class="title">WesternPrep</h1>
+      <div class="subtitle">CSUS - Email Verification</div>
+    </div>
+
+    <div class="content">
+      <p>Use the 6-digit code below to verify your email address for WesternPrep.</p>
+
+      <div class="code-box">
+        <div class="code-label">Your verification code</div>
+        <div class="code">{{token}}</div>
+      </div>
+
+      <p>This code will expire in <strong>{{token_TTL}} minutes</strong>.</p>
+    </div>
+
+    <div class="footer">
+      If you didn’t request this, you can safely ignore this email.<br/>
+      © 2025 WesternPrep - CSUS
+    </div>
+  </div>
+</body>
+</html>
+</file>
+
+<file path="interviewer_backend/api/utils/enc.py">
+import hashlib
+
+
+def hash_password(password: str, salt: str) -> str:
+    enc = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000)
+    return enc.hex()
+
+
+def validate_password(password: str, hashed_password: str, salt: str) -> bool:
+    return hash_password(password, salt) == hashed_password
+</file>
+
+<file path="interviewer_backend/api/utils/security.py">
+import datetime
+
+from fastapi.openapi.models import APIKey, APIKeyIn
+from fastapi.security.base import SecurityBase
+from fastapi_sqlalchemy import db
+from starlette.requests import Request
+
+from api.exceptions import AuthFailed
+from api.models.db import UserSession
+from api.settings import get_settings
+from api.utils.user_session import calc_session_expire_date
+
+
+settings = get_settings()
+
+
+class Auth(SecurityBase):
+    model = APIKey.model_construct(in_=APIKeyIn.header, name="Authorization")
+    scheme_name = "token"
+    allow_none: bool
+
+    def __init__(self, allow_none=False) -> None:
+        super().__init__()
+        self.allow_none = allow_none
+
+    def _except(self):
+        raise AuthFailed("Not authorized")
+
+    async def __call__(
+        self,
+        request: Request,
+    ) -> UserSession | None:
+        token = request.headers.get("Authorization")
+        if not token and self.allow_none:
+            return None
+        if not token:
+            self._except()
+        user_session: UserSession = (
+            UserSession.query(session=db.session).filter(UserSession.token == token).one_or_none()
+        )
+        if not user_session:
+            self._except()
+        user_session.last_activity = datetime.datetime.now(tz=datetime.timezone.utc)
+        if user_session.expired:
+            self._except()
+        user_session.expires = calc_session_expire_date()
+        db.session.commit()
+        return user_session
+</file>
+
+<file path="interviewer_backend/api/utils/smtp.py">
+import logging
+import smtplib
+from datetime import datetime, timedelta, timezone
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+from fastapi.background import BackgroundTasks
+from retrying import retry
+from sqlalchemy.orm import Session as DbSession
+
+from api.exceptions import TooManyEmailRequests
+from api.models.db import UserMessageDelay
+from api.settings import Settings, get_settings
+
+
+logger = logging.getLogger(__name__)
+
+
+class EmailDelay:
+    settings: Settings = get_settings()
+
+    @classmethod
+    def create_user_delay(cls, ip: str, email: str, dbsession: DbSession):
+        '''Create database entry'''
+        cls.check_ip_delay(ip, dbsession)
+        cls.check_email_delay(email, dbsession)
+        user_delay = UserMessageDelay(user_ip=ip, user_email=email, delay_time=datetime.now(tz=timezone.utc))
+        dbsession.add(user_delay)
+        dbsession.flush()
+
+    @classmethod
+    def delete_user_delay(cls, ip: str, email: str, dbsession: DbSession):
+        """Delete database entries without delay"""
+        time_filter = datetime.now(tz=timezone.utc) - cls.settings.EMAIL_DELAY_TIME_IN_MINUTES * timedelta(minutes=1)
+        if ip:
+            dbsession.query(UserMessageDelay).filter(
+                UserMessageDelay.user_ip == ip, UserMessageDelay.delay_time < time_filter
+            ).delete()
+        if email:
+            dbsession.query(UserMessageDelay).filter(
+                UserMessageDelay.user_email == email, UserMessageDelay.delay_time < time_filter
+            ).delete()
+        dbsession.flush()
+
+    @classmethod
+    def check_ip_delay(cls, ip: str, dbsession: DbSession):
+        '''Check count of requests per unit of time by ip'''
+        cls.delete_user_delay(email=None, ip=ip, dbsession=dbsession)
+        time_filter = datetime.now(tz=timezone.utc) - cls.settings.IP_DELAY_TIME_IN_MINUTES * timedelta(minutes=1)
+        ip_list = (
+            dbsession.query(UserMessageDelay)
+            .filter(UserMessageDelay.user_ip == ip, UserMessageDelay.delay_time > time_filter)
+            .all()
+        )
+        if len(ip_list) >= cls.settings.IP_DELAY_COUNT:
+            time_delay = cls.settings.EMAIL_DELAY_TIME_IN_MINUTES * timedelta(minutes=1) - (
+                datetime.now(tz=timezone.utc) - min(list(i.delay_time for i in ip_list))
+            )
+            raise TooManyEmailRequests(time_delay)
+
+    @classmethod
+    def check_email_delay(cls, email: str, dbsession: DbSession):
+        '''Check count of requests per unit of time by email'''
+        cls.delete_user_delay(email=email, ip=None, dbsession=dbsession)
+        time_filter = datetime.now(tz=timezone.utc) - cls.settings.EMAIL_DELAY_TIME_IN_MINUTES * timedelta(minutes=1)
+        email_list = (
+            dbsession.query(UserMessageDelay)
+            .filter(UserMessageDelay.user_email == email, UserMessageDelay.delay_time > time_filter)
+            .all()
+        )
+        if len(email_list) >= cls.settings.EMAIL_DELAY_COUNT:
+            time_delay = cls.settings.EMAIL_DELAY_TIME_IN_MINUTES * timedelta(minutes=1) - (
+                datetime.now(tz=timezone.utc) - min(list(i.delay_time for i in email_list))
+            )
+            raise TooManyEmailRequests(time_delay)
+
+    @classmethod
+    def delay(cls, ip: str, email: str, dbsession: DbSession):
+        cls.check_ip_delay(ip, dbsession)
+        cls.check_email_delay(email, dbsession)
+        cls.create_user_delay(ip, email, dbsession)
+
+
+class SendEmailMessage:
+    settings: Settings = get_settings()
+    from_email: str = settings.EMAIL
+
+    @classmethod
+    @retry(
+        stop_max_attempt_number=settings.MAX_RETRIES,
+        stop_max_delay=settings.STOP_MAX_DELAY,
+        wait_random_min=settings.WAIT_MIN,
+        wait_random_max=settings.WAIT_MAX,
+        retry_on_exception=lambda exc: isinstance(exc, smtplib.SMTPException),
+    )
+    def email_task(cls, to_email: str, file_name: str, subject: str, **kwargs):
+        with open(f"api/templates/{file_name}") as f:
+            tmp = f.read()
+            for key, value in kwargs.items():
+                if f'{{{{{key}}}}}' in tmp:
+                    tmp = tmp.replace(f'{{{{{key}}}}}', str(value))
+        message = MIMEMultipart('related')
+        message['Subject'] = subject
+        message['From'] = cls.from_email
+        message['To'] = to_email
+
+        msgAlternative = MIMEMultipart('alternative')
+        message.attach(msgAlternative)
+
+        text = MIMEText(tmp, "html")
+        msgAlternative.attach(text)
+
+        with smtplib.SMTP_SSL(cls.settings.SMTP_HOST, cls.settings.SMTP_PORT) as smtp:
+            smtp.login(cls.settings.EMAIL, cls.settings.EMAIL_PASS)
+            smtp.sendmail(cls.settings.EMAIL, to_email, message.as_string())
+
+    @classmethod
+    @retry(
+        stop_max_attempt_number=settings.MAX_RETRIES,
+        stop_max_delay=settings.STOP_MAX_DELAY,
+        wait_random_min=settings.WAIT_MIN,
+        wait_random_max=settings.WAIT_MAX,
+        retry_on_exception=lambda exc: isinstance(exc, smtplib.SMTPException),
+    )
+    def send(
+        cls,
+        to_email: str,
+        ip: str,
+        message_file_name: str,
+        subject: str,
+        dbsession: DbSession,
+        background_tasks: BackgroundTasks,
+        **kwargs,
+    ):
+        EmailDelay.delay(ip, to_email, dbsession)
+        background_tasks.add_task(cls.email_task, to_email, message_file_name, subject, **kwargs)
+</file>
+
+<file path="interviewer_backend/api/utils/token.py">
+import random
+import string
+
+
+def random_string(length: int = 32):
+    return "".join([random.choice(string.ascii_letters) for _ in range(length)])
+
+
+def random_int(length: int = 6):
+    return random.randint(10 ** (length - 1), 10**length - 1) if length > 0 else 0
+</file>
+
+<file path="interviewer_backend/api/utils/user_session.py">
+import datetime
+
+from api.settings import get_settings
+
+
+settings = get_settings()
+
+
+def calc_session_expire_date():
+    return datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(days=settings.SESSION_TIME_IN_DAYS)
+</file>
+
+<file path="interviewer_backend/Dockerfile">
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.11
+
+ARG APP_VERSION=dev
+ENV APP_VERSION=${APP_VERSION}
+ENV APP_MODULE=api.routes.base:app
+WORKDIR /app
+
+COPY ./requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -U -r ./requirements.txt
+COPY ./alembic.ini ./alembic.ini
+COPY ./migrations ./migrations
+COPY ./api ./api
+</file>
+
+<file path="interviewer_backend/flake8.conf">
+[flake8]
+select =
+    E, W,  # pep8 errors and warnings
+    F,  # pyflakes
+    C9, # McCabe
+    N8, # Naming Conventions
+    #B, S,  # bandit
+    #C,  # commas
+    #D,  # docstrings
+    #P,  # string-format
+    #Q,  # quotes
+
+ignore =
+    E122,  # continuation line missing indentation or outdented
+    E123,  # closing bracket does not match indentation of opening bracket's line
+    E127,  # continuation line over-indented for visual indent
+    E131,  # continuation line unaligned for hanging
+    E203,  # whitespace before ':'
+    E225,  # missing whitespace around operator
+    E226,  # missing whitespace around arithmetic operator
+    E24,   # multiple spaces after ',' or tab after ','
+    E275,  # missing whitespace after keyword
+    E305,  # expected 2 blank lines after end of function or class
+    E306,  # expected 1 blank line before a nested definition
+    E402,  # module level import not at top of file
+    E722,  # do not use bare except, specify exception instead
+    E731,  # do not assign a lambda expression, use a def
+    E741,  # do not use variables named 'l', 'O', or 'I'
+
+    F722,  # syntax error in forward annotation
+
+    W503,  # line break before binary operator
+    W504,  # line break after binary operator
+
+max-line-length = 120
+</file>
+
+<file path="interviewer_backend/Makefile">
+SHELL := cmd.exe
+
+run:
+	venv\Scripts\activate && uvicorn --reload api.routes.base:app
+
+configure: venv
+	venv\Scripts\activate && pip install -r requirements.dev.txt -r requirements.txt
+
+venv:
+	python -m venv venv
+
+format:
+	source ./venv/bin/activate && autoflake -r --in-place --remove-all-unused-imports ./api
+	source ./venv/bin/activate && isort ./api
+	source ./venv/bin/activate && black ./api
+	source ./venv/bin/activate && autoflake -r --in-place --remove-all-unused-imports ./migrations
+	source ./venv/bin/activate && isort ./migrations
+	source ./venv/bin/activate && black ./migrations
+	
+db:
+	docker run -d -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust --name western_prep_db postgres:15
+
+migrate:
+	source ./venv/bin/activate && alembic upgrade head
+</file>
+
+<file path="interviewer_backend/migrations/env.py">
+from logging.config import fileConfig
+
+from alembic import context
+from sqlalchemy import engine_from_config, pool
+
+from api.models import (
+    BaseDbModel,
+)
+from api.settings import get_settings
+
+
+# this is the Alembic Config object, which provides
+# access to the values within the .ini file in use.
+config = context.config
+settings = get_settings()
+
+# Interpret the config file for Python logging.
+# This line sets up loggers basically.
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
+# add your model's MetaData object here
+# for 'autogenerate' support
+# from myapp import mymodel
+# target_metadata = mymodel.Base.metadata
+target_metadata = BaseDbModel.metadata
+
+# other values from the config, defined by the needs of env.py,
+# can be acquired:
+# my_important_option = config.get_main_option("my_important_option")
+# ... etc.
+
+
+def run_migrations_offline():
+    """Run migrations in 'offline' mode.
+
+    This configures the context with just a URL
+    and not an Engine, though an Engine is acceptable
+    here as well.  By skipping the Engine creation
+    we don't even need a DBAPI to be available.
+
+    Calls to context.execute() here emit the given string to the
+    script output.
+
+    """
+    url = config.get_main_option("sqlalchemy.url")
+    context.configure(
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
+    )
+
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+def run_migrations_online():
+    """Run migrations in 'online' mode.
+
+    In this scenario we need to create an Engine
+    and associate a connection with the context.
+
+    """
+    configuration = config.get_section(config.config_ini_section)
+    configuration['sqlalchemy.url'] = str(settings.DB_DSN)
+    connectable = engine_from_config(
+        configuration,
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+
+    with connectable.connect() as connection:
+        context.configure(connection=connection, target_metadata=target_metadata)
+
+        with context.begin_transaction():
+            context.run_migrations()
+
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()
+</file>
+
+<file path="interviewer_backend/migrations/README">
+Generic single-database configuration.
+</file>
+
+<file path="interviewer_backend/migrations/script.py.mako">
+"""${message}
+
+Revision ID: ${up_revision}
+Revises: ${down_revision | comma,n}
+Create Date: ${create_date}
+
+"""
+from alembic import op
+import sqlalchemy as sa
+${imports if imports else ""}
+
+# revision identifiers, used by Alembic.
+revision = ${repr(up_revision)}
+down_revision = ${repr(down_revision)}
+branch_labels = ${repr(branch_labels)}
+depends_on = ${repr(depends_on)}
+
+
+def upgrade():
+    ${upgrades if upgrades else "pass"}
+
+
+def downgrade():
+    ${downgrades if downgrades else "pass"}
+</file>
+
+<file path="interviewer_backend/migrations/versions/0b24a728385d_add_user_id_and_create_ts_to_session.py">
+"""add user_id and create_ts to session
+
+Revision ID: 0b24a728385d
+Revises: bc726b00803a
+Create Date: 2025-11-16 00:00:00.000000
+
+"""
+
+import sqlalchemy as sa
+from alembic import op
+
+# revision identifiers, used by Alembic.
+revision = '0b24a728385d'
+down_revision = 'bc726b00803a'
+branch_labels = None
+depends_on = None
+
+
+def upgrade():
+    # Add user_id column to session table
+    op.add_column('session', sa.Column('user_id', sa.Integer(), nullable=False))
+    op.create_foreign_key('session_user_id_fkey', 'session', 'user', ['user_id'], ['id'])
+    
+    # Add create_ts column to session table
+    op.add_column('session', sa.Column('create_ts', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')))
+
+
+def downgrade():
+    # Remove the columns we added
+    op.drop_constraint('session_user_id_fkey', 'session', type_='foreignkey')
+    op.drop_column('session', 'user_id')
+    op.drop_column('session', 'create_ts')
+</file>
+
+<file path="interviewer_backend/migrations/versions/461d2e04c93e_add_templates_questions_grades_sessions.py">
+"""add templates/questions/grades/sessions
+
+Revision ID: 461d2e04c93e
+Revises: bc726b00803a
+Create Date: 2025-11-22 20:54:47.299218
+
+"""
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+revision = '461d2e04c93e'
+down_revision = 'bc726b00803a'
+branch_labels = None
+depends_on = None
+
+
+def upgrade():
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.create_table('feedback',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('point', sa.Text(), nullable=False),
+    sa.Column('ways_to_improve', sa.Text(), nullable=True),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('template',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('job_title', sa.String(), nullable=False),
+    sa.Column('description', sa.Text(), nullable=True),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('question',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('question', sa.Text(), nullable=False),
+    sa.Column('template_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['template_id'], ['template.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('session',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('video_url', sa.String(), nullable=True),
+    sa.Column('transcript', sa.Text(), nullable=True),
+    sa.Column('state', sa.Enum('PENDING', 'IN_PROGRESS', 'COMPLETED', 'GRADED', name='sessionstate'), nullable=False),
+    sa.Column('overall_grade', sa.Integer(), nullable=True),
+    sa.Column('create_ts', sa.DateTime(timezone=True), nullable=False),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('grade',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('body_language_score', sa.Integer(), nullable=False),
+    sa.Column('speech_score', sa.Integer(), nullable=False),
+    sa.Column('material_score', sa.Integer(), nullable=False),
+    sa.Column('brevity_score', sa.Integer(), nullable=False),
+    sa.Column('overall_score', sa.Integer(), nullable=False),
+    sa.Column('feedback_id', sa.Integer(), nullable=False),
+    sa.Column('session_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['feedback_id'], ['feedback.id'], ),
+    sa.ForeignKeyConstraint(['session_id'], ['session.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    # ### end Alembic commands ###
+
+
+def downgrade():
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table('grade')
+    op.drop_table('session')
+    op.drop_table('question')
+    op.drop_table('template')
+    op.drop_table('feedback')
+    # ### end Alembic commands ###
+</file>
+
+<file path="interviewer_backend/migrations/versions/bc726b00803a_init_auth.py">
+"""Init auth
+
+Revision ID: bc726b00803a
+Revises:
+Create Date: 2025-11-05 02:45:03.579823
+
+"""
+
+import sqlalchemy as sa
+from alembic import op
+
+
+# revision identifiers, used by Alembic.
+revision = 'bc726b00803a'
+down_revision = None
+branch_labels = None
+depends_on = None
+
+
+def upgrade():
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.create_table(
+        'user',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('email', sa.String(), nullable=False),
+        sa.Column('first_name', sa.String(), nullable=True),
+        sa.Column('last_name', sa.String(), nullable=True),
+        sa.Column('password_hash', sa.String(), nullable=True),
+        sa.Column('salt', sa.String(), nullable=True),
+        sa.Column('verification_token', sa.Integer(), nullable=False),
+        sa.Column('create_ts', sa.DateTime(timezone=True), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('email'),
+    )
+    op.create_table(
+        'user_message_delay',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('delay_time', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('user_email', sa.String(), nullable=False),
+        sa.Column('user_ip', sa.String(), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+    )
+    op.create_table(
+        'user_session',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('user_id', sa.Integer(), nullable=False),
+        sa.Column('expires', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('token', sa.String(), nullable=False),
+        sa.Column('last_activity', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('create_ts', sa.DateTime(timezone=True), nullable=False),
+        sa.ForeignKeyConstraint(
+            ['user_id'],
+            ['user.id'],
+        ),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('token'),
+    )
+    # ### end Alembic commands ###
+
+
+def downgrade():
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table('user_session')
+    op.drop_table('user_message_delay')
+    op.drop_table('user')
+    # ### end Alembic commands ###
+</file>
+
+<file path="interviewer_backend/pyproject.toml">
+[tool.black]
+line-length = 120
+target-version = ['py311']
+skip-string-normalization = true
+
+[tool.isort]
+line_length = 120
+multi_line_output = 3
+profile = "black"
+lines_after_imports = 2
+include_trailing_comma = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+python_files = "*.py"
+testpaths = [
+    "tests"
+]
+pythonpath = [
+    "."
+]
+log_cli=true
+log_level=0
+</file>
+
+<file path="interviewer_backend/README.md">
+# WesternPrep (BackEnd)
+## Prerequisites
+
+- Python 3.11
+- Docker
+
+## Launch
+
+1) Navigate to the backend project folder
+
+2) Create virtual environment and install the dependencies:
+```bash
+make venv
+make configure
+```
+
+3) Create db and implement migrations:
+```bash
+make db
+make migrate
+```
+
+4) Run the app
+```bash
+make run
+```
+
+## API Endpoints
+The full list of endpoints can be found in auto-generated doc:
+- For self-hosted api: ```localhost:8000/docs```
+</file>
+
+<file path="interviewer_backend/requirements.dev.txt">
+autoflake
+black
+isort
+</file>
+
+<file path="interviewer_backend/requirements.txt">
+alembic
+aiohttp
+fastapi
+fastapi-sqlalchemy
+gunicorn
+psycopg2-binary
+pydantic
+pydantic-settings
+SQLAlchemy
+uvicorn
+retrying
+</file>
+
+<file path="interviewer_frontend/.gitignore">
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+</file>
+
+<file path="interviewer_frontend/app/globals.css">
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+</file>
+
+<file path="interviewer_frontend/app/layout.tsx">
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "Create Next App",
+  description: "Generated by create next app",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        {children}
+      </body>
+    </html>
+  );
+}
+</file>
+
+<file path="interviewer_frontend/app/page.module.css">
+.page {
+  --background: #fafafa;
+  --foreground: #fff;
+
+  --text-primary: #000;
+  --text-secondary: #666;
+
+  --button-primary-hover: #383838;
+  --button-secondary-hover: #f2f2f2;
+  --button-secondary-border: #ebebeb;
+
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-geist-sans);
+  background-color: var(--background);
+}
+
+.main {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 800px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  background-color: var(--foreground);
+  padding: 120px 60px;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 24px;
+}
+
+.intro h1 {
+  max-width: 320px;
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 48px;
+  letter-spacing: -2.4px;
+  text-wrap: balance;
+  color: var(--text-primary);
+}
+
+.intro p {
+  max-width: 440px;
+  font-size: 18px;
+  line-height: 32px;
+  text-wrap: balance;
+  color: var(--text-secondary);
+}
+
+.intro a {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.ctas {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  max-width: 440px;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.ctas a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 128px;
+  border: 1px solid transparent;
+  transition: 0.2s;
+  cursor: pointer;
+  width: fit-content;
+  font-weight: 500;
+}
+
+a.primary {
+  background: var(--text-primary);
+  color: var(--background);
+  gap: 8px;
+}
+
+a.secondary {
+  border-color: var(--button-secondary-border);
+}
+
+/* Enable hover only on non-touch devices */
+@media (hover: hover) and (pointer: fine) {
+  a.primary:hover {
+    background: var(--button-primary-hover);
+    border-color: transparent;
+  }
+
+  a.secondary:hover {
+    background: var(--button-secondary-hover);
+    border-color: transparent;
+  }
+}
+
+@media (max-width: 600px) {
+  .main {
+    padding: 48px 24px;
+  }
+
+  .intro {
+    gap: 16px;
+  }
+
+  .intro h1 {
+    font-size: 32px;
+    line-height: 40px;
+    letter-spacing: -1.92px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .logo {
+    filter: invert();
+  }
+
+  .page {
+    --background: #000;
+    --foreground: #000;
+
+    --text-primary: #ededed;
+    --text-secondary: #999;
+
+    --button-primary-hover: #ccc;
+    --button-secondary-hover: #1a1a1a;
+    --button-secondary-border: #1a1a1a;
+  }
+}
+</file>
+
+<file path="interviewer_frontend/app/page.tsx">
+import Image from "next/image";
+import styles from "./page.module.css";
+
+export default function Home() {
+  return (
+    <div className={styles.page}>
+      <main className={styles.main}>
+        <Image
+          className={styles.logo}
+          src="/next.svg"
+          alt="Next.js logo"
+          width={100}
+          height={20}
+          priority
+        />
+        <div className={styles.intro}>
+          <h1>To get started, edit the page.tsx file.</h1>
+          <p>
+            Looking for a starting point or more instructions? Head over to{" "}
+            <a
+              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Templates
+            </a>{" "}
+            or the{" "}
+            <a
+              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Learning
+            </a>{" "}
+            center.
+          </p>
+        </div>
+        <div className={styles.ctas}>
+          <a
+            className={styles.primary}
+            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image
+              className={styles.logo}
+              src="/vercel.svg"
+              alt="Vercel logomark"
+              width={16}
+              height={16}
+            />
+            Deploy Now
+          </a>
+          <a
+            className={styles.secondary}
+            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Documentation
+          </a>
+        </div>
+      </main>
+    </div>
+  );
+}
+</file>
+
+<file path="interviewer_frontend/eslint.config.mjs">
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+</file>
+
+<file path="interviewer_frontend/next.config.ts">
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+  reactCompiler: true,
+};
+
+export default nextConfig;
+</file>
+
+<file path="interviewer_frontend/package.json">
+{
+  "name": "interviewer_frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "next": "16.0.1"
+  },
+  "devDependencies": {
+    "babel-plugin-react-compiler": "1.0.0",
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.1"
+  }
+}
+</file>
+
+<file path="interviewer_frontend/public/file.svg">
+<svg fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 13.5V5.41a1 1 0 0 0-.3-.7L9.8.29A1 1 0 0 0 9.08 0H1.5v13.5A2.5 2.5 0 0 0 4 16h8a2.5 2.5 0 0 0 2.5-2.5m-1.5 0v-7H8v-5H3v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1M9.5 5V2.12L12.38 5zM5.13 5h-.62v1.25h2.12V5zm-.62 3h7.12v1.25H4.5zm.62 3h-.62v1.25h7.12V11z" clip-rule="evenodd" fill="#666" fill-rule="evenodd"/></svg>
+</file>
+
+<file path="interviewer_frontend/public/globe.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g clip-path="url(#a)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.27 14.1a6.5 6.5 0 0 0 3.67-3.45q-1.24.21-2.7.34-.31 1.83-.97 3.1M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.48-1.52a7 7 0 0 1-.96 0H7.5a4 4 0 0 1-.84-1.32q-.38-.89-.63-2.08a40 40 0 0 0 3.92 0q-.25 1.2-.63 2.08a4 4 0 0 1-.84 1.31zm2.94-4.76q1.66-.15 2.95-.43a7 7 0 0 0 0-2.58q-1.3-.27-2.95-.43a18 18 0 0 1 0 3.44m-1.27-3.54a17 17 0 0 1 0 3.64 39 39 0 0 1-4.3 0 17 17 0 0 1 0-3.64 39 39 0 0 1 4.3 0m1.1-1.17q1.45.13 2.69.34a6.5 6.5 0 0 0-3.67-3.44q.65 1.26.98 3.1M8.48 1.5l.01.02q.41.37.84 1.31.38.89.63 2.08a40 40 0 0 0-3.92 0q.25-1.2.63-2.08a4 4 0 0 1 .85-1.32 7 7 0 0 1 .96 0m-2.75.4a6.5 6.5 0 0 0-3.67 3.44 29 29 0 0 1 2.7-.34q.31-1.83.97-3.1M4.58 6.28q-1.66.16-2.95.43a7 7 0 0 0 0 2.58q1.3.27 2.95.43a18 18 0 0 1 0-3.44m.17 4.71q-1.45-.12-2.69-.34a6.5 6.5 0 0 0 3.67 3.44q-.65-1.27-.98-3.1" fill="#666"/></g><defs><clipPath id="a"><path fill="#fff" d="M0 0h16v16H0z"/></clipPath></defs></svg>
+</file>
+
+<file path="interviewer_frontend/public/next.svg">
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 394 80"><path fill="#000" d="M262 0h68.5v12.7h-27.2v66.6h-13.6V12.7H262V0ZM149 0v12.7H94v20.4h44.3v12.6H94v21h55v12.6H80.5V0h68.7zm34.3 0h-17.8l63.8 79.4h17.9l-32-39.7 32-39.6h-17.9l-23 28.6-23-28.6zm18.3 56.7-9-11-27.1 33.7h17.8l18.3-22.7z"/><path fill="#000" d="M81 79.3 17 0H0v79.3h13.6V17l50.2 62.3H81Zm252.6-.4c-1 0-1.8-.4-2.5-1s-1.1-1.6-1.1-2.6.3-1.8 1-2.5 1.6-1 2.6-1 1.8.3 2.5 1a3.4 3.4 0 0 1 .6 4.3 3.7 3.7 0 0 1-3 1.8zm23.2-33.5h6v23.3c0 2.1-.4 4-1.3 5.5a9.1 9.1 0 0 1-3.8 3.5c-1.6.8-3.5 1.3-5.7 1.3-2 0-3.7-.4-5.3-1s-2.8-1.8-3.7-3.2c-.9-1.3-1.4-3-1.4-5h6c.1.8.3 1.6.7 2.2s1 1.2 1.6 1.5c.7.4 1.5.5 2.4.5 1 0 1.8-.2 2.4-.6a4 4 0 0 0 1.6-1.8c.3-.8.5-1.8.5-3V45.5zm30.9 9.1a4.4 4.4 0 0 0-2-3.3 7.5 7.5 0 0 0-4.3-1.1c-1.3 0-2.4.2-3.3.5-.9.4-1.6 1-2 1.6a3.5 3.5 0 0 0-.3 4c.3.5.7.9 1.3 1.2l1.8 1 2 .5 3.2.8c1.3.3 2.5.7 3.7 1.2a13 13 0 0 1 3.2 1.8 8.1 8.1 0 0 1 3 6.5c0 2-.5 3.7-1.5 5.1a10 10 0 0 1-4.4 3.5c-1.8.8-4.1 1.2-6.8 1.2-2.6 0-4.9-.4-6.8-1.2-2-.8-3.4-2-4.5-3.5a10 10 0 0 1-1.7-5.6h6a5 5 0 0 0 3.5 4.6c1 .4 2.2.6 3.4.6 1.3 0 2.5-.2 3.5-.6 1-.4 1.8-1 2.4-1.7a4 4 0 0 0 .8-2.4c0-.9-.2-1.6-.7-2.2a11 11 0 0 0-2.1-1.4l-3.2-1-3.8-1c-2.8-.7-5-1.7-6.6-3.2a7.2 7.2 0 0 1-2.4-5.7 8 8 0 0 1 1.7-5 10 10 0 0 1 4.3-3.5c2-.8 4-1.2 6.4-1.2 2.3 0 4.4.4 6.2 1.2 1.8.8 3.2 2 4.3 3.4 1 1.4 1.5 3 1.5 5h-5.8z"/></svg>
+</file>
+
+<file path="interviewer_frontend/public/vercel.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000"><path d="m577.3 0 577.4 1000H0z" fill="#fff"/></svg>
+</file>
+
+<file path="interviewer_frontend/public/window.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5" fill="#666"/></svg>
+</file>
+
+<file path="interviewer_frontend/README.md">
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+</file>
+
+<file path="interviewer_frontend/tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
+</file>
+
+</files>

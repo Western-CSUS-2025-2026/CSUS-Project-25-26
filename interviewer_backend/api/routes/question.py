@@ -46,35 +46,3 @@ def delete_question(question_id: int, _: UserSession = Depends(Auth)):
     db.session.delete(question)
     db.session.commit()
     return {"status": "deleted"}
-
-
-@question.post("", response_model=SessionObject)
-def create_session(
-    user_session: UserSession = Depends(Auth()),
-):
-    session_obj = Session(user_id=user_session.user_id)
-    db.session.add(session_obj)
-    db.session.commit()
-    db.session.refresh(session_obj)
-    return session_obj
-
-
-@question.patch("/{session_id}/state")
-def update_session_state(
-    session_id: int,
-    new_state: SessionState,
-    user_session: UserSession = Depends(Auth()),
-):
-    session_obj = (
-        Session.query(session=db.session)
-        .filter(Session.id == session_id)
-        .filter(Session.user_id == user_session.user_id)
-        .one_or_none()
-    )
-
-    if not session_obj:
-        raise ObjectNotFound(Session, session_id)
-
-    session_obj.state = new_state
-    db.session.commit()
-    return {"status": "updated"}

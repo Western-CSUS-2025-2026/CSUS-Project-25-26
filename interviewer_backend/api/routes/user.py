@@ -34,6 +34,7 @@ async def registration_initiate(
     request: Request, user_data: RegistrationInitiate, background_tasks: BackgroundTasks
 ) -> StatusResponseModel:
     verification_token: int = random_int()
+    print(verification_token) # NOTE: Testing
     async with User.lock(db.session) as txn:
         user: User | None = User.query(session=txn).filter(User.email == user_data.email).one_or_none()
         if user:

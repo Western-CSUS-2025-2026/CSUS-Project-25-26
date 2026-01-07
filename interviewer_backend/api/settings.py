@@ -42,4 +42,6 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
+    s = Settings()
+    print("Using: ", s.DB_DSN)
     return Settings()

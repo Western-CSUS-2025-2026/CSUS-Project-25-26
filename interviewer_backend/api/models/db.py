@@ -148,7 +148,7 @@ class SessionState(enum.Enum):
 class Session(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
-    video_url: Mapped[str] = mapped_column(String, nullable=True)
+    video_url: Mapped[str] = mapped_column(String, nullable=False)
     transcript: Mapped[str] = mapped_column(Text, nullable=True)
     state: Mapped[SessionState] = mapped_column(
         Enum(SessionState), nullable=False, default=SessionState.PENDING

@@ -1,8 +1,8 @@
-"""add templates/questions/grades/sessions
+"""CRUD endpoints
 
-Revision ID: 461d2e04c93e
+Revision ID: 40b6f461e63c
 Revises: bc726b00803a
-Create Date: 2025-11-22 20:54:47.299218
+Create Date: 2026-01-06 20:19:22.263594
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '461d2e04c93e'
+revision = '40b6f461e63c'
 down_revision = 'bc726b00803a'
 branch_labels = None
 depends_on = None
@@ -28,6 +28,12 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('job_title', sa.String(), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('video',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('video_url', sa.String(), nullable=True),
+    sa.Column('question_timestamps', sa.JSON(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('question',
@@ -69,6 +75,7 @@ def downgrade():
     op.drop_table('grade')
     op.drop_table('session')
     op.drop_table('question')
+    op.drop_table('video')
     op.drop_table('template')
     op.drop_table('feedback')
     # ### end Alembic commands ###
