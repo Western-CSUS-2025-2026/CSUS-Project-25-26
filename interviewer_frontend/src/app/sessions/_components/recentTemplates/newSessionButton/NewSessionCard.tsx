@@ -1,14 +1,19 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import InvertedPlusIcon from "@/components/icons/invertedPlusIcon";
 import styles from "./newSessionCard.module.css";
 
 // Button to start a new session
 export default function NewSessionCard() {
+  const router = useRouter();
+
   return (
     <div
       className={styles.button}
-      onClick={() => alert("New Session modal will open soon")}
+      onClick={() => {
+        router.push("/sessions?newSession=1&step=select");
+      }}
     >
       {/* Left text section */}
       <div className={styles.labelGroup}>
@@ -23,7 +28,7 @@ export default function NewSessionCard() {
         size={"2.3em"}
         foreground="var(--accent)"
         background="var(--accent-primary-text)"
-      ></InvertedPlusIcon>
+      />
     </div>
   );
 }
