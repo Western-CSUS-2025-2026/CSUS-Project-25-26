@@ -7,6 +7,7 @@ import logging
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import JSONB
 
 from api.utils.user_session import calc_session_expire_date
 
@@ -98,7 +99,6 @@ class Grade(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     body_language_score: Mapped[int] = mapped_column(Integer, nullable=False)
     speech_score: Mapped[int] = mapped_column(Integer, nullable=False)
-    material_score: Mapped[int] = mapped_column(Integer, nullable=False)
     brevity_score: Mapped[int] = mapped_column(Integer, nullable=False)
     session_component_id: Mapped[int] = mapped_column(Integer, ForeignKey("session_component.id"), nullable=False, unique=True)
     session_component: Mapped["SessionComponent"] = relationship(
@@ -192,7 +192,8 @@ class Session(BaseDbModel):
 
 class TwelveLabsIndex(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False, unique=True)
+    index_id: Mapped[str] = mapped_column(String, nullable=False)
     create_ts: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc), nullable=False
     )

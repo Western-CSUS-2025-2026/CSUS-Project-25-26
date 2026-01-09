@@ -1,5 +1,5 @@
 import datetime
-from typing import Annotated, List
+from typing import Annotated, List, Optional
 
 from annotated_types import MaxLen
 from pydantic import Field, field_validator
@@ -103,13 +103,44 @@ class AnalysisResult(Base):
     actionable_feedback: str
 
 
+class VideoUploadResponse(Base):
+    asset_id: str
+    indexed_asset_id: str
+    session_id: int
+
+    question: str
+    state: str
+
+
+class TwelveLabsWebhookRequest(Base):
+    indexed_asset_id: Optional[str] = None
+    state: Optional[str] = None
+
+
+class FeedbackModel(Base):
+    points: List[str]
+    ways_to_improve: List[str]
+
+
+class ImproveAnswerModel(Base):
+    version: str
+
+
+class QuestionResponseModel(Base):
+    question: str
+    body_language_score: int
+    speech_score: int
+    brevity_score: int
+    feedback: FeedbackModel
+    improved_answer: ImproveAnswerModel
+
+
+class TwelveLabsAnalysisModel(Base):
+    question_responses: List[QuestionResponseModel]
+
+
 class VideoAnalysisStateResponse(Base):
     status: str
     session_id: int
-    analysis_data: AnalysisResult | None = None
+    analysis_data: AnalysisResult | TwelveLabsAnalysisModel | None = None
     error: str | None = None
-
-
-class VideoUploadResponse(Base):
-    asset_id: str
-    session_id: int

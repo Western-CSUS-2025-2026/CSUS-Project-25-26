@@ -1,14 +1,16 @@
 from twelvelabs import TwelveLabs
 from twelvelabs.indexes import IndexesCreateRequestModelsItem
 from twelvelabs.tasks import TasksRetrieveResponse
-from api.models.db import TwelveLabsIndex
+from twelvelabs.types import ResponseFormat
 
 from api.exceptions import FailToConnectTwelveLabs, IndexCreatingFail, FailToCreateTask
 from api.settings import get_settings, Settings
+from api.models.db import TwelveLabsIndex
 
 from fastapi import UploadFile
 
 import datetime
+import uuid
 
 
 class VideoAnalysis:
@@ -40,11 +42,8 @@ class VideoAnalysis:
         if not self.settings.TWELVE_LABS_API_KEYS:
             raise FailToConnectTwelveLabs("TWELVE_LABS_API_KEYS is not set")
         
-        try:
-            self.client = TwelveLabs(api_key=self.settings.TWELVE_LABS_API_KEYS)
-            self.index_id = None
-        except Exception as e:
-            raise FailToConnectTwelveLabs(str(e))
+        self.client = TwelveLabs(api_key=self.settings.TWELVE_LABS_API_KEYS)
+        self.index_id = None
 
 
     def create_index(self, index_name: str = None):
@@ -109,9 +108,14 @@ class VideoAnalysis:
             is_expired = datetime.datetime.now(tz=datetime.timezone.utc) >= expiration_date
 
             if not is_expired:
-                return existing_index.index_id
+                try:
+                    self.client.indexes.retrieve(existing_index.index_id)
+                    return existing_index.index_id
+                except Exception as e:
+                    print(f"[get_or_create_index] Index {existing_index.index_id} not found in TwelveLabs, creating new one")
+                    pass
 
-        index = self.create_index(index_name=f"user_{user_id}_index")
+        index = self.create_index(index_name=f"user_{user_id}_index_{uuid.uuid4().hex}")
         index_id = index.id
 
         # Delete old index if exists
@@ -191,62 +195,188 @@ class VideoAnalysis:
         return response
 
 
-    def generate_interview_analysis(self, video_id: str, question: str):
-        """
-        Generate custom interview analysis for a video.
-        
-        Uses TwelveLabs generate.text() to analyze an interview video
-        and provide scores for various interview metrics. The analysis
-        includes confidence, clarity, speech rate, eye contact, body language,
-        voice tone, relevance to question, and important points.
-        
-        Args:
-            video_id: The unique identifier of the video to analyze.
-            question: The interview question that was asked in the video.
-        
-        Returns:
-            Analysis result object containing:
-            - confidence: Score 1-10 for confidence level
-            - clarity: Score 1-10 for answer clarity
-            - speech_rate: Score 1-10 for speech rate appropriateness
-            - eye_contact: Score 1-10 for eye contact quality
-            - body_language: Score 1-10 for body language
-            - voice_tone: Score 1-10 for voice tone
-            - relevant_to_question: Score 1-10 for answer relevance
-            - imp_points: List of important points from the answer
-        
-        Raises:
-            FailToCreateTask: If analysis generation fails
-        """
+    def generate_interview_analysis(self, video_id: str, questions: list[str]):
         try:
-            prompt = f"""You are an Interviewer and a professional communication analyst. Your task is to analyze the video clip of the interview answer provided for the question: "{question}".
+            questions_block = "\n".join(
+                [f"{i+1}. {q}" for i, q in enumerate(questions)]
+            )
 
-Your response must be a single JSON object.
+            prompt = f"""
+You are a senior technical interviewer and communication coach.
 
-### Scoring Criteria:
-Analyze and score the candidate on the following categories from 1 (Needs significant improvement) to 10 (Excellent).
+The video contains answers to interview questions.
+Analyze EACH answer separately.
 
-### Conditional Logic (CRITICAL):
-If a visible face is **not** present in the video, you **must** assign a score of less than 5 (e.g., 1, 2, 3, or 4) for ALL numerical categories (confidence, clarity, speech_rate, eye_contact, body_language, voice_tone, relevant_to_question, imp_points).
+QUESTIONS:
+{questions_block}
 
-### JSON Output Keys:
-The final JSON object must contain the following keys:
-1.  **confidence** (Number 1-10)
-2.  **clarity** (Number 1-10)
-3.  **speech_rate** (Number 1-10)
-4.  **eye_contact** (Number 1-10)
-5.  **body_language** (Number 1-10)
-6.  **voice_tone** (Number 1-10)
-7.  **relevant_to_question** (Number 1-10)
-8.  **imp_points** (List of Strings): A list containing the exact, summarized sentences spoken by the speaker. **Remove all filler words** ("um," "like," "you know," etc.) from these sentences.
-9.  **overall_summary** (String): A one-paragraph, high-level assessment of the answer, including its key strengths and weaknesses.
-10. **actionable_feedback** (String): Specific, constructive advice pointing out areas for improvement (e.g., "Increase vocal projection," "Maintain steady eye contact," or "Structure the answer using the STAR method").
+CRITICAL RULES (DO NOT VIOLATE):
+- Return ONE valid JSON object only
+- No markdown, no explanations, no extra text
+- Scores must be integers from 1 to 10
+- If a visible face is NOT present, all scores MUST be below 5
+- Feedback must be grounded in what the candidate actually said
+
+FOR EACH QUESTION RESPONSE, PRODUCE:
+
+1) Scores:
+- body_language_score (1–10)
+- speech_score (1–10)
+- brevity_score (1–10)
+
+2) evidence.clean_transcript  
+EXACTLY 6 short sentences summarizing what the candidate said.
+- Remove filler words (um, like, you know)
+- Preserve meaning, not grammar perfection
+
+3) evidence.key_original_snippets  
+EXACTLY 3 items. Each item must include:
+- original: an exact or near-verbatim sentence the candidate said
+- issue: what is wrong with it (specific and concrete)
+- rewrite: a better sentence the candidate can practice saying
+
+4) feedback.points  
+EXACTLY 3 concrete observations based on the video
+
+5) feedback.ways_to_improve  
+EXACTLY 3 actionable improvements with wording or structure guidance
+
+6) improved_answer.version  
+ONE polished answer paragraph the candidate can practice.
+- Natural
+- Professional
+- Not overly long
+- No buzzwords
+
+OUTPUT FORMAT (STRICT JSON):
+{{
+"question_responses": [
+    {{
+    "question": "<question text>",
+    "body_language_score": 1,
+    "speech_score": 1,
+    "brevity_score": 1,
+    "evidence": {{
+        "clean_transcript": ["...", "...", "...", "...", "...", "..."],
+        "key_original_snippets": [
+        {{
+            "original": "...",
+            "issue": "...",
+            "rewrite": "..."
+        }}
+        ]
+    }},
+    "feedback": {{
+        "points": ["...", "...", "..."],
+        "ways_to_improve": ["...", "...", "..."]
+    }},
+    "improved_answer": {{
+        "version": "..."
+    }}
+    }}
+]
+}}
 """
+
             result = self.client.analyze(
                 video_id=video_id,
-                prompt=prompt
+                prompt=prompt,
+                temperature=0.2,
+                max_tokens=2500,
+                response_format=ResponseFormat(
+                    type="json_schema",
+                    json_schema={
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "question_responses": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "additionalProperties": False,
+                                    "properties": {
+                                        "question": {"type": "string"},
+                                        "body_language_score": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 10
+                                        },
+                                        "speech_score": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 10
+                                        },
+                                        "brevity_score": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 10
+                                        },
+                                        "evidence": {
+                                            "type": "object",
+                                            "additionalProperties": False,
+                                            "properties": {
+                                                "clean_transcript": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"}
+                                                },
+                                                "key_original_snippets": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "additionalProperties": False,
+                                                        "properties": {
+                                                            "original": {"type": "string"},
+                                                            "issue": {"type": "string"},
+                                                            "rewrite": {"type": "string"}
+                                                        },
+                                                        "required": ["original", "issue", "rewrite"]
+                                                    }
+                                                }
+                                            },
+                                            "required": ["clean_transcript", "key_original_snippets"]
+                                        },
+                                        "feedback": {
+                                            "type": "object",
+                                            "additionalProperties": False,
+                                            "properties": {
+                                                "points": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"}
+                                                },
+                                                "ways_to_improve": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"}
+                                                }
+                                            },
+                                            "required": ["points", "ways_to_improve"]
+                                        },
+                                        "improved_answer": {
+                                            "type": "object",
+                                            "additionalProperties": False,
+                                            "properties": {
+                                                "version": {"type": "string"}
+                                            },
+                                            "required": ["version"]
+                                        }
+                                    },
+                                    "required": [
+                                        "question",
+                                        "body_language_score",
+                                        "speech_score",
+                                        "brevity_score",
+                                        "evidence",
+                                        "feedback",
+                                        "improved_answer"
+                                    ]
+                                }
+                            }
+                        },
+                        "required": ["question_responses"]
+                    }
+                )
             )
-            
+
             return result
+
         except Exception as e:
             raise FailToCreateTask(str(e))
