@@ -19,7 +19,6 @@ export default function NewSessionModalClient({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-
   const [query, setQuery] = useState("");
 
   const selectedTemplate = useMemo(() => {
@@ -79,76 +78,79 @@ export default function NewSessionModalClient({
           </button>
         </div>
 
-        {step === "select" ? (
-          <>
-            <div className={styles.searchRow}>
-              <Search size={18} strokeWidth={1.5} />
-              <input
-                className={styles.searchInput}
-                placeholder="Search templates..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-              {query.length > 0 && (
-                <button
-                  className={styles.clearBtn}
-                  onClick={() => setQuery("")}
-                  aria-label="Clear"
-                >
-                  <X size={16} strokeWidth={1.5} />
-                </button>
-              )}
-            </div>
-
-            <div className={styles.list}>
-              {filtered.map((t) => (
-                <button
-                  key={t.id}
-                  className={styles.listItem}
-                  onClick={() => chooseTemplate(t.id)}
-                >
-                  <div className={styles.itemIcon}>
-                    <Folder size={18} strokeWidth={1.5} />
-                  </div>
-
-                  <div className={styles.itemText}>
-                    <div className={styles.itemTitle}>{t.title}</div>
-                    <div className={styles.itemSubtitle}>{t.description}</div>
-                  </div>
-
-                  <div className={styles.chevron}>
-                    <ChevronRight size={20} strokeWidth={1.5} />
-                  </div>
-                </button>
-              ))}
-            </div>
-          </>
-        ) : (
-          <>
-            <h1 className={styles.h1}>Create Session</h1>
-            <p className={styles.helpText}>
-              Creating a session from a template selects a variety of questions
-              from the template, so you can reuse templates and have different
-              questions each time.
-            </p>
-
-            <h2 className={styles.h2}>Selected Template</h2>
-
-            <div className={styles.selectedCard}>
-              <div className={styles.selectedTitle}>
-                {selectedTemplate?.title ?? "Template"}
+        {/* Keeps modal size fixed  */}
+        <div className={styles.content}>
+          {step === "select" ? (
+            <>
+              <div className={styles.searchRow}>
+                <Search size={18} strokeWidth={1.5} />
+                <input
+                  className={styles.searchInput}
+                  placeholder="Search templates..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+                {query.length > 0 && (
+                  <button
+                    className={styles.clearBtn}
+                    onClick={() => setQuery("")}
+                    aria-label="Clear"
+                  >
+                    <X size={16} strokeWidth={1.5} />
+                  </button>
+                )}
               </div>
-              <div className={styles.selectedSubtitle}>
-                {selectedTemplate?.description ?? ""}
-              </div>
-            </div>
 
-            <button className={styles.startBtn} onClick={startSession}>
-              <span>Start New Session</span>
-              <span className={styles.startPlus}>+</span>
-            </button>
-          </>
-        )}
+              <div className={styles.list}>
+                {filtered.map((t) => (
+                  <button
+                    key={t.id}
+                    className={styles.listItem}
+                    onClick={() => chooseTemplate(t.id)}
+                  >
+                    <div className={styles.itemIcon}>
+                      <Folder size={18} strokeWidth={1.5} />
+                    </div>
+
+                    <div className={styles.itemText}>
+                      <div className={styles.itemTitle}>{t.title}</div>
+                      <div className={styles.itemSubtitle}>{t.description}</div>
+                    </div>
+
+                    <div className={styles.chevron}>
+                      <ChevronRight size={20} strokeWidth={1.5} />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <h1 className={styles.h1}>Create Session</h1>
+              <p className={styles.helpText}>
+                Creating a session from a template selects a variety of questions
+                from the template, so you can reuse templates and have different
+                questions each time.
+              </p>
+
+              <h2 className={styles.h2}>Selected Template</h2>
+
+              <div className={styles.selectedCard}>
+                <div className={styles.selectedTitle}>
+                  {selectedTemplate?.title ?? "Template"}
+                </div>
+                <div className={styles.selectedSubtitle}>
+                  {selectedTemplate?.description ?? ""}
+                </div>
+              </div>
+
+              <button className={styles.startBtn} onClick={startSession}>
+                <span>Start New Session</span>
+                <span className={styles.startPlus}>+</span>
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
