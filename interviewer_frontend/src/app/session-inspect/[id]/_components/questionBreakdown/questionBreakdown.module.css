@@ -1,0 +1,173 @@
+.questionSection {
+  margin-top: 3em;
+}
+
+.questionTitle {
+  color: var(--primary-text);
+  font-size: 1.875em;
+  font-weight: 590;
+  margin: 0 0 1.5em 0;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  grid-template-rows: auto auto;
+  gap: 2em;
+}
+
+/* Grade Card - Top Left */
+.gradeCard {
+  background-color: var(--accent);
+  border-radius: 10px;
+  padding: 1.5em;
+  display: flex;
+  flex-direction: column;
+  height: 350px;
+}
+
+.header {
+  margin-bottom: 1em;
+}
+
+.title {
+  color: var(--accent-primary-text);
+  font-size: 1.5em;
+  font-weight: 590;
+  margin: 0 0 0.5em 0;
+}
+
+.subtitle {
+  color: var(--accent-secondary-text);
+  font-size: 1em;
+  margin: 0;
+}
+
+.gaugeContainer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Skills Card - Top Right */
+.skillsCard {
+  background-color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5em;
+}
+
+.skillsTitle {
+  color: var(--primary-text);
+  font-size: 1.5em;
+  font-weight: 590;
+  margin: 0 0 1.5em 0;
+}
+
+.barsContainer {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 250px;
+  gap: 1em;
+}
+
+.barItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75em;
+  flex: 1;
+}
+
+.barWrapper {
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.bar {
+  width: 52px;
+  height: 100%;
+  background-color: var(--border);
+  border-radius: 20px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.barFill {
+  width: 100%;
+  background-color: var(--accent);
+  border-radius: 20px;
+  transition: height 0.3s ease;
+}
+
+.barLabel {
+  color: var(--secondary-text);
+  font-size: 1.25em;
+  text-align: center;
+}
+
+/* Feedback Card - Bottom, Spans Both Columns */
+.feedbackCard {
+  grid-column: 1 / -1;
+  background-color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5em;
+}
+
+.feedbackHeader {
+  margin-bottom: 1.5em;
+}
+
+.feedbackTitle {
+  color: var(--primary-text);
+  font-size: 1.5em;
+  font-weight: 590;
+  margin: 0 0 0.5em 0;
+}
+
+.feedbackSubtitle {
+  color: var(--secondary-text);
+  font-size: 1em;
+  margin: 0;
+}
+
+.feedbackGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2em;
+}
+
+.feedbackItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+}
+
+.feedbackPoint {
+  color: var(--primary-text);
+  font-size: 1em;
+  font-weight: 400;
+  margin: 0;
+}
+
+.suggestionsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+}
+
+.suggestion {
+  color: var(--secondary-text);
+  font-size: 1em;
+  line-height: 1.2;
+}

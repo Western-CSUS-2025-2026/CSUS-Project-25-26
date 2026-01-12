@@ -1,0 +1,57 @@
+.feedbackCard {
+  background-color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5em;
+}
+
+.header {
+  margin-bottom: 1.5em;
+}
+
+.title {
+  color: var(--primary-text);
+  font-size: 1.5em;
+  font-weight: 590;
+  margin: 0 0 0.5em 0;
+}
+
+.subtitle {
+  color: var(--secondary-text);
+  font-size: 1em;
+  margin: 0;
+}
+
+.feedbackList {
+  display: flex;
+  flex-direction: column;
+  gap: 2em;
+}
+
+.feedbackItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+}
+
+.feedbackPoint {
+  color: var(--primary-text);
+  font-size: 1em;
+  font-weight: 400;
+  margin: 0;
+}
+
+.suggestions {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+}
+
+.suggestion {
+  color: var(--secondary-text);
+  font-size: 1em;
+  line-height: 1.2;
+}

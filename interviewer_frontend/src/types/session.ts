@@ -28,13 +28,13 @@ export interface Grading {
   feedback: Feedback[];
 }
 // a single score for an individual category
-interface Score {
+export interface Score {
   title: string;
   description: string;
   score: number;
 }
 // the feedback
-interface Feedback {
+export interface Feedback {
   // the skill or thing that they need work on
   point: string;
   // a list of ways to improve apon the point
