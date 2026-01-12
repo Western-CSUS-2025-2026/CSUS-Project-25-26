@@ -13,6 +13,7 @@ async function SessionPage({ searchParams }: SearchParamProps) {
   const resolvedParams = await searchParams;
 
   const show = resolvedParams?.show;
+
   return (
     <div className={styles.sessionPageContainer}>
       <Link href={"/sessions?show=true"}>Show modal</Link>
@@ -28,7 +29,11 @@ async function SessionPage({ searchParams }: SearchParamProps) {
       </section>
 
       {/* This is where the modal is going to appear */}
-      {show && <Modal height="20em" width="20em" />}
+      {show && (
+        <Modal height="20em" width="20em">
+          Hello
+        </Modal>
+      )}
     </div>
   );
 }
