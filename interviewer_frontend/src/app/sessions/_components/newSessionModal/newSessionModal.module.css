@@ -215,7 +215,7 @@
   background: var(--accent-primary-text);
   display: grid;
   place-items: center;
-  color: var(--primary-text);
+  color: var(--accent);
   flex-shrink: 0;
 }
 

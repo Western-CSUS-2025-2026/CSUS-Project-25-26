@@ -1,25 +1,53 @@
-import { getTemplates } from "@/lib/getTemplates";
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
 import { Template } from "@/types/template";
 import NewSessionModalClient from "./NewSessionModalClient";
 
-export default async function NewSessionModal({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
-  const isOpen = searchParams.newSession === "1";
-  if (!isOpen) return null;
+type Step = "select" | "confirm";
 
-  const step = (searchParams.step as string) ?? "select";
-  const templateId = (searchParams.templateId as string) ?? "";
+function readParams() {
+  const params = new URLSearchParams(window.location.search);
 
-  const templates: Template[] = await getTemplates();
+  const isOpen = params.get("newSession") === "1";
+  const step = (params.get("step") as Step) || "select";
+  const templateId = params.get("templateId") || "";
+
+  return { isOpen, step, templateId };
+}
+
+export default function NewSessionModal({ templates }: { templates: Template[] }) {
+  const [state, setState] = useState(() => ({
+    isOpen: false,
+    step: "select" as Step,
+    templateId: "",
+  }));
+
+  useEffect(() => {
+    const update = () => setState(readParams());
+
+    // initial read
+    update();
+
+    // back/forward
+    window.addEventListener("popstate", update);
+
+    // our custom event (pushState)
+    window.addEventListener("urlchange", update);
+
+    return () => {
+      window.removeEventListener("popstate", update);
+      window.removeEventListener("urlchange", update);
+    };
+  }, []);
+
+  if (!state.isOpen) return null;
 
   return (
     <NewSessionModalClient
       templates={templates}
-      step={step === "confirm" ? "confirm" : "select"}
-      templateId={templateId}
+      step={state.step}
+      templateId={state.templateId}
     />
   );
 }

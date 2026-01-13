@@ -1,24 +1,42 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { Template } from "@/types/template";
 import styles from "./newSessionModal.module.css";
 import { Search, X, ChevronLeft, Folder, ChevronRight } from "lucide-react";
 
 type Step = "select" | "confirm";
 
+
+function setUrlParams(next: Record<string, string | null>, mode: "push" | "replace" = "push") {
+  const url = new URL(window.location.href);
+  const sp = url.searchParams;
+
+  for (const [k, v] of Object.entries(next)) {
+    if (v === null) sp.delete(k);
+    else sp.set(k, v);
+  }
+
+  const nextUrl = `${url.pathname}?${sp.toString()}${url.hash || ""}`;
+
+  if (mode === "replace") window.history.replaceState({}, "", nextUrl);
+  else window.history.pushState({}, "", nextUrl);
+
+  
+  window.dispatchEvent(new Event("urlchange"));
+}
+
 export default function NewSessionModalClient({
   templates,
+  loading,
   step,
   templateId,
 }: {
   templates: Template[];
+  loading: boolean;
   step: Step;
   templateId: string;
 }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
 
   const selectedTemplate = useMemo(() => {
@@ -35,25 +53,16 @@ export default function NewSessionModalClient({
     );
   }, [templates, query]);
 
-  function setParams(next: Record<string, string | null>) {
-    const params = new URLSearchParams(searchParams.toString());
-    for (const [k, v] of Object.entries(next)) {
-      if (v === null) params.delete(k);
-      else params.set(k, v);
-    }
-    router.push(`/sessions?${params.toString()}`);
-  }
-
   function close() {
-    setParams({ newSession: null, step: null, templateId: null });
+    setUrlParams({ newSession: null, step: null, templateId: null }, "push");
   }
 
   function goSelect() {
-    setParams({ step: "select", templateId: null });
+    setUrlParams({ step: "select", templateId: null }, "replace");
   }
 
   function chooseTemplate(id: string) {
-    setParams({ step: "confirm", templateId: id });
+    setUrlParams({ step: "confirm", templateId: id }, "replace");
   }
 
   function startSession() {
@@ -78,7 +87,6 @@ export default function NewSessionModalClient({
           </button>
         </div>
 
-        {/* Keeps modal size fixed  */}
         <div className={styles.content}>
           {step === "select" ? (
             <>
@@ -102,26 +110,33 @@ export default function NewSessionModalClient({
               </div>
 
               <div className={styles.list}>
-                {filtered.map((t) => (
-                  <button
-                    key={t.id}
-                    className={styles.listItem}
-                    onClick={() => chooseTemplate(t.id)}
-                  >
-                    <div className={styles.itemIcon}>
-                      <Folder size={18} strokeWidth={1.5} />
-                    </div>
+                {loading ? (
+                  
+                  <div style={{ padding: "14px", color: "var(--secondary-text)" }}>
+                    Loading templates...
+                  </div>
+                ) : (
+                  filtered.map((t) => (
+                    <button
+                      key={t.id}
+                      className={styles.listItem}
+                      onClick={() => chooseTemplate(t.id)}
+                    >
+                      <div className={styles.itemIcon}>
+                        <Folder size={18} strokeWidth={1.5} />
+                      </div>
 
-                    <div className={styles.itemText}>
-                      <div className={styles.itemTitle}>{t.title}</div>
-                      <div className={styles.itemSubtitle}>{t.description}</div>
-                    </div>
+                      <div className={styles.itemText}>
+                        <div className={styles.itemTitle}>{t.title}</div>
+                        <div className={styles.itemSubtitle}>{t.description}</div>
+                      </div>
 
-                    <div className={styles.chevron}>
-                      <ChevronRight size={20} strokeWidth={1.5} />
-                    </div>
-                  </button>
-                ))}
+                      <div className={styles.chevron}>
+                        <ChevronRight size={20} strokeWidth={1.5} />
+                      </div>
+                    </button>
+                  ))
+                )}
               </div>
             </>
           ) : (
