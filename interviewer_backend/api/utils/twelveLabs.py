@@ -224,58 +224,18 @@ FOR EACH QUESTION RESPONSE, PRODUCE:
 - speech_score (1–10)
 - brevity_score (1–10)
 
-2) evidence.clean_transcript  
-EXACTLY 6 short sentences summarizing what the candidate said.
-- Remove filler words (um, like, you know)
-- Preserve meaning, not grammar perfection
+2) feedback.points  
+EXACTLY 3 problems or issues identified during the interview (e.g., unclear explanations, lack of examples, poor structure)
 
-3) evidence.key_original_snippets  
-EXACTLY 3 items. Each item must include:
-- original: an exact or near-verbatim sentence the candidate said
-- issue: what is wrong with it (specific and concrete)
-- rewrite: a better sentence the candidate can practice saying
+3) feedback.ways_to_improve  
+EXACTLY 3 actionable improvements that directly address the problems in feedback.points (provide specific solutions for each problem)
 
-4) feedback.points  
-EXACTLY 3 concrete observations based on the video
-
-5) feedback.ways_to_improve  
-EXACTLY 3 actionable improvements with wording or structure guidance
-
-6) improved_answer.version  
+4) improved_answer.version  
 ONE polished answer paragraph the candidate can practice.
 - Natural
 - Professional
 - Not overly long
 - No buzzwords
-
-OUTPUT FORMAT (STRICT JSON):
-{{
-"question_responses": [
-    {{
-    "question": "<question text>",
-    "body_language_score": 1,
-    "speech_score": 1,
-    "brevity_score": 1,
-    "evidence": {{
-        "clean_transcript": ["...", "...", "...", "...", "...", "..."],
-        "key_original_snippets": [
-        {{
-            "original": "...",
-            "issue": "...",
-            "rewrite": "..."
-        }}
-        ]
-    }},
-    "feedback": {{
-        "points": ["...", "...", "..."],
-        "ways_to_improve": ["...", "...", "..."]
-    }},
-    "improved_answer": {{
-        "version": "..."
-    }}
-    }}
-]
-}}
 """
 
             result = self.client.analyze(
@@ -310,30 +270,6 @@ OUTPUT FORMAT (STRICT JSON):
                                             "type": "integer",
                                             "minimum": 1,
                                             "maximum": 10
-                                        },
-                                        "evidence": {
-                                            "type": "object",
-                                            "additionalProperties": False,
-                                            "properties": {
-                                                "clean_transcript": {
-                                                    "type": "array",
-                                                    "items": {"type": "string"}
-                                                },
-                                                "key_original_snippets": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "additionalProperties": False,
-                                                        "properties": {
-                                                            "original": {"type": "string"},
-                                                            "issue": {"type": "string"},
-                                                            "rewrite": {"type": "string"}
-                                                        },
-                                                        "required": ["original", "issue", "rewrite"]
-                                                    }
-                                                }
-                                            },
-                                            "required": ["clean_transcript", "key_original_snippets"]
                                         },
                                         "feedback": {
                                             "type": "object",
