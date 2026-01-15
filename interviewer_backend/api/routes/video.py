@@ -1,19 +1,14 @@
 import json
-import traceback
 
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
-from fastapi import Request
 from fastapi_sqlalchemy import db
 
 
-from api.exceptions import FailToCreateTask
-from api.schemas.base import StatusResponseModel
 from api.utils.security import Auth
 from api.utils.twelveLabs import VideoAnalysis
-from api.schemas.models import VideoAnalysisStateResponse, AnalysisResult, VideoUploadResponse, TwelveLabsWebhookRequest
-from api.schemas.models import TwelveLabsAnalysisModel
+from api.schemas.models import VideoAnalysisStateResponse, VideoUploadResponse, TwelveLabsWebhookRequest
+from api.schemas.models import QuestionResponseModel, FeedbackModel, ImproveAnswerModel
 from api.models.db import SessionState, Session, UserSession, Question, SessionComponent, Feedback, Grade, Template
-from pydantic import ValidationError
 
 
 video = APIRouter(prefix="/video", tags=["Video"])
@@ -61,8 +56,15 @@ async def upload_video(video: UploadFile = File(...),
         session=db.session,
         user_id=user_session.user_id,
         indexed_asset_id=None,
-        question=question,
         state=SessionState.PENDING
+    )
+    db.session.flush()
+
+    session_component = SessionComponent.create(
+        session=db.session,
+        session_id=session.id,
+        question_id=question_record.id,
+        transcript=None
     )
     db.session.flush()
 
@@ -75,7 +77,8 @@ async def upload_video(video: UploadFile = File(...),
         asset_id=asset.id,
         indexed_asset_id=indexed_asset.id,
         session_id=session.id,
-        question=question,
+        session_component_id=session_component.id,
+        question=question_record.question,
         state=session.state.value
     )
 
@@ -115,15 +118,21 @@ async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
     db.session.flush()
 
     try:
+        # Get question from SessionComponent
+        question_text = session.session_components[0].question.question if session.session_components else None
+        
+        if not question_text:
+            raise ValueError("No question found in session components")
+        
         result = analyzer.generate_interview_analysis(
             video_id=indexed_asset_id,            
-            questions=[session.question]     
+            question=question_text
         )
 
         data_string = result.data if hasattr(result, "data") else str(result)
         analysis_dict = json.loads(data_string)
 
-        # Store raw JSON
+        # Store raw JSON (for debugging)
         session.analysis_data = json.dumps(analysis_dict)
 
         print(f"[webhook] SUCCESS: Analysis completed for session_id: {session.id}")
@@ -163,21 +172,19 @@ async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
                     db.session.flush()
                     print(f"[webhook] Created question: {question.id}")
 
-                # Create SessionComponent
-                session_component = SessionComponent.create(
-                    session=db.session,
-                    session_id=session.id,
-                    question_id=question.id,
-                    transcript=None
+                session_component = (
+                    SessionComponent.query(session=db.session)
+                    .filter(SessionComponent.session_id == session.id)
+                    .one_or_none()
                 )
-                db.session.flush()
 
                 Grade.create(
                     session=db.session,
                     session_component_id=session_component.id,
                     body_language_score=qr.get("body_language_score", 0),
                     speech_score=qr.get("speech_score", 0),
-                    brevity_score=qr.get("brevity_score", 0)
+                    brevity_score=qr.get("brevity_score", 0),
+                    material_score=0
                 )
 
                 # Create Feedback
@@ -198,6 +205,16 @@ async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
                     ways_to_improve=ways_str
                 )
                 db.session.flush()
+
+                index_id = analyzer.get_or_create_index(session.user_id, session=db.session)
+                transcript_text = analyzer.get_video_transcript(
+                    index_id=index_id,
+                    video_id=indexed_asset_id
+                )
+
+                if transcript_text:
+                    session_component.transcript = transcript_text
+                    db.session.flush()
 
         session.state = SessionState.COMPLETED
         db.session.commit()
@@ -227,48 +244,40 @@ async def get_video_analysis(
     # Verify ownership
     if session.user_id != user_session.user_id:
         raise HTTPException(status_code=403, detail="Access denied")
-    
-    # Parse analysis data if available
-    analysis_data = None
-    if session.analysis_data:
-        try:
-            analysis_dict = json.loads(session.analysis_data)
-            # Check if it's new format (question_responses) or old format
-            if "question_responses" in analysis_dict:
-                filtered_responses = []
-                for response in analysis_dict["question_responses"]:
-                    filtered_response = {
-                        "question": response.get("question"),
-                        "body_language_score": response.get("body_language_score"),
-                        "speech_score": response.get("speech_score"),
-                        "brevity_score": response.get("brevity_score"),
-                        "feedback": {
-                            "points": response.get("feedback", {}).get("points", []),
-                            "ways_to_improve": response.get("feedback", {}).get("ways_to_improve", [])
-                        },
-                        "improved_answer": {  # Add this
-                            "version": response.get("improved_answer", {}).get("version", "")
-                        }
-                    }
-                    filtered_responses.append(filtered_response)
-                
-                filtered_dict = {"question_responses": filtered_responses}
-                analysis_data = TwelveLabsAnalysisModel(**filtered_dict)
-            else:
-                # Old format - try to parse as AnalysisResult
-                analysis_data = AnalysisResult(**analysis_dict)
-        except (json.JSONDecodeError, ValidationError) as e:
-            print(f"[get_video_analysis] Error parsing analysis data: {e}")
-            analysis_data = None
-    
-    # Determine status message
-    status = "success" if session.state == SessionState.COMPLETED else "processing"
-    if session.state == SessionState.ERROR:
-        status = "error"
+
+
+    if session.session_components:
+        session_component = session.session_components[0]
+
+        if session_component.grade and session_component.feedback:
+            # Parse feedback strings back to arrays
+            points_list = session_component.feedback.point.split("\n") if session_component.feedback.point else []
+            ways_list = session_component.feedback.ways_to_improve.split("\n") if session_component.feedback.ways_to_improve else []
+
+            improved_answer_version = ""
+            if session.analysis_data:
+                try:
+                    analysis_dict = json.loads(session.analysis_data)
+                    if "question_responses" in analysis_dict:
+                        improved_answer_version = analysis_dict["question_responses"][0].get("improved_answer", {}).get("version", "")
+                except:
+                    pass
+
+            question_response = QuestionResponseModel(
+                question=session_component.question.question,
+                body_language_score=session_component.grade.body_language_score,
+                speech_score=session_component.grade.speech_score,
+                brevity_score=session_component.grade.brevity_score,
+                feedback=FeedbackModel(
+                    points=points_list,
+                    ways_to_improve=ways_list
+                ),
+                improved_answer=ImproveAnswerModel(version=improved_answer_version)
+            )
     
     return VideoAnalysisStateResponse(
-        status=status,
+        status=session.state.value,
         session_id=session.id,
-        analysis_data=analysis_data,
+        analysis_data=question_response,
         error=None if session.state != SessionState.ERROR else "Analysis failed"
     )

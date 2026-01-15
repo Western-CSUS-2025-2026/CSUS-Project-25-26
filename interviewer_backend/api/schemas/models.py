@@ -107,7 +107,7 @@ class VideoUploadResponse(Base):
     asset_id: str
     indexed_asset_id: str
     session_id: int
-
+    session_component_id: int
     question: str
     state: str
 
@@ -135,12 +135,8 @@ class QuestionResponseModel(Base):
     improved_answer: ImproveAnswerModel
 
 
-class TwelveLabsAnalysisModel(Base):
-    question_responses: List[QuestionResponseModel]
-
-
 class VideoAnalysisStateResponse(Base):
     status: str
     session_id: int
-    analysis_data: AnalysisResult | TwelveLabsAnalysisModel | None = None
+    analysis_data: QuestionResponseModel | None = None
     error: str | None = None

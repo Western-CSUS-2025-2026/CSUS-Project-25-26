@@ -177,6 +177,34 @@ class VideoAnalysis:
         return indexed_asset
 
 
+    def get_video_transcript(self, index_id: str, video_id: str):
+        """
+        Retrieve transcript for an indexed video.
+        
+        Args:
+            index_id: The unique identifier of the index
+            video_id: The unique identifier of the indexed video (indexed_asset_id)
+        
+        Returns:
+            String containing the full transcript, or None if not available
+        """
+        try:
+            response = self.client.indexes.videos.retrieve(
+                index_id=index_id,
+                video_id=video_id,
+                transcription=True
+            )
+            
+            if hasattr(response, 'transcription') and response.transcription:
+                transcript_parts = [item.value for item in response.transcription if hasattr(item, 'value')]
+                return " ".join(transcript_parts) if transcript_parts else None
+            
+            return None
+        except Exception as e:
+            print(f"[get_video_transcript] Error retrieving transcript: {e}")
+            return None
+
+
     def list_indexed_assets(self, index_id: str):
         """
         List all indexed assets in an index.
@@ -195,20 +223,16 @@ class VideoAnalysis:
         return response
 
 
-    def generate_interview_analysis(self, video_id: str, questions: list[str]):
+    def generate_interview_analysis(self, video_id: str, question: str):
         try:
-            questions_block = "\n".join(
-                [f"{i+1}. {q}" for i, q in enumerate(questions)]
-            )
-
             prompt = f"""
 You are a senior technical interviewer and communication coach.
 
-The video contains answers to interview questions.
-Analyze EACH answer separately.
+The video contains an answer to an interview question.
+Analyze the candidate's response.
 
-QUESTIONS:
-{questions_block}
+QUESTION:
+{question}
 
 CRITICAL RULES (DO NOT VIOLATE):
 - Return ONE valid JSON object only
@@ -217,7 +241,7 @@ CRITICAL RULES (DO NOT VIOLATE):
 - If a visible face is NOT present, all scores MUST be below 5
 - Feedback must be grounded in what the candidate actually said
 
-FOR EACH QUESTION RESPONSE, PRODUCE:
+PRODUCE:
 
 1) Scores:
 - body_language_score (1–10)
@@ -300,7 +324,6 @@ ONE polished answer paragraph the candidate can practice.
                                         "body_language_score",
                                         "speech_score",
                                         "brevity_score",
-                                        "evidence",
                                         "feedback",
                                         "improved_answer"
                                     ]

@@ -100,6 +100,7 @@ class Grade(BaseDbModel):
     body_language_score: Mapped[int] = mapped_column(Integer, nullable=False)
     speech_score: Mapped[int] = mapped_column(Integer, nullable=False)
     brevity_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    material_score: Mapped[int] = mapped_column(Integer, nullable=False)
     session_component_id: Mapped[int] = mapped_column(Integer, ForeignKey("session_component.id"), nullable=False, unique=True)
     session_component: Mapped["SessionComponent"] = relationship(
         "SessionComponent",
@@ -186,7 +187,6 @@ class Session(BaseDbModel):
         primaryjoin="Session.user_id==User.id",
     )
     indexed_asset_id: Mapped[str] = mapped_column(String, nullable=True)
-    question: Mapped[str] = mapped_column(Text, nullable=True)
     analysis_data: Mapped[str] = mapped_column(Text, nullable=True)
 
 
