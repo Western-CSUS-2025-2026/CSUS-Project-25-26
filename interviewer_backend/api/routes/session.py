@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
 from fastapi_sqlalchemy import db
@@ -15,8 +15,8 @@ from api.schemas.models import (
 )
 from api.utils.security import Auth
 
-logger = logging.getLogger(__name__)
-session = APIRouter(prefix="/sessions", tags=["Sessions"])
+logger: logging.Logger = logging.getLogger(__name__)
+session: APIRouter = APIRouter(prefix="/sessions", tags=["Sessions"])
 
 
 @session.get("", response_model=SessionsList)
@@ -71,15 +71,19 @@ async def get_session(
     grades_list: list[GradeGet] = []
     transcripts: list[str] = []
 
+    comp: SessionComponent
     for comp in session_obj.session_components:
         if comp.transcript:
             transcripts.append(comp.transcript)
 
         if comp.grade:
-            # Calculate the overall_score required by the GradeGet schema
-            scores = [comp.grade.body_language_score, comp.grade.speech_score,
-                      comp.grade.material_score, comp.grade.brevity_score]
-            avg = sum(scores) // len(scores)
+            scores: List[int] = [
+                comp.grade.body_language_score,
+                comp.grade.speech_score,
+                comp.grade.material_score,
+                comp.grade.brevity_score
+            ]
+            avg: int = sum(scores) // len(scores)
 
             grades_list.append(
                 GradeGet(
@@ -101,6 +105,5 @@ async def get_session(
         create_ts=session_obj.create_ts,
         grades=grades_list,
         transcript="\n".join(transcripts) if transcripts else None,
-        # Take video URL from the first component if available
         video_url=session_obj.session_components[0].video.s3_key if (session_obj.session_components and session_obj.session_components[0].video) else None
     )

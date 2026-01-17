@@ -1,3 +1,4 @@
+from typing import List, Optional
 from fastapi import APIRouter, Depends
 from fastapi_sqlalchemy import db
 
@@ -13,12 +14,13 @@ question = APIRouter(prefix="/questions", tags=["Questions"])
 def create_question(
     payload: QuestionCreate,
     _: UserSession = Depends(Auth()),
-):
-    db_template = Template.query(session=db.session).get(payload.template_id)
+) -> QuestionGet:
+    db_template: Optional[Template] = Template.query(session=db.session).get(payload.template_id)
+
     if not db_template:
         raise ObjectNotFound(Template, payload.template_id)
 
-    new_question = Question(**payload.model_dump())
+    new_question: Question = Question(**payload.model_dump())
     db.session.add(new_question)
     db.session.commit()
 
@@ -29,12 +31,13 @@ def create_question(
 def get_questions_for_template(
     template_id: int,
     _: UserSession = Depends(Auth()),
-):
-    db_template = Template.query(session=db.session).get(template_id)
+) -> List[QuestionGet]:
+    db_template: Optional[Template] = Template.query(session=db.session).get(template_id)
+
     if not db_template:
         raise ObjectNotFound(Template, template_id)
 
-    questions = (
+    questions: List[Question] = (
         Question.query(session=db.session)
         .filter(Question.template_id == template_id)
         .all()
@@ -47,8 +50,9 @@ def get_questions_for_template(
 def delete_question(
     question_id: int,
     _: UserSession = Depends(Auth())
-):
-    db_question = Question.query(session=db.session).get(question_id)
+) -> StatusResponse:
+    db_question: Optional[Question] = Question.query(session=db.session).get(question_id)
+
     if not db_question:
         raise ObjectNotFound(Question, question_id)
 
