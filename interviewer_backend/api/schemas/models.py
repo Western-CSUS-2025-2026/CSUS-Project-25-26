@@ -89,6 +89,7 @@ class UserGet(Base):
     id: int
     username: str
 
+
 class FeedbackGet(Base):
     id: int
     point: str

@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends
 from fastapi_sqlalchemy import db
 
 from api.exceptions import ObjectNotFound
-from api.models.db import Question, Session, SessionState, Template, UserSession
-from api.schemas.models import QuestionCreate, QuestionGet, SessionObject
+from api.models.db import Question, Template, UserSession
+from api.schemas.models import QuestionCreate, QuestionGet
 from api.utils.security import Auth
 
 question = APIRouter(prefix="/questions", tags=["Questions"])
@@ -12,37 +12,46 @@ question = APIRouter(prefix="/questions", tags=["Questions"])
 @question.post("", response_model=QuestionGet)
 def create_question(
     payload: QuestionCreate,
-    _: UserSession = Depends(Auth),
+    _: UserSession = Depends(Auth()),
 ):
-    template = Template.query(session=db.session).get(payload.template_id)
-    if not template:
+    db_template = Template.query(session=db.session).get(payload.template_id)
+    if not db_template:
         raise ObjectNotFound(Template, payload.template_id)
 
-    question = Question(**payload.model_dump())
-    db.session.add(question)
+    new_question = Question(**payload.model_dump())
+    db.session.add(new_question)
     db.session.commit()
-    db.session.refresh(question)
-    return question
+
+    return QuestionGet.model_validate(new_question)
 
 
 @question.get("/template/{template_id}", response_model=list[QuestionGet])
 def get_questions_for_template(
     template_id: int,
-    _: UserSession = Depends(Auth),
+    _: UserSession = Depends(Auth()),
 ):
-    return (
+    db_template = Template.query(session=db.session).get(template_id)
+    if not db_template:
+        raise ObjectNotFound(Template, template_id)
+
+    questions = (
         Question.query(session=db.session)
         .filter(Question.template_id == template_id)
         .all()
     )
 
+    return [QuestionGet.model_validate(q) for q in questions]
+
 
 @question.delete("/{question_id}")
-def delete_question(question_id: int, _: UserSession = Depends(Auth)):
-    question = Question.query(session=db.session).get(question_id)
-    if not question:
+def delete_question(
+    question_id: int,
+    _: UserSession = Depends(Auth())
+):
+    db_question = Question.query(session=db.session).get(question_id)
+    if not db_question:
         raise ObjectNotFound(Question, question_id)
 
-    db.session.delete(question)
+    db.session.delete(db_question)
     db.session.commit()
     return {"status": "deleted"}

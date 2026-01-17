@@ -1,16 +1,17 @@
 import logging
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from fastapi_sqlalchemy import db
+from sqlalchemy.orm import joinedload, Query as SQLAQuery
 
 from api.exceptions import ObjectNotFound
-from api.models.db import Session, UserSession
+from api.models.db import Session, UserSession, SessionComponent
 from api.schemas.models import (
-    FeedbackGet,
-    GradeGet,
     SessionObject,
     SessionsList,
     SimpleSession,
+    GradeGet,
 )
 from api.utils.security import Auth
 
@@ -21,36 +22,30 @@ session = APIRouter(prefix="/sessions", tags=["Sessions"])
 @session.get("", response_model=SessionsList)
 async def get_user_sessions(
     user_session: UserSession = Depends(Auth()),
-    length: int = Query(
-        default=10, ge=1, le=100, description="Number of sessions to return"
-    ),
-    skip: int = Query(default=0, ge=0, description="Number of sessions to skip"),
+    limit: int = Query(default=10, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
 ) -> SessionsList:
-    """
-    Get all of a user's past sessions.
-
-    Returns an array of all the user's sessions with the specified length.
-    """
-    sessions_query = (
+    """Get summarized history of user sessions."""
+    sessions_query: SQLAQuery = (
         Session.query(session=db.session)
         .filter(Session.user_id == user_session.user_id)
         .order_by(Session.create_ts.desc())
-        .offset(skip)
-        .limit(length)
+        .offset(offset)
+        .limit(limit)
     )
-    sessions = sessions_query.all()
+    sessions: list[Session] = sessions_query.all()
 
-    simple_sessions = [
-        SimpleSession(
-            id=session.id,
-            state=session.state.value,
-            overall_grade=session.overall_grade,
-            create_ts=session.create_ts,
-        )
-        for session in sessions
-    ]
-
-    return SessionsList(sessions=simple_sessions)
+    return SessionsList(
+        sessions=[
+            SimpleSession(
+                id=s.id,
+                state=s.state.value,
+                overall_grade=s.overall_grade,
+                create_ts=s.create_ts,
+            )
+            for s in sessions
+        ]
+    )
 
 
 @session.get("/{session_id}", response_model=SessionObject)
@@ -58,13 +53,13 @@ async def get_session(
     session_id: int,
     user_session: UserSession = Depends(Auth()),
 ) -> SessionObject:
-    """
-    Get all the data about a specific session.
-
-    Returns a Session Object with all details including grades and feedback.
-    """
-    session_obj: Session | None = (
+    session_obj: Optional[Session] = (
         Session.query(session=db.session)
+        .options(
+            joinedload(Session.session_components).joinedload(SessionComponent.grade),
+            joinedload(Session.session_components).joinedload(SessionComponent.feedback),
+            joinedload(Session.session_components).joinedload(SessionComponent.video)
+        )
         .filter(Session.id == session_id)
         .filter(Session.user_id == user_session.user_id)
         .one_or_none()
@@ -73,33 +68,39 @@ async def get_session(
     if not session_obj:
         raise ObjectNotFound(Session, session_id)
 
-    # Build grades with feedback
-    grades = []
-    for grade in session_obj.grades:
-        feedback = grade.feed_back
-        grades.append(
-            GradeGet(
-                id=grade.id,
-                body_language_score=grade.body_language_score,
-                speech_score=grade.speech_score,
-                material_score=grade.material_score,
-                brevity_score=grade.brevity_score,
-                overall_score=grade.overall_score,
-                feed_back=FeedbackGet(
-                    id=feedback.id,
-                    point=feedback.point,
-                    ways_to_improve=feedback.ways_to_improve,
-                ),
+    grades_list: list[GradeGet] = []
+    transcripts: list[str] = []
+
+    for comp in session_obj.session_components:
+        if comp.transcript:
+            transcripts.append(comp.transcript)
+
+        if comp.grade:
+            # Calculate the overall_score required by the GradeGet schema
+            scores = [comp.grade.body_language_score, comp.grade.speech_score,
+                      comp.grade.material_score, comp.grade.brevity_score]
+            avg = sum(scores) // len(scores)
+
+            grades_list.append(
+                GradeGet(
+                    id=comp.grade.id,
+                    body_language_score=comp.grade.body_language_score,
+                    speech_score=comp.grade.speech_score,
+                    material_score=comp.grade.material_score,
+                    brevity_score=comp.grade.brevity_score,
+                    overall_score=avg,
+                    feed_back=comp.feedback
+                )
             )
-        )
 
     return SessionObject(
         id=session_obj.id,
         user_id=session_obj.user_id,
-        video_url=session_obj.video_url,
-        transcript=session_obj.transcript,
         state=session_obj.state.value,
         overall_grade=session_obj.overall_grade,
-        grades=grades,
         create_ts=session_obj.create_ts,
+        grades=grades_list,
+        transcript="\n".join(transcripts) if transcripts else None,
+        # Take video URL from the first component if available
+        video_url=session_obj.session_components[0].video.s3_key if (session_obj.session_components and session_obj.session_components[0].video) else None
     )
