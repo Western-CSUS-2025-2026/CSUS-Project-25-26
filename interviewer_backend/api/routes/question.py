@@ -3,7 +3,7 @@ from fastapi_sqlalchemy import db
 
 from api.exceptions import ObjectNotFound
 from api.models.db import Question, Template, UserSession
-from api.schemas.models import QuestionCreate, QuestionGet
+from api.schemas.models import QuestionCreate, QuestionGet, StatusResponse
 from api.utils.security import Auth
 
 question = APIRouter(prefix="/questions", tags=["Questions"])
@@ -54,4 +54,5 @@ def delete_question(
 
     db.session.delete(db_question)
     db.session.commit()
-    return {"status": "deleted"}
+
+    return StatusResponse(status="deleted")

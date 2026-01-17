@@ -7,6 +7,7 @@ from api.schemas.models import (
     TemplateCreate,
     TemplateGet,
     TemplateUpdate,
+    StatusResponse
 )
 from api.utils.security import Auth
 
@@ -66,4 +67,5 @@ def delete_template(template_id: int, _: UserSession = Depends(Auth())):
 
     db.session.delete(db_template)
     db.session.commit()
-    return {"status": "deleted"}
+
+    return StatusResponse(status="deleted")

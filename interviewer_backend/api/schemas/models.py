@@ -173,3 +173,6 @@ class QuestionGet(QuestionBase):
 
 class TemplateWithQuestionsGet(TemplateGet):
     questions: list[QuestionGet]
+
+class StatusResponse(Base):
+    status: str
