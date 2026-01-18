@@ -102,30 +102,33 @@ class GradeGet(Base):
     speech_score: int
     material_score: int
     brevity_score: int
-    overall_score: int
-    feed_back: FeedbackGet
 
 
-class SimpleSession(Base):
+class VideoGet(Base):
     id: int
-    state: str
-    overall_grade: int | None
-    create_ts: datetime.datetime
+    s3_key: str | None
 
 
-class SessionObject(Base):
+class SessionComponentGet(Base):
+    id: int
+    transcript: str | None
+    question_id: int
+    grade: GradeGet | None = None
+    feedback: FeedbackGet | None = None
+    video: VideoGet | None = None
+
+
+class SessionGet(Base):
     id: int
     user_id: int
-    video_url: str | None
-    transcript: str | None
     state: str
     overall_grade: int | None
-    grades: list[GradeGet]
     create_ts: datetime.datetime
+    session_components: list[SessionComponentGet] | None = None
 
 
 class SessionsList(Base):
-    sessions: list[SimpleSession]
+    sessions: list[SessionGet]
 
 
 class SessionCreate(Base):
@@ -173,6 +176,7 @@ class QuestionGet(QuestionBase):
 
 class TemplateWithQuestionsGet(TemplateGet):
     questions: list[QuestionGet]
+
 
 class StatusResponse(Base):
     status: str
