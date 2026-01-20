@@ -1,0 +1,92 @@
+.cardContent {
+  display: grid;
+  flex-direction: row;
+  grid-template-columns: 1fr 1fr;
+  justify-content: space-between;
+  align-items: start;
+}
+
+.statusBox {
+  text-align: right;
+}
+
+.statusBox h3 {
+  margin: 0;
+  color: var(--secondary-text);
+}
+
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  height: 100%; /* important */
+}
+
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  height: 100%;
+}
+
+.dateBox {
+  display: block;
+  flex-grow: 1;
+  margin-bottom: auto;
+}
+
+.dateBox h3 {
+  margin: 0;
+  color: var(--secondary-text);
+  font-weight: 500;
+}
+
+.SessionBox {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: auto;
+}
+
+.SessionBox p {
+  margin: 0;
+}
+
+.SessionBox h2 {
+  /* 4px bottom margin → 0.25em × 1.11 = 0.277em */
+  margin-bottom: 0.2em;
+  margin-top: 0;
+}
+
+.proccessingText p {
+  /* 30px top margin → 1.875em × 1.11 = 2.081em */
+  margin-bottom: 0.4em;
+  font-size: 0.7em;
+}
+
+.buttonBackground {
+  width: 100%; /* 273px corrected */
+  min-width: 14em;
+  height: 3.19em; /* 46px corrected */
+  background: #303030;
+
+  border-radius: 6.94em; /* 100px corrected */
+  opacity: 1;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 0;
+  cursor: pointer;
+}
+
+.buttonText {
+  color: var(--primary-text); /* white */
+  font-weight: 600; /* bold */
+  margin: 0; /* remove global margins */
+}
+
+.buttonGenText {
+  color: var(--secondary-text); /* accent color */
+  font-weight: 600; /* bold */
+  margin: 0; /* remove global margins */
+}
