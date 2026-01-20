@@ -8,6 +8,7 @@ html {
   --secondary-text: #828079;
   --accent-primary-text: #39333b;
   --accent-secondary-text: #8c769a;
+  --highlight: #505050;
   /* font sizing*/
   --h1-font-size: 2em;
   --h2-font-size: 1.5em;

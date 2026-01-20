@@ -1,25 +1,8 @@
-"use client";
-import {
-  checkVerificationCode,
-  getVerificationEmail,
-} from "@/actions/login/register";
 import Card from "@/components/card/card";
 import LoadingText from "@/components/loadingText/loadingText";
-import { useActionState, useRef } from "react";
+import StyledInput from "@/components/styledInput/styledInput";
 
 export default function Home() {
-  const [state, formAction] = useActionState(getVerificationEmail, undefined);
-  const [codeState, codeFormAction] = useActionState(
-    checkVerificationCode,
-    undefined,
-  );
-
-  const fromFunc = async () => {
-    const form = new FormData();
-    form.append("email", "test");
-    const res = await getVerificationEmail(undefined, form);
-  };
-
   return (
     <div>
       <Card height="30em" width="20em">
@@ -42,22 +25,14 @@ export default function Home() {
         </div>
       </Card>
       <Card>
-        <form action={formAction}>
-          <input name="email" />
-          <button style={{ color: "green" }} type="submit">
-            Submit Form
-          </button>
-          <div style={{ color: "green" }}>{state}</div>
-        </form>
-        <div> Code</div>
-        <form action={codeFormAction}>
-          <input name="email" />
-          <input name="code" />
-          <button style={{ color: "green" }} type="submit">
-            Submit Form
-          </button>
-          <div style={{ color: "green" }}>{codeState}</div>
-        </form>
+        <StyledInput
+          title="Title"
+          placeholder="Enter name"
+          width="15em"
+          subtext="Sub text"
+          subtextStyle="Error"
+        ></StyledInput>
+        <StyledInput placeholder="Enter name" width="15em"></StyledInput>
       </Card>
     </div>
   );
