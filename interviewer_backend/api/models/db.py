@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 import logging
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -28,6 +28,9 @@ class User(BaseDbModel):
     )
     sessions: Mapped[list[UserSession]] = relationship(
         "UserSession", foreign_keys="UserSession.user_id", back_populates="user", cascade='all, delete'
+    )
+    interview_sessions: Mapped[list[InterviewSession]] = relationship(
+        "InterviewSession", foreign_keys="InterviewSession.user_id", back_populates="user", cascade='all, delete'
     )
 
 
@@ -61,3 +64,45 @@ class UserMessageDelay(BaseDbModel):
     )
     user_email: Mapped[str] = mapped_column(String, unique=False, nullable=False)
     user_ip: Mapped[str] = mapped_column(String, unique=False, nullable=False)
+
+
+class InterviewSession(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"))
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    video_task_id: Mapped[str] = mapped_column(String, nullable=True)
+    video_id: Mapped[str] = mapped_column(String, nullable=True)
+    status: Mapped[str] = mapped_column(String, default="pending")
+    create_ts: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc), nullable=False
+    )
+    user: Mapped[User] = relationship(
+        "User",
+        foreign_keys=[user_id],
+        back_populates="interview_sessions",
+        primaryjoin="InterviewSession.user_id==User.id",
+    )
+    feedback: Mapped[InterviewFeedback] = relationship(
+        "InterviewFeedback", back_populates="interview_session", uselist=False, cascade='all, delete'
+    )
+
+
+class InterviewFeedback(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    interview_session_id: Mapped[int] = mapped_column(Integer, ForeignKey("interview_session.id"), unique=True)
+    overall_score: Mapped[float] = mapped_column(Float, nullable=True)
+    clarity_score: Mapped[float] = mapped_column(Float, nullable=True)
+    pace_score: Mapped[float] = mapped_column(Float, nullable=True)
+    filler_word_count: Mapped[int] = mapped_column(Integer, nullable=True)
+    confidence_score: Mapped[float] = mapped_column(Float, nullable=True)
+    eye_contact_score: Mapped[float] = mapped_column(Float, nullable=True)
+    summary: Mapped[str] = mapped_column(Text, nullable=True)
+    suggestions: Mapped[str] = mapped_column(Text, nullable=True)
+    create_ts: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc), nullable=False
+    )
+    interview_session: Mapped[InterviewSession] = relationship(
+        "InterviewSession",
+        foreign_keys=[interview_session_id],
+        back_populates="feedback",
+    )

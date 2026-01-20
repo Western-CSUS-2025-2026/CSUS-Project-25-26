@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     EMAIL_DELAY_TIME_IN_MINUTES: float = 1
     EMAIL_DELAY_COUNT: int = 3
 
+    # Twelve Labs configuration
+    TWELVE_LABS_API_KEY: str = ""
+    TWELVE_LABS_INDEX_ID: str = ""
+
     model_config = ConfigDict(case_sensitive=True, env_file=".env", extra="ignore")
 
 

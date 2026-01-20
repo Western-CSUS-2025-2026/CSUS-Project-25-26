@@ -88,3 +88,34 @@ class MyUserGet(Base):
 class UserGet(Base):
     id: int
     username: str
+
+
+# Interview schemas
+class InterviewSessionCreate(Base):
+    question: str
+
+
+class InterviewFeedbackGet(Base):
+    id: int
+    overall_score: float | None
+    clarity_score: float | None
+    pace_score: float | None
+    filler_word_count: int | None
+    confidence_score: float | None
+    eye_contact_score: float | None
+    summary: str | None
+    suggestions: str | None
+    create_ts: datetime.datetime
+
+
+class InterviewSessionGet(Base):
+    id: int
+    question: str
+    video_id: str | None
+    status: str
+    create_ts: datetime.datetime
+    feedback: InterviewFeedbackGet | None = None
+
+
+class InterviewSessionsGet(Base):
+    sessions: list[InterviewSessionGet]

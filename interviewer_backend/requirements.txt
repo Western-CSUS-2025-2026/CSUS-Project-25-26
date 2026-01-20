@@ -9,3 +9,4 @@ pydantic-settings
 SQLAlchemy
 uvicorn
 retrying
+twelvelabs

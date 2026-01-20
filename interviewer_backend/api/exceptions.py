@@ -47,3 +47,13 @@ class RegistrationIncomplete(APIError):
 class AuthFailed(APIError):
     def __init__(self, error_msg: str):
         super().__init__(error_msg)
+
+
+class VideoProcessingFailed(APIError):
+    def __init__(self, error_msg: str):
+        super().__init__(f"Video processing failed: {error_msg}")
+
+
+class AnalysisFailed(APIError):
+    def __init__(self, error_msg: str):
+        super().__init__(f"Interview analysis failed: {error_msg}")

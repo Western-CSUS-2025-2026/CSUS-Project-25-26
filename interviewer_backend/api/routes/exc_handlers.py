@@ -3,11 +3,13 @@ from starlette.responses import JSONResponse
 
 from api.exceptions import (
     AlreadyExists,
+    AnalysisFailed,
     AuthFailed,
     ForbiddenAction,
     ObjectNotFound,
     RegistrationIncomplete,
     TooManyEmailRequests,
+    VideoProcessingFailed,
 )
 from api.schemas.base import StatusResponseModel
 
@@ -47,6 +49,22 @@ async def registration_incomplete_handler(req: starlette.requests.Request, exc: 
     return JSONResponse(
         StatusResponseModel(status="Error", message=exc.msg).model_dump(),
         status_code=403,
+    )
+
+
+@app.exception_handler(VideoProcessingFailed)
+async def video_processing_failed_handler(req: starlette.requests.Request, exc: VideoProcessingFailed):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=422,
+    )
+
+
+@app.exception_handler(AnalysisFailed)
+async def analysis_failed_handler(req: starlette.requests.Request, exc: AnalysisFailed):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=422,
     )
 
 

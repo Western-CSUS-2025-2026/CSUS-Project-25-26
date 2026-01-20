@@ -5,6 +5,7 @@ from fastapi_sqlalchemy import DBSessionMiddleware
 from api import __version__
 from api.settings import Settings, get_settings
 
+from .interview import interview as interview_router
 from .user import user as user_router
 
 
@@ -32,3 +33,4 @@ app.add_middleware(
 )
 
 app.include_router(user_router)
+app.include_router(interview_router)
