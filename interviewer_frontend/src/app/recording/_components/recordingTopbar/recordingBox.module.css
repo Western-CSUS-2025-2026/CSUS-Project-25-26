@@ -9,7 +9,8 @@
 
 .recordingRow{
   display: flex;
-  gap: 1em;
+  align-items: center;
+  gap: 0; 
 }
 
 
@@ -71,18 +72,50 @@
 }
 
 .recordingIndicator {
-  width: 3.4em;
   height: 1.46em;
 
   border-radius: 10px;
-  opacity: 1;
 
   display: flex;
   align-items: center;
   justify-content: space-evenly;
 
   background-color: var(--border);
+
+  /* animation*/
+  overflow: hidden;
+  white-space: nowrap;
+
+  width: 0;
+  margin-right: 0;
+
+  opacity: 0;
+  transform: translateX(-0.6em);
+
+  transition:
+    width 220ms ease,
+    margin-right 220ms ease,
+    opacity 180ms ease,
+    transform 220ms ease;
 }
+
+/* when recording is ON */
+.recordingOn {
+  width: 3.4em;      
+  margin-right: 1em; /* replace old flex gap */
+
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.recordingOff {
+  width: 0;
+  margin-right: 0;
+
+  opacity: 0;
+  transform: translateX(-0.6em);
+}
+
 
 .recordingDot {
   width: 0.5em;
@@ -112,3 +145,4 @@
   --bar-thickness: 0.1em; /* set to 0.10em or 0.20em */
   --bar-gap: 0.2em;       /* optional */
 }
+
