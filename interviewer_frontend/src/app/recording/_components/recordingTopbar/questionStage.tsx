@@ -1,15 +1,16 @@
 import Card from "@/components/card/card";
 import styles from "./questionStage.module.css";
+import { SessionState } from "@/lib/sessionLib/useSession";
 
-type Stage = "preparing" | "answering";
+type Stage = SessionState;
 
 type QuestionStageProps = {
   stage: Stage;
 };
 
 export default function QuestionStage({ stage }: QuestionStageProps) {
-  const isPreparing = stage === "preparing";
-  const isAnswering = stage === "answering";
+  const isPreparing = stage == "Preparing";
+  const isAnswering = stage == "Recording";
 
   return (
     <div>
@@ -21,7 +22,9 @@ export default function QuestionStage({ stage }: QuestionStageProps) {
           <div
             className={isPreparing ? styles.stageBoxActive : styles.stageBox}
           >
-            <p className={isPreparing ? styles.activeText : styles.inactiveText}>
+            <p
+              className={isPreparing ? styles.activeText : styles.inactiveText}
+            >
               Preparing
             </p>
           </div>
@@ -30,7 +33,9 @@ export default function QuestionStage({ stage }: QuestionStageProps) {
           <div
             className={isAnswering ? styles.stageBoxActive : styles.stageBox}
           >
-            <p className={isAnswering ? styles.activeText : styles.inactiveText}>
+            <p
+              className={isAnswering ? styles.activeText : styles.inactiveText}
+            >
               Answering
             </p>
           </div>

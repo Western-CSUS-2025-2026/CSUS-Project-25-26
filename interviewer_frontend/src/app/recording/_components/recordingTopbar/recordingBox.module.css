@@ -7,12 +7,11 @@
   justify-content: space-between;
 }
 
-.recordingRow{
+.recordingRow {
   display: flex;
   align-items: center;
-  gap: 0; 
+  gap: 0;
 }
-
 
 .left {
   display: grid;
@@ -20,18 +19,18 @@
   gap: 0.5em;
 }
 
-
 .circleButton {
   width: 3.236em;
   height: 3.236em;
   border-radius: 9999em;
+  margin-left: 1em;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
   font-weight: 600;
-  background-color: #984A4A;
+  background-color: #984a4a;
   overflow: visible;
 
   border: none;
@@ -66,7 +65,7 @@
   transform: translateX(0.1em);
 }
 
-.timeText{
+.timeText {
   color: var(--primary-text);
   margin: 0;
 }
@@ -101,7 +100,7 @@
 
 /* when recording is ON */
 .recordingOn {
-  width: 3.4em;      
+  width: 3.4em;
   margin-right: 1em; /* replace old flex gap */
 
   opacity: 1;
@@ -116,22 +115,20 @@
   transform: translateX(-0.6em);
 }
 
-
 .recordingDot {
   width: 0.5em;
   height: 0.5em;
   border-radius: 9999em;
 
   display: flex;
-  background-color: #984A4A;
+  background-color: #984a4a;
 }
 
-.recText{
+.recText {
   color: var(--secondary-text);
   font-size: 0.69em;
   font-weight: 600;
 }
-
 
 .waveform {
   width: 11em;
@@ -139,10 +136,8 @@
   border-radius: 0.35em;
   overflow: hidden;
 
-
   /* controls for JS */
   --wave-color: var(--secondary-text);
   --bar-thickness: 0.1em; /* set to 0.10em or 0.20em */
-  --bar-gap: 0.2em;       /* optional */
+  --bar-gap: 0.2em; /* optional */
 }
-

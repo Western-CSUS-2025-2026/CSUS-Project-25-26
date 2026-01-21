@@ -1,29 +1,49 @@
 "use client";
-import Card from "@/components/card/card";
+import styles from "./page.module.css";
 import WebcamCard from "./_components/webcam/webcamCard";
-import { useRecording } from "@/lib/useRecording";
+import TopBar from "./_components/recordingTopbar/topBar";
+import useSession from "@/lib/sessionLib/useSession";
+import Card from "@/components/card/card";
+import Modal from "@/components/modal/modal";
 
 function RecordingPage() {
-  const rec = useRecording();
+  const session = useSession();
 
-  const duration = () => {
-    const start = rec.startTime?.getTime() ?? 0;
-    const end = rec.endTime?.getTime() ?? new Date().getTime();
-
-    return (end - start) / 1000;
-  };
   return (
-    <div style={{ display: "flex", flexDirection: "row", gap: "1em" }}>
-      <WebcamCard webRef={rec.webRef}></WebcamCard>
-      <Card width="20em">
-        <button onClick={rec.startRecording}>Start</button>
-        <button onClick={rec.endRecording}>End</button>
-        <button onClick={rec.download}>Download</button>
-        <div style={{ color: "green" }}>
-          {rec.capturing ? "Capturing" : "Not"}
-        </div>
-        <div style={{ color: "green" }}>{duration()}</div>
-      </Card>
+    <div style={{ gap: "1em", display: "flex", flexDirection: "column" }}>
+      <h1 className={styles.questionTitle}>{session.currentQuestion}</h1>
+
+      <TopBar
+        currentQuestion={session.currentQuestionNumber + 1}
+        totalQuestions={session.totalQuestions}
+        isRecording={session.isRecording}
+        duration={session.recordingDuration}
+        stage={session.state}
+        pauseRecording={session.toggleRecording}
+      ></TopBar>
+      <div style={{ display: "flex", flexDirection: "row", gap: "1em" }}>
+        <WebcamCard webRef={session.webcam}></WebcamCard>
+        <Card>
+          <button onClick={session.startSession} style={{ color: "black" }}>
+            Start Recording
+          </button>
+          <div style={{ color: "green" }}>{session.state}</div>
+          <div style={{ color: "green" }}>{session.timerDisplay}</div>
+        </Card>
+      </div>
+      {session.finishModalUp ? (
+        <Modal width="20em" height="20em">
+          <div>finished</div>
+          <div>{"Videos uploaded: " + session.videosUploadedCount}</div>
+        </Modal>
+      ) : undefined}
+
+      {session.continueModalUp ? (
+        <Modal width="20em" height="20em" onDismiss={session.startNextQuestion}>
+          <div>Completed question</div>
+          <button onClick={session.startNextQuestion}>continue</button>
+        </Modal>
+      ) : undefined}
     </div>
   );
 }

@@ -1,52 +1,40 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import styles from "./topBar.module.css";
 import CurrentQuestions from "./currentQuestion";
 import QuestionStage from "./questionStage";
 import RecordingBox from "./recordingBox";
+import { SessionState } from "@/lib/sessionLib/useSession";
 
-export default function TopBar() {
-  // Questions
-  const [currentQuestion] = useState(3);
-  const totalQuestions = 5;
+interface TopBarProps {
+  currentQuestion: number;
+  totalQuestions: number;
+  isRecording: boolean;
+  duration: number;
+  pauseRecording: () => void;
+  stage: SessionState;
+}
 
-  // Stage
-  const [stage] = useState<"preparing" | "answering">("answering");
-
-  // Recording state
-  const [recording, setRecording] = useState(false);
-  const [duration, setDuration] = useState(0);
-
-  // duration logic 
-  useEffect(() => {
-    if (!recording) return;
-
-    const t = setTimeout(() => {
-      setDuration((d) => d + 1);
-    }, 1000);
-
-    return () => clearTimeout(t);
-  }, [recording, duration]);
-
+export default function TopBar(props: TopBarProps) {
   return (
     <div className={styles.topBar}>
       <div className={styles.slot}>
         <CurrentQuestions
-          current={currentQuestion}
-          total={totalQuestions}
+          current={props.currentQuestion}
+          total={props.totalQuestions}
         />
       </div>
 
       <div className={styles.slot}>
-        <QuestionStage stage={stage} />
+        <QuestionStage stage={props.stage} />
       </div>
 
       <div className={styles.slot}>
         <RecordingBox
-          recording={recording}
-          duration={duration}
-          onToggleRecording={() => setRecording((r) => !r)}
+          canPause={props.stage == "Recording"}
+          recording={props.isRecording}
+          duration={props.duration}
+          onToggleRecording={props.pauseRecording}
         />
       </div>
     </div>

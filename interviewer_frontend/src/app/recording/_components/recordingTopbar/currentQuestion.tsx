@@ -4,7 +4,7 @@ import CheckMark from "./checkmark";
 
 type CurrentQuestionsProps = {
   current: number; // current question (1-based)
-  total: number;   // total number of questions
+  total: number; // total number of questions
 };
 
 export default function CurrentQuestions({
@@ -43,9 +43,7 @@ export default function CurrentQuestions({
             // UPCOMING
             return (
               <div key={questionNumber} className={styles.circle}>
-                <h2 className={styles.questionNum}>
-                  {questionNumber}
-                </h2>
+                <h2 className={styles.questionNum}>{questionNumber}</h2>
               </div>
             );
           })}
