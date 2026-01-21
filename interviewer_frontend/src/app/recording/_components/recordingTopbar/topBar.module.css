@@ -1,11 +1,8 @@
 .topBar {
   width: 100%;
-  margin: 0 0;
 
-  display: grid;
-  grid-template-columns: 27.5rem 22.986rem 17.847rem;
-  column-gap: 1.5625rem; /* 45px total gap split in two */
-  align-items: stretch;
+  display: flex;
+  gap: 1em; /* 45px total gap split in two */
 }
 .slot {
   height: 100%;

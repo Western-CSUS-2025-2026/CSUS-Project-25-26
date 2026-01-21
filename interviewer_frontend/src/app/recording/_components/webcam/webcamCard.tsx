@@ -9,8 +9,8 @@ interface WebcamCardProps {
 }
 
 const videoConstraints = {
-  width: 700,
-  height: 500,
+  width: 630,
+  height: 440,
   facingMode: "user",
 };
 

@@ -1,5 +1,5 @@
 .boxTitle {
-  margin-bottom: 0.25em; 
+  margin-bottom: 0.25em;
 }
 
 .questionNum {
@@ -14,9 +14,9 @@
   display: flex;
   align-items: center;
   justify-content: space-evenly;
+  gap: 1em;
   width: 100%;
 }
-
 
 .circle {
   width: 3.236em;
@@ -33,7 +33,6 @@
   overflow: visible;
 }
 
-
 .circleCurrent {
   width: 3.236em;
   height: 3.236em;
@@ -49,7 +48,6 @@
   background-color: var(--accent);
   overflow: visible;
 }
-
 
 .circleDone {
   width: 3.236em;

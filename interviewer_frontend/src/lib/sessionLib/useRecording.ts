@@ -9,6 +9,7 @@ interface UseRecordingReturn {
   startRecording: () => void;
   endRecording: () => void;
   download: () => void;
+  toggleRecording: () => void;
   startTime: Date | undefined;
   endTime: Date | undefined;
 }
@@ -20,9 +21,15 @@ export function useRecording(): UseRecordingReturn {
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [startTime, setStartTime] = useState<undefined | Date>();
   const [endTime, setEndTime] = useState<undefined | Date>();
+  const toggleRecording = () => {
+    setCapturing(!capturing);
+  };
 
   const handleData = useCallback(
     ({ data }: BlobEvent) => {
+      if (!capturing) {
+        return;
+      }
       if (data.size > 0) {
         setRecordedChunks((prev) => prev.concat(data));
       }
@@ -76,6 +83,7 @@ export function useRecording(): UseRecordingReturn {
     }
   }, [recordedChunks]);
   return {
+    toggleRecording: toggleRecording,
     webRef: webRef,
     recordedChunks: recordedChunks,
     startRecording: startRecording,
