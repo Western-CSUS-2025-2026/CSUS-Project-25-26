@@ -1,0 +1,183 @@
+.gauge {
+  width: 7.6358em;
+  height: 7.6358em;
+
+  margin-top: 1.8625em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* INNER HOLE */
+.gauge::after {
+  content: "";
+  position: absolute;
+  inset: 13.5%; /* size of inner hollow */
+  background: var(--foreground);
+  border-radius: 100%;
+  z-index: 1; /* above segments, below text */
+}
+
+/* wrapper */
+.gaugeRing {
+  position: absolute;
+  inset: 0;
+}
+
+/* base pill segment */
+.gaugeSegment {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  width: 3em; /* arc length */
+  height: 1.2em; /* thickness */
+
+  border-radius: 50em;
+  background: var(--accent-primary-text);
+
+  /* curved pill */
+  clip-path: ellipse(50% 50% at 50% 65%);
+
+  transform-origin: center center;
+  z-index: 0;
+}
+
+/* 5 evenly-spaced arc segments around circle (bottom missing) */
+
+.gaugeSegment1 {
+  transform: translate(-50%, -50%) rotate(-120deg) translateY(-3.1em);
+}
+
+.gaugeSegment2 {
+  transform: translate(-50%, -50%) rotate(-60deg) translateY(-3.1em);
+}
+
+.gaugeSegment3 {
+  transform: translate(-50%, -50%) rotate(0deg) translateY(-3.1em);
+}
+
+.gaugeSegment4 {
+  transform: translate(-50%, -50%) rotate(60deg) translateY(-3.1em);
+}
+
+.gaugeSegment5 {
+  transform: translate(-50%, -50%) rotate(120deg) translateY(-3.1em);
+}
+
+.gaugeSegment1.filled-33 {
+  background: linear-gradient(
+    to right,
+    var(--accent) 33%,
+    #3a3a3a 33%,
+    #3a3a3a 100%
+  );
+}
+
+.gauge h1 {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  font-size: var(--h1-font-size);
+  color: var(--accent);
+}
+
+.loading1 {
+  background-color: var(--accent-primary-text);
+
+  width: 9.0625em;
+  height: 1.25em;
+  border-radius: 6.25em;
+  opacity: 1;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading2 {
+  background-color: var(--accent-primary-text);
+  margin-top: 0.5em;
+
+  width: 11.125em;
+  height: 1.25em;
+  border-radius: 6.25em;
+  opacity: 1;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading3 {
+  background-color: var(--accent-primary-text);
+  margin-top: 0.5em;
+
+  width: 14.125em;
+  height: 1.25em;
+  border-radius: 6.25em;
+  opacity: 1;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loadingButton {
+  background-color: var(--accent-primary-text);
+  margin-top: 4.3em;
+
+  width: 100%;
+  height: 2.875em;
+  border-radius: 0.625em;
+  top: 9.375em;
+  left: 1.3125em;
+  opacity: 1;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.2em;
+}
+
+.loading4 {
+  background-color: var(--accent-primary-text);
+
+  width: 7.4375em;
+  height: 1.25em;
+  border-radius: 6.25em;
+  opacity: 1;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading5 {
+  background-color: var(--accent-primary-text);
+  margin-top: 0.5em;
+
+  width: 6.5em;
+  height: 1.25em;
+  border-radius: 6.25em;
+  opacity: 1;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loadingGrade {
+  border-radius: 0.625em;
+  background-color: var(--accent-primary-text);
+  opacity: 1;
+
+  width: 2.5em;
+  height: 2.3125em;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+}

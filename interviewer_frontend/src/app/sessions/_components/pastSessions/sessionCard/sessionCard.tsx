@@ -1,19 +1,23 @@
-'use client';
-
 import Card from "@/components/card/card";
 import type { SimpleSession } from "@/types/simpleSession";
 import styles from "./sessionCard.module.css";
-import Gauge from "./gauge";
+import Gauge from "../../../../../components/gauge/gauge";
+import LoadingSpinner from "@/components/loadingSpinner/loadingSpinner";
 
 interface SessionCardProps {
   session: SimpleSession;
 }
 
 export default function SessionCard({ session }: SessionCardProps) {
+  const stateText = () => {
+    if (session.state == "COMPLETED") {
+      return "Completed";
+    }
+    return "Processing";
+  };
   return (
     <Card>
       <div className={styles.cardContent}>
-
         {/* LEFT COLUMN */}
         <div className={styles.leftColumn}>
           <div className={styles.SessionBox}>
@@ -22,9 +26,11 @@ export default function SessionCard({ session }: SessionCardProps) {
             <p>{session.template.id}</p>
           </div>
 
-          <div className={styles.processingText}>
+          <div className={styles.proccessingText}>
             {session.state === "PROCESSING" ? (
-              <p>This may take a few minutes...</p>
+              <p className={styles.proccessingText}>
+                This may take a few minutes...
+              </p>
             ) : (
               <p>&nbsp;</p>
             )}
@@ -42,7 +48,7 @@ export default function SessionCard({ session }: SessionCardProps) {
         {/* RIGHT COLUMN */}
         <div className={styles.rightColumn}>
           <div className={styles.statusBox}>
-            <h3 className={styles.statusText}>{session.state}</h3>
+            <h3 className={styles.statusText}>{stateText()}</h3>
           </div>
 
           <div className={styles.dateBox}>
@@ -59,17 +65,8 @@ export default function SessionCard({ session }: SessionCardProps) {
             <Gauge score={session.overallGrade.overallGrade} />
           )}
 
-          {session.state === "PROCESSING" && (
-            <div className={styles.spinnerWrapper}>
-              <div className={styles.ldsSpinner}>
-                <div></div><div></div><div></div><div></div>
-                <div></div><div></div><div></div><div></div>
-                <div></div><div></div><div></div><div></div>
-              </div>
-            </div>
-          )}
+          {session.state === "PROCESSING" && <LoadingSpinner></LoadingSpinner>}
         </div>
-
       </div>
     </Card>
   );
