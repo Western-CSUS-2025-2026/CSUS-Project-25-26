@@ -1,9 +1,9 @@
 import logging
-from typing import Optional, Set
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Query
 from fastapi_sqlalchemy import db
-from sqlalchemy.orm import joinedload, Query as SQLAQuery
+from sqlalchemy.orm import joinedload
 
 from api.exceptions import ObjectNotFound
 from api.models.db import Session, UserSession, SessionComponent
@@ -12,38 +12,13 @@ from api.schemas.models import (
     SessionsList,
 )
 from api.utils.security import Auth
+from api.utils.session_query import parse_include, get_session_options, build_serialization_filter
+
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 
 logger: logging.Logger = logging.getLogger(__name__)
 session: APIRouter = APIRouter(prefix="/sessions", tags=["Sessions"])
-
-
-def get_session_options(include: str | None):
-    """
-    Helper to convert a comma-separated string into SQLAlchemy joinedload options.
-    """
-    options = []
-    if not include:
-        return options
-
-    requested: Set[str] = {i.strip().lower() for i in include.split(",")}
-    print(requested)
-
-    component_triggers = {"components", "grades", "grade", "feedback", "videos", "video"}
-
-    if any(item in requested for item in component_triggers):
-        base_load = joinedload(Session.session_components)
-
-        if "grades" in requested:
-            options.append(base_load.joinedload(SessionComponent.grade))
-        if "feedback" in requested:
-            options.append(base_load.joinedload(SessionComponent.feedback))
-        if "videos" in requested:
-            options.append(base_load.joinedload(SessionComponent.video))
-
-        if not options:
-            options.append(base_load)
-
-    return options
 
 
 @session.get("", response_model=SessionsList)
@@ -51,23 +26,34 @@ async def get_user_sessions(
     user_session: UserSession = Depends(Auth()),
     limit: int = Query(default=10, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
-    include: Optional[str] = Query(default=None, description="Comma-separated: components, grades, feedback, videos"),
+    include: Annotated[list[str], Query(description="Comma-separated: components, grades, feedback, videos")] = [
+        "components",
+        "grades",
+        "feedback",
+        "videos",
+    ],
 ) -> SessionsList:
     """Get summarized history of user sessions."""
 
-    options = get_session_options(include)
+    requested = parse_include(include)
+    options = get_session_options(requested)
 
-    sessions_query: SQLAQuery = (
+    sessions: list[Session] = (
         Session.query(session=db.session)
         .options(*options)
         .filter(Session.user_id == user_session.user_id)
         .order_by(Session.create_ts.desc())
         .offset(offset)
         .limit(limit)
+        .all()
     )
-    sessions: list[Session] = sessions_query.all()
 
-    return SessionsList(sessions=[SessionGet.model_validate(s) for s in sessions])
+    sessions_list = SessionsList(sessions=[SessionGet.model_validate(s) for s in sessions])
+
+    mask = {"sessions": {"__all__": build_serialization_filter(requested)}}
+
+    filtered_data = sessions_list.model_dump(include=mask, exclude_none=True)
+    return JSONResponse(content=jsonable_encoder(filtered_data))
 
 
 @session.get("/{session_id}", response_model=SessionGet)
