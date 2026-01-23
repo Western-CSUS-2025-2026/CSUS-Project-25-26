@@ -132,7 +132,6 @@ class QuestionResponseModel(Base):
     speech_score: int
     brevity_score: int
     feedback: FeedbackModel
-    improved_answer: ImproveAnswerModel
 
 
 class VideoAnalysisStateResponse(Base):
@@ -140,3 +139,22 @@ class VideoAnalysisStateResponse(Base):
     session_id: int
     analysis_data: QuestionResponseModel | None = None
     error: str | None = None
+
+
+class SessionCreateResponse(Base):
+    """Response after creating a session."""
+    session_id: int
+    state: str
+
+
+class SessionComponentCreateRequest(Base):
+    """Request to add a question/component to a session."""
+    question: str
+
+
+class SessionComponentCreateResponse(Base):
+    """Response after creating a session component."""
+    session_component_id: int
+    session_id: int
+    question: str
+    question_id: int

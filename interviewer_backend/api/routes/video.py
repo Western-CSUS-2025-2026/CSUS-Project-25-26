@@ -6,8 +6,9 @@ from fastapi_sqlalchemy import db
 
 from api.utils.security import Auth
 from api.utils.twelveLabs import VideoAnalysis
-from api.schemas.models import VideoAnalysisStateResponse, VideoUploadResponse, TwelveLabsWebhookRequest
-from api.schemas.models import QuestionResponseModel, FeedbackModel, ImproveAnswerModel
+from api.schemas.models import VideoAnalysisStateResponse, VideoUploadResponse, TwelveLabsWebhookRequest, QuestionResponseModel, FeedbackModel
+from api.schemas.base import StatusResponseModel
+from api.schemas.models import SessionCreateResponse, SessionComponentCreateResponse, SessionComponentCreateRequest
 from api.models.db import SessionState, Session, UserSession, Question, SessionComponent, Feedback, Grade, Template
 
 
@@ -15,21 +16,45 @@ video = APIRouter(prefix="/video", tags=["Video"])
 analyzer = VideoAnalysis()
 
 
-@video.post("/upload_video", status_code=202)
-async def upload_video(video: UploadFile = File(...), 
-    user_session: UserSession = Depends(Auth()),
-    question: str = Form(...)):
+@video.post("/session", status_code=201, response_model=SessionCreateResponse)
+async def create_session(
+    user_session: UserSession = Depends(Auth())
+) -> SessionCreateResponse:
+    """Create a new interview session for the authenticated user."""
     
-    index_id = analyzer.get_or_create_index(user_session.user_id, session=db.session)
+    session = Session.create(
+        session=db.session,
+        user_id=user_session.user_id,
+        indexed_asset_id=None,
+        state=SessionState.PENDING
+    )
+    db.session.commit()
     
-    asset = analyzer.upload_asset(file=video)
+    return SessionCreateResponse(
+        session_id=session.id,
+        state=session.state.value,
+    )
 
+
+@video.post("/session/{session_id}/component", status_code=201, response_model=SessionComponentCreateResponse)
+async def add_session_component(
+    session_id: int,
+    component_data: SessionComponentCreateRequest,
+    user_session: UserSession = Depends(Auth())
+) -> SessionComponentCreateResponse:
+    """Add a question/component to an existing session."""
+    
+    session = Session.get(session_id, session=db.session)
+    
+    if session.user_id != user_session.user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
     default_template = (
         Template.query(session=db.session)
         .filter(Template.job_title == f"{user_session.user_id} Questions")
         .one_or_none()
     )
-
+    
     if not default_template:
         default_template = Template.create(
             session=db.session,
@@ -37,48 +62,71 @@ async def upload_video(video: UploadFile = File(...),
             description=f"Questions submitted by {user_session.user_id} during video uploads"
         )
         db.session.flush()
-
+    
     question_record = (
         Question.query(session=db.session)
-        .filter(Question.question == question)
+        .filter(Question.question == component_data.question)
         .one_or_none()
     )
-
+    
     if not question_record:
         question_record = Question.create(
             session=db.session,
-            question=question,
+            question=component_data.question,
             template_id=default_template.id
         )
         db.session.flush()
-
-    session = Session.create(
-        session=db.session,
-        user_id=user_session.user_id,
-        indexed_asset_id=None,
-        state=SessionState.PENDING
-    )
-    db.session.flush()
-
+    
     session_component = SessionComponent.create(
         session=db.session,
-        session_id=session.id,
+        session_id=session_id,
         question_id=question_record.id,
         transcript=None
     )
-    db.session.flush()
-
-    indexed_asset = analyzer.index_asset(index_id=index_id, asset_id=asset.id)
-    session.indexed_asset_id = indexed_asset.id
-    session.state = SessionState.INDEXING
     db.session.commit()
+
+    return SessionComponentCreateResponse(
+        session_component_id=session_component.id,
+        session_id=session_id,
+        question=question_record.question,
+        question_id=question_record.id
+    )
+
+
+@video.post("/session/{session_id}/upload_video", status_code=202)
+async def upload_video_to_session(
+    session_id: int,
+    session_component_id: int = Form(...),
+    video: UploadFile = File(...),
+    user_session: UserSession = Depends(Auth())
+):
+    """Upload video for a specific session component."""
+    
+    session = Session.get(session_id, session=db.session)
+    
+    if session.user_id != user_session.user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    session_component = SessionComponent.get(session_component_id, session=db.session)
+    
+    if session_component.session_id != session_id:
+        raise HTTPException(status_code=400, detail="Component does not belong to this session")
+    
+    index_id = analyzer.get_or_create_index(user_session.user_id, session=db.session)
+    asset = analyzer.upload_asset(file=video)
+    indexed_asset = analyzer.index_asset(index_id=index_id, asset_id=asset.id)
+    
+    if not session.indexed_asset_id:
+        session.indexed_asset_id = indexed_asset.id
+        session.state = SessionState.INDEXING
+        db.session.commit()
     
     return VideoUploadResponse(
         asset_id=asset.id,
         indexed_asset_id=indexed_asset.id,
         session_id=session.id,
         session_component_id=session_component.id,
-        question=question_record.question,
+        question=session_component.question.question,
         state=session.state.value
     )
 
@@ -90,8 +138,7 @@ async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
 
     # always return 200 even if malformed, but log server-side
     if not indexed_asset_id:
-        print(f"[webhook] ERROR: Missing indexed_asset_id in payload: {payload}")
-        return {"ok": True, "message": "missing id", "received_payload": payload.dict()}
+        return StatusResponseModel(status="error", message="Missing indexed_asset_id")
 
     session = (
         Session.query(session=db.session)
@@ -100,19 +147,18 @@ async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
     )
 
     if not session:
-        return {"ok": True, "message": "no session", "indexed_asset_id": indexed_asset_id}
+        return StatusResponseModel(status="error", message="Session not found")
 
-    # idempotency
     if session.state in (SessionState.ANALYZING, SessionState.COMPLETED):
-        return {"ok": True, "message": "already handled", "session_id": session.id, "current_state": session.state.value}
+        return StatusResponseModel(status="success", message="Webhook already processed")
 
     if state in ("error", "failed"):
         session.state = SessionState.ERROR
         db.session.commit()
-        return {"ok": True, "message": "error state handled", "session_id": session.id, "state": "error"}
+        return StatusResponseModel(status="error", message="Analysis failed")
 
     if state not in ("completed", "ready"):
-        return {"ok": True, "message": "still processing", "state": state, "session_id": session.id}
+        return StatusResponseModel(status="processing", message="Analysis still in progress")
 
     session.state = SessionState.ANALYZING
     db.session.flush()
@@ -132,11 +178,6 @@ async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
         data_string = result.data if hasattr(result, "data") else str(result)
         analysis_dict = json.loads(data_string)
 
-        # Store raw JSON (for debugging)
-        session.analysis_data = json.dumps(analysis_dict)
-
-        print(f"[webhook] SUCCESS: Analysis completed for session_id: {session.id}")
-
         if "question_responses" in analysis_dict:
             for qr in analysis_dict["question_responses"]:
 
@@ -155,28 +196,34 @@ async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
                     db.session.flush()
 
 
+                # Get question text from response
+                response_question_text = qr.get("question", "")
+                
+                # Find matching SessionComponent by question text
+                session_component = None
+                for sc in session.session_components:
+                    if sc.question.question == response_question_text:
+                        session_component = sc
+                        break
+                
+                # Skip if no matching component found
+                if not session_component:
+                    continue
+
                 # Get or create Question record
-                question_text = qr.get("question", "")
                 question = (
                     Question.query(session=db.session)
-                    .filter(Question.question == question_text)
+                    .filter(Question.question == response_question_text)
                     .one_or_none()
                 )
 
                 if not question:
                     question = Question.create(
                         session=db.session,
-                        question=question_text,
+                        question=response_question_text,
                         template_id=default_template.id
                     )
                     db.session.flush()
-                    print(f"[webhook] Created question: {question.id}")
-
-                session_component = (
-                    SessionComponent.query(session=db.session)
-                    .filter(SessionComponent.session_id == session.id)
-                    .one_or_none()
-                )
 
                 Grade.create(
                     session=db.session,
@@ -194,7 +241,6 @@ async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
                 points_list = feedback_data.get("points", [])
                 ways_list = feedback_data.get("ways_to_improve", [])
                 
-                # Join arrays into strings (adjust separator as needed)
                 point_str = "\n".join(points_list) if points_list else ""
                 ways_str = "\n".join(ways_list) if ways_list else None
 
@@ -219,20 +265,15 @@ async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
         session.state = SessionState.COMPLETED
         db.session.commit()
 
-        return {
-            "message": "analysis completed",
-            "session_id": session.id,
-            "state": "completed",
-            "analysis_keys": list(analysis_dict.keys()) if isinstance(analysis_dict, dict) else None
-        }
+        return StatusResponseModel(status="success", message="Analysis completed successfully")
 
     except Exception as e:
         session.state = SessionState.ERROR
         db.session.commit()
-        return {"message": "error occurred", "error": str(e), "session_id": session.id}
+        return StatusResponseModel(status="error", message="Analysis processing failed")
 
 
-@video.get("/analysis/{session_id}", response_model=VideoAnalysisStateResponse)
+@video.get("/analysis/{session_id}")
 async def get_video_analysis(
     session_id: int,
     user_session: UserSession = Depends(Auth())
@@ -245,6 +286,7 @@ async def get_video_analysis(
     if session.user_id != user_session.user_id:
         raise HTTPException(status_code=403, detail="Access denied")
 
+    question_response = None
 
     if session.session_components:
         session_component = session.session_components[0]
@@ -254,15 +296,6 @@ async def get_video_analysis(
             points_list = session_component.feedback.point.split("\n") if session_component.feedback.point else []
             ways_list = session_component.feedback.ways_to_improve.split("\n") if session_component.feedback.ways_to_improve else []
 
-            improved_answer_version = ""
-            if session.analysis_data:
-                try:
-                    analysis_dict = json.loads(session.analysis_data)
-                    if "question_responses" in analysis_dict:
-                        improved_answer_version = analysis_dict["question_responses"][0].get("improved_answer", {}).get("version", "")
-                except:
-                    pass
-
             question_response = QuestionResponseModel(
                 question=session_component.question.question,
                 body_language_score=session_component.grade.body_language_score,
@@ -271,9 +304,14 @@ async def get_video_analysis(
                 feedback=FeedbackModel(
                     points=points_list,
                     ways_to_improve=ways_list
-                ),
-                improved_answer=ImproveAnswerModel(version=improved_answer_version)
+                )
             )
+
+    if question_response is None or session.state != SessionState.COMPLETED:
+        return StatusResponseModel(
+            status=session.state.value,
+            message=f"Analysis {session.state.value}. Data not yet available."
+        )
     
     return VideoAnalysisStateResponse(
         status=session.state.value,

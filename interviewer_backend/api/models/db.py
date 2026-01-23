@@ -187,7 +187,6 @@ class Session(BaseDbModel):
         primaryjoin="Session.user_id==User.id",
     )
     indexed_asset_id: Mapped[str] = mapped_column(String, nullable=True)
-    analysis_data: Mapped[str] = mapped_column(Text, nullable=True)
 
 
 class TwelveLabsIndex(BaseDbModel):
