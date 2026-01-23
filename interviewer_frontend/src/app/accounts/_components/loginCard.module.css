@@ -4,6 +4,10 @@
   place-items: center;
 }
 
+.sizeBox {
+    height: 27.8em;
+    width: 27.8em;
+}
 
 .coloumn {
   display: flex;
@@ -12,15 +16,20 @@
 }
 
 .line {
-  width: 341px;
+  width: 23.7em;
   height: 1px;
   background-color: var(--border);
+
 }
 
 .header{
     align-items: flex-start;
-    margin-top: 0;
+    margin-left: 0.5em;
+    margin-top: 0em;
+    font-size: 2.5em;
+    font-weight: 600;
 }
+
 
 .infoBox{
     align-items: flex-start;
@@ -28,6 +37,7 @@
 
 .infoBox p{
     margin-bottom: 0.2em;
+    margin-top: 1.5em;
 }
 
 .textBox {
@@ -57,21 +67,35 @@
 
 
 .loginButton {
-    width: 22em;
-    height: 3em;
-    border-radius: 99em;
-    margin-top: 3.9em;
-    margin-bottom: 0.5em;
+  width: 23.2em;
+  height: 3em;
+  border-radius: 99em;
+  margin-top: 3.5em;
+  margin-bottom: 0.5em;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    background-color: var(--accent);
+  background-color: var(--accent);
+  color: var(--border);
+  font-weight: 600;
 
+  border: none;          
+  cursor: pointer;      
+}
 
-    color: var(--border);
-    font-weight: 600;
+.loginButton:hover {
+  filter: brightness(1.05);
+}
+
+.loginButton:active {
+  transform: scale(0.98);
+}
+
+.loginButton:focus-visible {
+  outline: 2px solid var(--highlight);
+  outline-offset: 2px;
 }
 
 
@@ -82,9 +106,40 @@
   width: 65%;
 }
 
-.linkText p {
+.linkText button {
+  background: none;
+  border: none;
+  padding: 0;
+
   color: var(--accent);
   font-weight: 600;
+
+  margin-bottom: 1em;
+  margin-top: 1em;
+
+  cursor: pointer;
+}
+
+
+.linkButton {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 1em;
+
+  color: var(--accent);
+  font-size: 0.95em;
+
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  text-decoration: underline;
+}
+
+.linkButton:focus-visible {
+  outline: 2px solid var(--highlight);
+  outline-offset: 2px;
 }
 
 
