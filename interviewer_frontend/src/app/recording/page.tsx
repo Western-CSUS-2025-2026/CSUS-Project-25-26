@@ -1,6 +1,6 @@
 "use client";
 import Card from "@/components/card/card";
-import WebcamCard from "./_components/webcam/webcamCard";
+/*import WebcamCard from "./_components/webcam/webcamCard";
 import { useRecording } from "@/lib/useRecording";
 
 function RecordingPage() {
@@ -28,4 +28,4 @@ function RecordingPage() {
   );
 }
 
-export default RecordingPage;
+export default RecordingPage; */
