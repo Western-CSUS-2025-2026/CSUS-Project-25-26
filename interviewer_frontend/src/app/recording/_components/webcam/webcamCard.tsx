@@ -3,18 +3,20 @@ import Card from "@/components/card/card";
 import Webcam from "react-webcam";
 import styles from "./webcamCard.module.css";
 import { RefObject } from "react";
+import { useWindowDimensions } from "@/lib/useWindowDimensions";
 
 interface WebcamCardProps {
   webRef: RefObject<Webcam | null>;
 }
 
-const videoConstraints = {
-  width: 630,
-  height: 440,
-  facingMode: "user",
-};
-
 function WebcamCard({ webRef }: WebcamCardProps) {
+  const dims = useWindowDimensions();
+  const videoConstraints = {
+    width: 0.5 * dims.width,
+    height: (440 / 717) * dims.height,
+    facingMode: "user",
+  };
+
   return (
     <Card>
       <Webcam
