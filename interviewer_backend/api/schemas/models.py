@@ -109,36 +109,6 @@ class VideoGet(Base):
     s3_key: str | None
 
 
-class SessionComponentGet(Base):
-    id: int
-    transcript: str | None
-    question_id: int
-    grade: GradeGet | None = None
-    feedback: FeedbackGet | None = None
-    video: VideoGet | None = None
-
-
-class SessionGet(Base):
-    id: int
-    user_id: int
-    state: str
-    overall_grade: int | None
-    create_ts: datetime.datetime
-    session_components: list[SessionComponentGet] | None = None
-
-
-class SessionsList(Base):
-    sessions: list[SessionGet]
-
-
-class SessionCreate(Base):
-    pass
-
-
-class SessionStateUpdate(Base):
-    state: str
-
-
 class TemplateBase(Base):
     job_title: str
     description: str | None = None
@@ -180,3 +150,34 @@ class TemplateWithQuestionsGet(TemplateGet):
 
 class StatusResponse(Base):
     status: str
+
+
+class SessionComponentGet(Base):
+    id: int
+    transcript: str | None
+    question_id: int
+    question: QuestionGet | None = None
+    grade: GradeGet | None = None
+    feedback: FeedbackGet | None = None
+    video: VideoGet | None = None
+
+
+class SessionGet(Base):
+    id: int
+    user_id: int
+    state: str
+    overall_grade: int | None
+    create_ts: datetime.datetime
+    session_components: list[SessionComponentGet] | None = None
+
+
+class SessionsList(Base):
+    sessions: list[SessionGet]
+
+
+class SessionCreate(Base):
+    pass
+
+
+class SessionStateUpdate(Base):
+    state: str
