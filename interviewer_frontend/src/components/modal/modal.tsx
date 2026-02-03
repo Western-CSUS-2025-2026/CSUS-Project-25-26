@@ -7,6 +7,7 @@ export interface ModalProps {
   height?: string;
   flexDirection?: "row" | "column";
   alignItems?: string;
+  onDismiss?: () => void;
 }
 
 function Modal(props: ModalProps) {
@@ -26,7 +27,7 @@ function Modal(props: ModalProps) {
         {/* main content */}
         {props.children}
         {/* the close button */}
-        <CloseIcon></CloseIcon>
+        <CloseIcon onDismiss={props.onDismiss}></CloseIcon>
       </div>
     </div>
   );
