@@ -1,18 +1,22 @@
 import Card from "@/components/card/card";
 import styles from "./loginCard.module.css";
 
-interface LoginCardProps {
-  onSignUp: () => void;
+interface CreateAccountEmailCardProps {
+  onNext: () => void;
+  onBackToLogin: () => void;
 }
 
-export default function LoginCard({ onSignUp }: LoginCardProps) {
+export default function CreateAccountEmailCard({
+  onNext,
+  onBackToLogin,
+}: CreateAccountEmailCardProps) {
   return (
     <>
       <div className={styles.container}>
         <div className="loginCardRadiusOverride">
           <div className={styles.sizeBox}>
             <Card fillHeight fillWidth>
-              <h1 className={styles.header}>Login</h1>
+              <h1 className={styles.header}>Create Account</h1>
 
               <div className={styles.coloumn}>
                 <div className={styles.line}></div>
@@ -25,37 +29,25 @@ export default function LoginCard({ onSignUp }: LoginCardProps) {
                     placeholder="Enter your email"
                     autoComplete="email"
                   />
-
-                  <p>Password</p>
-                  <input
-                    type="password"
-                    className={styles.textBox}
-                    placeholder="Enter your password"
-                    autoComplete="current-password"
-                  />
                 </div>
+
+                <div className={styles.blankSpace}></div>
 
                 <button
                   className={styles.loginButton}
                   type="button"
+                  onClick={onNext}
                 >
-                  Login
+                  Next
                 </button>
 
-                <div className={styles.linkText}>
+                <div>
                   <button
                     type="button"
                     className={styles.linkButton}
+                    onClick={onBackToLogin}
                   >
-                    Forgot Password
-                  </button>
-
-                  <button
-                    type="button"
-                    className={styles.linkButton}
-                    onClick={onSignUp}
-                  >
-                    Sign Up
+                    Back
                   </button>
                 </div>
               </div>

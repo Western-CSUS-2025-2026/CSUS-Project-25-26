@@ -2,10 +2,11 @@ import Card from "@/components/card/card";
 import styles from "./loginCard.module.css";
 
 interface CreateAccountCardProps {
-  onBackToLogin: () => void;
+  onBack: () => void;     // go back to email step
+  onNext: () => void;     // proceed to next step (or finish signup)
 }
 
-export default function CreateAccountCard({ onBackToLogin }: CreateAccountCardProps) {
+export default function CreateAccountCard({ onBack, onNext }: CreateAccountCardProps) {
   return (
     <>
       <div className={styles.container}>
@@ -35,7 +36,11 @@ export default function CreateAccountCard({ onBackToLogin }: CreateAccountCardPr
                   />
                 </div>
 
-                <button className={styles.loginButton} type="button">
+                <button
+                  className={styles.loginButton}
+                  type="button"
+                  onClick={onNext}
+                >
                   Next
                 </button>
 
@@ -43,7 +48,7 @@ export default function CreateAccountCard({ onBackToLogin }: CreateAccountCardPr
                   <button
                     type="button"
                     className={styles.linkButton}
-                    onClick={onBackToLogin}
+                    onClick={onBack}
                   >
                     Back
                   </button>
