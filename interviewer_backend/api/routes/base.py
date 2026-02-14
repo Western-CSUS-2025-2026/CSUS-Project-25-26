@@ -7,6 +7,7 @@ from api.settings import Settings, get_settings
 
 from .user import user as user_router
 from .video import video as video_router
+from .session import session as session_router
 
 
 settings: Settings = get_settings()
@@ -34,3 +35,4 @@ app.add_middleware(
 
 app.include_router(user_router)
 app.include_router(video_router)
+app.include_router(session_router)

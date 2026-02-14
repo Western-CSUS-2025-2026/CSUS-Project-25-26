@@ -145,6 +145,12 @@ class SessionState(enum.Enum):
 class SessionComponent(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     transcript: Mapped[str] = mapped_column(Text, nullable=True)
+    state: Mapped[SessionState] = mapped_column(
+        Enum(SessionState, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+        default=SessionState.PENDING,
+    )
+    indexed_asset_id: Mapped[str | None] = mapped_column(String, nullable=True)
     session_id: Mapped[int] = mapped_column(Integer, ForeignKey("session.id"), nullable=False)
     question_id: Mapped[int] = mapped_column(Integer, ForeignKey("question.id"), nullable=False)
     question: Mapped[Question] = relationship(
@@ -172,7 +178,6 @@ class SessionComponent(BaseDbModel):
 class Session(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
-    state: Mapped[SessionState] = mapped_column(Enum(SessionState), nullable=False, default=SessionState.PENDING)
     overall_grade: Mapped[int] = mapped_column(Integer, nullable=True)
     create_ts: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc), nullable=False
@@ -186,7 +191,6 @@ class Session(BaseDbModel):
         back_populates="interview_sessions",
         primaryjoin="Session.user_id==User.id",
     )
-    indexed_asset_id: Mapped[str] = mapped_column(String, nullable=True)
 
 
 class TwelveLabsIndex(BaseDbModel):

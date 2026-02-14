@@ -6,7 +6,6 @@ Create Date: 2026-01-07 22:24:51.230626
 
 """
 from alembic import op
-import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
@@ -17,26 +16,13 @@ depends_on = None
 
 
 def upgrade():
-    # Add new lowercase enum values to sessionstate (matching code)
-    # PostgreSQL requires these to be in separate transactions, but Alembic handles this
+    # Add new lowercase enum values only. Data UPDATE is in next migration
+    # (PostgreSQL: new enum values cannot be used in the same transaction).
     op.execute("ALTER TYPE sessionstate ADD VALUE IF NOT EXISTS 'pending'")
     op.execute("ALTER TYPE sessionstate ADD VALUE IF NOT EXISTS 'indexing'")
     op.execute("ALTER TYPE sessionstate ADD VALUE IF NOT EXISTS 'analyzing'")
     op.execute("ALTER TYPE sessionstate ADD VALUE IF NOT EXISTS 'completed'")
     op.execute("ALTER TYPE sessionstate ADD VALUE IF NOT EXISTS 'error'")
-    
-    # Update existing data from uppercase to lowercase
-    # Use text conversion workaround since new enum values need separate transaction
-    op.execute("""
-        UPDATE session 
-        SET state = CASE 
-            WHEN state::text = 'PENDING' THEN 'pending'::sessionstate
-            WHEN state::text = 'IN_PROGRESS' THEN 'indexing'::sessionstate
-            WHEN state::text = 'COMPLETED' THEN 'completed'::sessionstate
-            WHEN state::text = 'GRADED' THEN 'completed'::sessionstate
-            ELSE state
-        END
-    """)
 
 
 def downgrade():

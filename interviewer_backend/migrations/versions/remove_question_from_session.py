@@ -1,7 +1,7 @@
 """remove_question_from_session
 
 Revision ID: 0df5f40cbb29
-Revises: b98522a7272b
+Revises: c9d8e7f6a5b4
 Create Date: 2026-01-08 00:00:00.000000
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '0df5f40cbb29'
-down_revision = 'b98522a7272b'
+down_revision = 'c9d8e7f6a5b4'
 branch_labels = None
 depends_on = None
 
