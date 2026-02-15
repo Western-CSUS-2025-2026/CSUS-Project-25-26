@@ -1,9 +1,9 @@
 import json
 
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File
 from fastapi_sqlalchemy import db
 
-
+from api.exceptions import ForbiddenAction
 from api.utils.security import Auth
 from api.utils.twelveLabs import VideoAnalysis
 from api.schemas.models import VideoAnalysisStateResponse, TwelveLabsWebhookRequest, QuestionResponseModel, FeedbackModel
@@ -26,7 +26,7 @@ async def upload_video(
     session = session_component.session
 
     if session.user_id != user_session.user_id:
-        raise HTTPException(status_code=403, detail="Access denied")
+        raise ForbiddenAction(Session)
 
     index_id = analyzer.get_or_create_index(user_session.user_id, session=db.session)
     asset = analyzer.upload_asset(file=video)
@@ -43,35 +43,21 @@ async def upload_video(
 async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
     indexed_asset_id = payload.indexed_asset_id or payload.id
     state = (payload.state or payload.status or "").lower()
-
-    if not indexed_asset_id:
-        return StatusResponseModel(status="error", message="Missing indexed_asset_id")
-
     session_component_to_analyze = (
         SessionComponent.query(session=db.session)
         .filter(SessionComponent.indexed_asset_id == indexed_asset_id)
         .one_or_none()
     )
-    if not session_component_to_analyze:
-        return StatusResponseModel(status="error", message="Session not found")
-
-    session = session_component_to_analyze.session
-    if session_component_to_analyze.state in (
-        SessionState.ANALYZING,
-        SessionState.COMPLETED,
-    ):
-        return StatusResponseModel(status="success", message="Webhook already processed")
-
-    if state in ("error", "failed"):
-        session_component_to_analyze.state = SessionState.ERROR
-        db.session.commit()
-        return StatusResponseModel(status="error", message="Analysis failed")
-
-    if session_component_to_analyze:
-        session_component_to_analyze.state = SessionState.ANALYZING
-    db.session.flush()
 
     try:
+        session = session_component_to_analyze.session
+        if state in ("error", "failed"):
+            session_component_to_analyze.state = SessionState.ERROR
+            db.session.commit()
+            return StatusResponseModel(status="Success", message="Received (failure recorded)")
+
+        session_component_to_analyze.state = SessionState.ANALYZING
+        db.session.flush()
         question_text = session_component_to_analyze.question.question
         result = analyzer.generate_interview_analysis(
             video_id=indexed_asset_id,            
@@ -169,10 +155,10 @@ async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
 
         db.session.commit()
 
-        return StatusResponseModel(status="success", message="Analysis completed successfully")
+        return StatusResponseModel(status="Success", message="Analysis completed successfully")
 
     except Exception:
         if session_component_to_analyze:
             session_component_to_analyze.state = SessionState.ERROR
         db.session.commit()
-        return StatusResponseModel(status="error", message="Analysis processing failed")
+        return StatusResponseModel(status="Success", message="Received (failure recorded)")

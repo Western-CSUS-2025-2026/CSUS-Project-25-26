@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     TWELVE_LABS_API_KEYS: str | None = None
     TWELVE_LABS_INDEX_NAME: str = "school"
 
+    QUESTIONS_PER_SESSION: int = 3
+
     model_config = ConfigDict(case_sensitive=True, env_file=".env", extra="ignore")
 
 

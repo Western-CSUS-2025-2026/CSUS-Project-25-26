@@ -1,12 +1,14 @@
 # api/routes/session.py
-from fastapi import APIRouter, Depends
+import random
+
+from fastapi import APIRouter, Depends, Form
 from fastapi_sqlalchemy import db
-from api.utils.security import Auth
+
+from api.exceptions import ObjectNotFound
 from api.models.db import Session, UserSession, SessionState, Template, Question, SessionComponent
 from api.schemas.models import SessionCreateResponse, SessionComponentCreateResponse, SessionComponentCreateRequest
-from fastapi import Form, HTTPException
-from api.exceptions import ObjectNotFound
-import random
+from api.settings import get_settings
+from api.utils.security import Auth
 
 session = APIRouter(prefix="/session", tags=["Session"])
 
@@ -23,7 +25,7 @@ async def create_session(
         .all()
     )
     if not questions:
-        raise HTTPException(status_code=404, detail="Template not found or has no questions")
+        raise ObjectNotFound(Template, template_id)
 
     # 2. Create session (progress tracked on SessionComponent only)
     new_session = Session.create(
@@ -32,17 +34,18 @@ async def create_session(
     )
     db.session.flush()
 
-    # 3. Pick one (or more) at random and create session components
-    chosen = random.choice(questions)
-    SessionComponent.create(
-        session=db.session,
-        session_id=new_session.id,
-        question_id=chosen.id,
-        transcript=None,
-        state=SessionState.PENDING
-    )
+    settings = get_settings()
+    count = min(settings.QUESTIONS_PER_SESSION, len(questions))
+    chosen = random.sample(questions, count) # pick 3 random questions no repeat
+    for question in chosen:
+        SessionComponent.create(
+            session=db.session,
+            session_id=new_session.id,
+            question_id=question.id,
+            transcript=None,
+            state=SessionState.PENDING,
+        )
 
-    # 4. Commit once, then return
     db.session.commit()
 
     return SessionCreateResponse(
