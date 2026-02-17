@@ -8,7 +8,7 @@ from api.exceptions import ObjectNotFound
 from api.models.db import Session, UserSession
 from api.schemas.models import SessionGet, SessionsList
 from api.utils.security import Auth
-from api.utils.session_query import parse_include, get_session_options
+from api.utils.session_query import parse_include, get_session_options, serialize_session
 
 logger: logging.Logger = logging.getLogger(__name__)
 session: APIRouter = APIRouter(prefix="/sessions", tags=["Sessions"])
@@ -21,10 +21,8 @@ async def get_user_sessions(
     offset: int = Query(default=0, ge=0),
     include: Annotated[list[str], Query()] = [],
 ) -> SessionsList:
-    """Get history of sessions. Possible include options: components, grades, feedback, videos, questions."""
-
     requested = parse_include(include)
-    options = get_session_options(requested)
+    options, valid_requested = get_session_options(requested)
 
     sessions: list[Session] = (
         Session.query(session=db.session)
@@ -36,9 +34,7 @@ async def get_user_sessions(
         .all()
     )
 
-    for s in sessions:
-        print(s)
-    return SessionsList(sessions=[SessionGet.model_validate(s) for s in sessions])
+    return SessionsList(sessions=[serialize_session(s, valid_requested) for s in sessions])
 
 
 @session.get("/{session_id}", response_model=SessionGet, response_model_exclude_none=True)
@@ -47,10 +43,8 @@ async def get_session(
     user_session: UserSession = Depends(Auth()),
     include: Annotated[list[str], Query()] = [],
 ) -> SessionGet:
-    """Get single session. Possible include options: components, grades, feedback, videos, questions."""
-
     requested = parse_include(include)
-    options = get_session_options(requested)
+    options, valid_requested = get_session_options(requested)
 
     session_obj: Optional[Session] = (
         Session.query(session=db.session)
@@ -63,5 +57,4 @@ async def get_session(
     if not session_obj:
         raise ObjectNotFound(Session, session_id)
 
-    print(session_obj)
-    return SessionGet.model_validate(session_obj)
+    return serialize_session(session_obj, valid_requested)
