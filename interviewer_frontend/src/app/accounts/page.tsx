@@ -4,8 +4,9 @@ import { useState } from "react";
 import LoginCard from "./_components/loginCard";
 import CreateAccountEmailCard from "./_components/createAccountEmail";
 import CreateAccountCard from "./_components/createAccountName";
+import CreateAccountCode from "./_components/createAccountCode";
 
-type Mode = "login" | "signup-email" | "signup-details";
+type Mode = "login" | "signup-email" | "signup-code" | "signup-details";
 
 export default function AccountsPage() {
   const [mode, setMode] = useState<Mode>("login");
@@ -20,14 +21,22 @@ export default function AccountsPage() {
 
       {mode === "signup-email" && (
         <CreateAccountEmailCard
-          onNext={() => setMode("signup-details")}
+          onNext={() => setMode("signup-code")}
           onBackToLogin={() => setMode("login")}
+        />
+      )}
+
+      {mode === "signup-code" && (
+        <CreateAccountCode
+          email="ysahota@uwo.ca"
+          onNext={() => setMode("signup-details")}
+          onBackToLogin={() => setMode("signup-email")}
         />
       )}
 
       {mode === "signup-details" && (
         <CreateAccountCard
-          onBack={() => setMode("signup-email")}
+          onBack={() => setMode("signup-code")}
           onNext={() => {
             // submit signup or go to next step
           }}
