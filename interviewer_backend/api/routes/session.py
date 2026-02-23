@@ -21,6 +21,10 @@ async def get_user_sessions(
     offset: int = Query(default=0, ge=0),
     include: Annotated[list[str], Query()] = [],
 ) -> SessionsList:
+    """
+    Get history of user sessions.
+    Possible include options: components, grades, feedback, videos, questions
+    """
     requested = parse_include(include)
     options, valid_requested = get_session_options(requested)
 
@@ -43,6 +47,10 @@ async def get_session(
     user_session: UserSession = Depends(Auth()),
     include: Annotated[list[str], Query()] = [],
 ) -> SessionGet:
+    """
+    Get a single user session by ID.
+    Possible include options: components, grades, feedback, videos, questions
+    """
     requested = parse_include(include)
     options, valid_requested = get_session_options(requested)
 
