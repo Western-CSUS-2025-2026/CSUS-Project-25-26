@@ -1,11 +1,22 @@
+"use client";
+
+import { useActionState } from "react";
 import Card from "@/components/card/card";
 import styles from "./loginCard.module.css";
+import { login, type LoginResponse } from "@/actions/login/login";
 
 interface LoginCardProps {
   onSignUp: () => void;
 }
 
 export default function LoginCard({ onSignUp }: LoginCardProps) {
+  const [result, formAction, isPending] = useActionState<LoginResponse | undefined, FormData>(
+    async (_prevState, formData) => {
+      return await login(formData);
+    },
+    undefined
+  );
+
   return (
     <>
       <div className={styles.container}>
@@ -17,36 +28,49 @@ export default function LoginCard({ onSignUp }: LoginCardProps) {
               <div className={styles.coloumn}>
                 <div className={styles.line}></div>
 
-                <div className={styles.infoBox}>
-                  <p>Email</p>
-                  <input
-                    type="email"
-                    className={styles.textBox}
-                    placeholder="Enter your email"
-                    autoComplete="email"
-                  />
+                <form action={formAction}>
+                  <div className={styles.infoBox}>
+                    <p>Email</p>
+                    <input
+                      name="email"
+                      type="email"
+                      className={styles.textBox}
+                      placeholder="Enter your email"
+                      autoComplete="email"
+                    />
 
-                  <p>Password</p>
-                  <input
-                    type="password"
-                    className={styles.textBox}
-                    placeholder="Enter your password"
-                    autoComplete="current-password"
-                  />
-                </div>
+                    <p>Password</p>
+                    <input
+                      name="password"
+                      type="password"
+                      className={styles.textBox}
+                      placeholder="Enter your password"
+                      autoComplete="current-password"
+                    />
+                  </div>
 
-                <button
-                  className={styles.loginButton}
-                  type="button"
-                >
-                  Login
-                </button>
+                  <div className={styles.loginWrapper}>
+                    <button
+                      className={styles.loginButton}
+                      type="submit"
+                      disabled={isPending}
+                    >
+                      {isPending ? "Logging in..." : "Login"}
+                    </button>
+
+                    {result && result !== "SUCCESS" && (
+                      <div className={styles.errorText}>
+                        {result === "NOT_AUTHORIZED" && "Email or password is incorrect."}
+                        {result === "NETWORK_ERROR" && "Network error. Try again."}
+                        {result === "UNVALID_FORM" && "Please fill out all fields."}
+                      </div>
+                    )}
+                  </div>
+
+                </form>
 
                 <div className={styles.linkText}>
-                  <button
-                    type="button"
-                    className={styles.linkButton}
-                  >
+                  <button type="button" className={styles.linkButton}>
                     Forgot Password
                   </button>
 

@@ -1,9 +1,14 @@
 "use client";
 
 import React, { useRef, useState } from "react";
+import { useActionState } from "react";
 import Card from "@/components/card/card";
 import styles from "./loginCard.module.css";
 import codeStyles from "./createAccountCode.module.css";
+import {
+  checkVerificationCode,
+  type CheckVerificationCodeResponse,
+} from "@/actions/login/register";
 
 interface CreateAccountCodeProps {
   onNext: () => void;
@@ -14,12 +19,36 @@ interface CreateAccountCodeProps {
 export default function CreateAccountCode({
   onNext,
   onBackToLogin,
-  email = "email@uwo.ca",
+  email,
 }: CreateAccountCodeProps) {
   const CODE_LEN = 6;
 
+  // bypass toggle for api fetch failure
+  const Bypass = true;
+
   const [digits, setDigits] = useState<string[]>(Array(CODE_LEN).fill(""));
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+
+  const [result, formAction, isPending] = useActionState<
+    CheckVerificationCodeResponse | undefined,
+    FormData
+  >(async (_prev, formData) => {
+    const res = await checkVerificationCode(undefined, formData);
+
+    if (res === "SUCCESS") {
+      onNext();
+      return res;
+    }
+
+    // bypass
+    if (Bypass) {
+      console.warn("[BYPASS]", res);
+      onNext();
+      return "SUCCESS";
+    }
+
+    return res;
+  }, undefined);
 
   const setRef =
     (index: number) =>
@@ -35,16 +64,13 @@ export default function CreateAccountCode({
   const handleChange = (index: number, value: string) => {
     const v = value.replace(/\D/g, "");
 
-    // If user pastes/types multiple digits into one box
     if (v.length > 1) {
       const next = [...digits];
       for (let k = 0; k < v.length && index + k < CODE_LEN; k++) {
         next[index + k] = v[k];
       }
       setDigits(next);
-
-      const nextFocus = Math.min(index + v.length, CODE_LEN - 1);
-      focusIndex(nextFocus);
+      focusIndex(Math.min(index + v.length, CODE_LEN - 1));
       return;
     }
 
@@ -58,28 +84,15 @@ export default function CreateAccountCode({
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace") {
       if (digits[index]) {
-        // Clear current digit
         const next = [...digits];
         next[index] = "";
         setDigits(next);
       } else if (index > 0) {
-        // Move left and clear previous
         const next = [...digits];
         next[index - 1] = "";
         setDigits(next);
         focusIndex(index - 1);
       }
-      return;
-    }
-
-    if (e.key === "ArrowLeft" && index > 0) {
-      focusIndex(index - 1);
-      return;
-    }
-
-    if (e.key === "ArrowRight" && index < CODE_LEN - 1) {
-      focusIndex(index + 1);
-      return;
     }
   };
 
@@ -101,7 +114,7 @@ export default function CreateAccountCode({
   };
 
   const code = digits.join("");
- 
+
   return (
     <>
       <div className={styles.container}>
@@ -115,45 +128,50 @@ export default function CreateAccountCode({
 
                 <p className={codeStyles.sendingText}>
                   We've sent a 6-digit code to{" "}
-                  <span className={codeStyles.email}>{email}</span>. Please enter it
-                  below.
+                  <span className={codeStyles.email}>{email}</span>. Please enter it below.
                 </p>
 
-                <p className={codeStyles.codeText}>6-digit code</p>
+                <form action={formAction} noValidate>
+                  <input type="hidden" name="email" value={email ?? ""} />
+                  <input type="hidden" name="code" value={code} />
 
-                <div className={codeStyles.codeRow} onPaste={handlePaste}>
-                  {digits.map((digit, index) => (
-                    <input
-                      key={index}
-                      ref={setRef(index)}
-                      className={codeStyles.digitBox}
-                      value={digit}
-                      inputMode="numeric"
-                      autoComplete={index === 0 ? "one-time-code" : "off"}
-                      maxLength={1}
-                      onChange={(e) => handleChange(index, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(index, e)}
-                      aria-label={`Digit ${index + 1}`}
-                    />
-                  ))}
-                </div>
+                  <p className={codeStyles.codeText}>6-digit code</p>
 
-                  <button
-                    type="button"
-                    className={codeStyles.ResendText}
-                    onClick={() => {
-                    }}
-                  >
-                    Resend Code
-                  </button>
+                  <div className={codeStyles.codeRow} onPaste={handlePaste}>
+                    {digits.map((digit, index) => (
+                      <input
+                        key={index}
+                        ref={setRef(index)}
+                        className={codeStyles.digitBox}
+                        value={digit}
+                        inputMode="numeric"
+                        autoComplete={index === 0 ? "one-time-code" : "off"}
+                        maxLength={1}
+                        onChange={(e) => handleChange(index, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(index, e)}
+                        aria-label={`Digit ${index + 1}`}
+                      />
+                    ))}
+                  </div>
 
-                <button
-                  className={styles.loginButton}
-                  type="button"
-                  onClick={onNext}
-                >
-                  Next
-                </button>
+                  <div className={styles.loginWrapper}>
+                    <button
+                      className={styles.loginButton}
+                      type="submit"
+                      disabled={isPending}
+                    >
+                      {isPending ? "Verifying..." : "Next"}
+                    </button>
+
+                    {result && result !== "SUCCESS" && (
+                      <div className={styles.errorText} role="status">
+                        {result === "INVALID_FORM" && "Enter the 6-digit code."}
+                        {result === "INVALID_CODE" && "That code is incorrect."}
+                        {result === "NETWORK_ERROR" && "Network error. Try again."}
+                      </div>
+                    )}
+                  </div>
+                </form>
 
                 <div>
                   <button
