@@ -1,3 +1,5 @@
+"use server";
+
 import { cookies } from "next/headers";
 export type LoginResponse =
   | "NOT_AUTHORIZED"
@@ -9,7 +11,7 @@ export async function login(formData: FormData): Promise<LoginResponse> {
   "use server";
   const email = formData.get("email");
   const password = formData.get("password");
-  if (email == null || password == null) {
+  if ((email == null || password == null) || (email == "" || password == "")) {
     console.log("Email andd Password are required");
     return "UNVALID_FORM";
   }

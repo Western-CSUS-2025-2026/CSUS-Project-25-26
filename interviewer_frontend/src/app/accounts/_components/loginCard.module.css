@@ -114,7 +114,7 @@
   color: var(--accent);
   font-weight: 600;
 
-  margin-bottom: 1em;
+  margin-bottom: 0em;
   margin-top: 1em;
 
   cursor: pointer;
@@ -146,6 +146,21 @@
   height: 5.5em;
 }
 
+
+.loginWrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.errorText {
+  position: absolute;
+  top: 100%;      
+  left: 0;
+  width: 100%;
+
+  font-size: 0.65em;
+  color: var(--secondary-text);
+}
 
 
 
