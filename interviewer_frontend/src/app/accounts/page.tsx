@@ -3,8 +3,8 @@
 import { useState } from "react";
 import LoginCard from "./_components/loginCard";
 import CreateAccountEmailCard from "./_components/createAccountEmail";
-import CreateAccountCard from "./_components/createAccountName";
 import CreateAccountCode from "./_components/createAccountCode";
+import CreateAccountCard from "./_components/createAccountName";
 import CreateAccountPassword from "./_components/createAccountPassword";
 
 type Mode =
@@ -16,7 +16,12 @@ type Mode =
 
 export default function AccountsPage() {
   const [mode, setMode] = useState<Mode>("login");
-  const [signupEmail, setSignupEmail] = useState<string>(""); // store email here
+
+  // state carried over
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupCode, setSignupCode] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   return (
     <div>
@@ -25,8 +30,8 @@ export default function AccountsPage() {
       {mode === "signup-email" && (
         <CreateAccountEmailCard
           onNext={(email) => {
-            setSignupEmail(email);     // save email 
-            setMode("signup-code");    
+            setSignupEmail(email);
+            setMode("signup-code");
           }}
           onBackToLogin={() => setMode("login")}
         />
@@ -34,8 +39,11 @@ export default function AccountsPage() {
 
       {mode === "signup-code" && (
         <CreateAccountCode
-          email={signupEmail}          //use saved email
-          onNext={() => setMode("signup-details")}
+          email={signupEmail}
+          onNext={(code) => {
+            setSignupCode(code);
+            setMode("signup-details");
+          }}
           onBackToLogin={() => setMode("signup-email")}
         />
       )}
@@ -43,15 +51,23 @@ export default function AccountsPage() {
       {mode === "signup-details" && (
         <CreateAccountCard
           onBack={() => setMode("signup-code")}
-          onNext={() => setMode("signup-password")}
+          onNext={(first, last) => {
+            setFirstName(first);
+            setLastName(last);
+            setMode("signup-password");
+          }}
         />
       )}
 
       {mode === "signup-password" && (
         <CreateAccountPassword
+          email={signupEmail}
+          code={signupCode}
+          firstName={firstName}
+          lastName={lastName}
           onBack={() => setMode("signup-details")}
           onNext={() => {
-            // later: call completeRegistration here
+            setMode("login");
           }}
         />
       )}

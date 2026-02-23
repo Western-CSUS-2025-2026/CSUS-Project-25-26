@@ -11,7 +11,7 @@ import {
 } from "@/actions/login/register";
 
 interface CreateAccountCodeProps {
-  onNext: () => void;
+  onNext: (code: string) => void; // pass code upward
   onBackToLogin: () => void;
   email?: string;
 }
@@ -28,27 +28,6 @@ export default function CreateAccountCode({
 
   const [digits, setDigits] = useState<string[]>(Array(CODE_LEN).fill(""));
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
-
-  const [result, formAction, isPending] = useActionState<
-    CheckVerificationCodeResponse | undefined,
-    FormData
-  >(async (_prev, formData) => {
-    const res = await checkVerificationCode(undefined, formData);
-
-    if (res === "SUCCESS") {
-      onNext();
-      return res;
-    }
-
-    // bypass
-    if (Bypass) {
-      console.warn("[BYPASS]", res);
-      onNext();
-      return "SUCCESS";
-    }
-
-    return res;
-  }, undefined);
 
   const setRef =
     (index: number) =>
@@ -81,7 +60,10 @@ export default function CreateAccountCode({
     if (v && index < CODE_LEN - 1) focusIndex(index + 1);
   };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
     if (e.key === "Backspace") {
       if (digits[index]) {
         const next = [...digits];
@@ -115,6 +97,27 @@ export default function CreateAccountCode({
 
   const code = digits.join("");
 
+  const [result, formAction, isPending] = useActionState<
+    CheckVerificationCodeResponse | undefined,
+    FormData
+  >(async (_prev, formData) => {
+    const res = await checkVerificationCode(undefined, formData);
+
+    if (res === "SUCCESS") {
+      onNext(code); // pass the code
+      return res;
+    }
+
+    // bypass
+    if (Bypass) {
+      console.warn("[BYPASS]", res);
+      onNext(code); // pass code even in bypass
+      return "SUCCESS";
+    }
+
+    return res;
+  }, undefined);
+
   return (
     <>
       <div className={styles.container}>
@@ -128,7 +131,8 @@ export default function CreateAccountCode({
 
                 <p className={codeStyles.sendingText}>
                   We've sent a 6-digit code to{" "}
-                  <span className={codeStyles.email}>{email}</span>. Please enter it below.
+                  <span className={codeStyles.email}>{email}</span>. Please enter
+                  it below.
                 </p>
 
                 <form action={formAction} noValidate>
