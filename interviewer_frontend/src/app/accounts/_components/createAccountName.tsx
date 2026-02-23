@@ -1,12 +1,17 @@
+"use client";
+
 import Card from "@/components/card/card";
 import styles from "./loginCard.module.css";
+import { useState } from "react";
 
 interface CreateAccountCardProps {
-  onBack: () => void;     // go back to email step
-  onNext: () => void;     // proceed to next step (or finish signup)
+  onBack: () => void;
+  onNext: (firstName: string, lastName: string) => void;
 }
 
 export default function CreateAccountCard({ onBack, onNext }: CreateAccountCardProps) {
+  const [error, setError] = useState<string | null>(null);
+
   return (
     <>
       <div className={styles.container}>
@@ -18,31 +23,56 @@ export default function CreateAccountCard({ onBack, onNext }: CreateAccountCardP
               <div className={styles.coloumn}>
                 <div className={styles.line}></div>
 
-                <div className={styles.infoBox}>
-                  <p>First Name</p>
-                  <input
-                    type="text"
-                    className={styles.textBox}
-                    placeholder="Enter your first name"
-                    autoComplete="given-name"
-                  />
+                <form
+                  noValidate
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    setError(null);
 
-                  <p>Last Name</p>
-                  <input
-                    type="text"
-                    className={styles.textBox}
-                    placeholder="Enter your last name"
-                    autoComplete="family-name"
-                  />
-                </div>
+                    const fd = new FormData(e.currentTarget);
+                    const firstName = String(fd.get("firstName") ?? "").trim();
+                    const lastName = String(fd.get("lastName") ?? "").trim();
 
-                <button
-                  className={styles.loginButton}
-                  type="button"
-                  onClick={onNext}
+                    if (!firstName || !lastName) {
+                      setError("Please fill out both names.");
+                      return;
+                    }
+
+                    onNext(firstName, lastName);
+                  }}
                 >
-                  Next
-                </button>
+                  <div className={styles.infoBox}>
+                    <p>First Name</p>
+                    <input
+                      name="firstName"
+                      type="text"
+                      className={styles.textBox}
+                      placeholder="Enter your first name"
+                      autoComplete="given-name"
+                    />
+
+                    <p>Last Name</p>
+                    <input
+                      name="lastName"
+                      type="text"
+                      className={styles.textBox}
+                      placeholder="Enter your last name"
+                      autoComplete="family-name"
+                    />
+                  </div>
+
+                  <div className={styles.loginWrapper}>
+                    <button className={styles.loginButton} type="submit">
+                      Next
+                    </button>
+
+                    {error && (
+                      <div className={styles.errorText} role="status">
+                        {error}
+                      </div>
+                    )}
+                  </div>
+                </form>
 
                 <div>
                   <button
