@@ -89,14 +89,17 @@ class Question(BaseDbModel):
     session_components: Mapped[list["SessionComponent"]] = relationship(
         "SessionComponent", foreign_keys="SessionComponent.question_id", back_populates="question"
     )
-    
+
+
 class Grade(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     body_language_score: Mapped[int] = mapped_column(Integer, nullable=False)
     speech_score: Mapped[int] = mapped_column(Integer, nullable=False)
     material_score: Mapped[int] = mapped_column(Integer, nullable=False)
     brevity_score: Mapped[int] = mapped_column(Integer, nullable=False)
-    session_component_id: Mapped[int] = mapped_column(Integer, ForeignKey("session_component.id"), nullable=False, unique=True)
+    session_component_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("session_component.id"), nullable=False, unique=True
+    )
     session_component: Mapped["SessionComponent"] = relationship(
         "SessionComponent",
         foreign_keys=[session_component_id],
@@ -104,11 +107,14 @@ class Grade(BaseDbModel):
         primaryjoin="Grade.session_component_id==SessionComponent.id",
     )
 
+
 class Feedback(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     point: Mapped[str] = mapped_column(Text, nullable=False)
     ways_to_improve: Mapped[str] = mapped_column(Text, nullable=True)
-    session_component_id: Mapped[int] = mapped_column(Integer, ForeignKey("session_component.id"), nullable=False, unique=True)
+    session_component_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("session_component.id"), nullable=False, unique=True
+    )
     session_component: Mapped["SessionComponent"] = relationship(
         "SessionComponent",
         foreign_keys=[session_component_id],
@@ -116,13 +122,16 @@ class Feedback(BaseDbModel):
         primaryjoin="Feedback.session_component_id==SessionComponent.id",
     )
 
+
 class Video(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     s3_key: Mapped[str] = mapped_column(String, nullable=True)
     size_bytes: Mapped[int] = mapped_column(Integer, nullable=True)
     uploaded_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     checksum: Mapped[str] = mapped_column(String, nullable=True)
-    session_component_id: Mapped[int] = mapped_column(Integer, ForeignKey("session_component.id"), nullable=False, unique=True)
+    session_component_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("session_component.id"), nullable=False, unique=True
+    )
     session_component: Mapped["SessionComponent"] = relationship(
         "SessionComponent",
         foreign_keys=[session_component_id],
@@ -130,12 +139,14 @@ class Video(BaseDbModel):
         primaryjoin="Video.session_component_id==SessionComponent.id",
     )
 
+
 class SessionState(enum.Enum):
     PENDING = "pending"
     INDEXING = "indexing"
     ANALYZING = "analyzing"
     COMPLETED = "completed"
     ERROR = "error"
+
 
 class SessionComponent(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -155,7 +166,10 @@ class SessionComponent(BaseDbModel):
         "Grade", foreign_keys="Grade.session_component_id", back_populates="session_component", cascade="all, delete"
     )
     feedback: Mapped[Feedback] = relationship(
-        "Feedback", foreign_keys="Feedback.session_component_id", back_populates="session_component", cascade="all, delete"
+        "Feedback",
+        foreign_keys="Feedback.session_component_id",
+        back_populates="session_component",
+        cascade="all, delete",
     )
     session: Mapped["Session"] = relationship(
         "Session",
@@ -163,6 +177,7 @@ class SessionComponent(BaseDbModel):
         back_populates="session_components",
         primaryjoin="SessionComponent.session_id==Session.id",
     )
+
 
 class Session(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
