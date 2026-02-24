@@ -17,17 +17,14 @@ depends_on = None
 
 
 def upgrade():
-    # Create enum type for SessionComponent.state (raw SQL so we can ignore "already exists")
-    op.execute(
-        "DO $$ BEGIN CREATE TYPE sessionstate AS ENUM "
-        "('pending', 'indexing', 'analyzing', 'completed', 'error'); "
-        "EXCEPTION WHEN duplicate_object THEN NULL; END $$"
-    )
-    sessionstate_type = postgresql.ENUM(
+    # Create enum type for SessionComponent.state
+    sessionstate = postgresql.ENUM(
         'pending', 'indexing', 'analyzing', 'completed', 'error',
         name='sessionstate',
-        create_type=False,
+        create_type=True,
     )
+    sessionstate.create(op.get_bind(), checkfirst=True)
+    sessionstate_type = sa.Enum('pending', 'indexing', 'analyzing', 'completed', 'error', name='sessionstate', create_type=False)
 
     # Tables in dependency order
     op.create_table(
