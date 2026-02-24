@@ -63,6 +63,21 @@ class UserSession(BaseDbModel):
         return self.expires <= datetime.datetime.now(tz=datetime.timezone.utc)
 
 
+class Video(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    s3_key: Mapped[str] = mapped_column(String, nullable=True)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=True)
+    uploaded_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    checksum: Mapped[str] = mapped_column(String, nullable=True)
+    session_component_id: Mapped[int] = mapped_column(Integer, ForeignKey("session_component.id"), nullable=False, unique=True)
+    session_component: Mapped["SessionComponent"] = relationship(
+        "SessionComponent",
+        foreign_keys=[session_component_id],
+        back_populates="video",
+        primaryjoin="Video.session_component_id==SessionComponent.id",
+    )
+
+
 class UserMessageDelay(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     delay_time: Mapped[datetime.datetime] = mapped_column(
@@ -131,11 +146,7 @@ class SessionState(enum.Enum):
 class SessionComponent(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     transcript: Mapped[str] = mapped_column(Text, nullable=True)
-    state: Mapped[SessionState] = mapped_column(
-        Enum(SessionState, values_callable=lambda obj: [e.value for e in obj]),
-        nullable=False,
-        default=SessionState.PENDING,
-    )
+    state: Mapped[SessionState] = mapped_column(Enum(SessionState), nullable=False, default=SessionState.PENDING)
     indexed_asset_id: Mapped[str | None] = mapped_column(String, nullable=True)
     session_id: Mapped[int] = mapped_column(Integer, ForeignKey("session.id"), nullable=False)
     question_id: Mapped[int] = mapped_column(Integer, ForeignKey("question.id"), nullable=False)
@@ -144,6 +155,9 @@ class SessionComponent(BaseDbModel):
         foreign_keys=[question_id],
         back_populates="session_components",
         primaryjoin="SessionComponent.question_id==Question.id",
+    )
+    video: Mapped[Video] = relationship(
+        "Video", foreign_keys="Video.session_component_id", back_populates="session_component", cascade="all, delete"
     )
     grade: Mapped[Grade] = relationship(
         "Grade", foreign_keys="Grade.session_component_id", back_populates="session_component", cascade="all, delete"
