@@ -137,16 +137,21 @@ class Feedback(BaseDbModel):
     )
 
 class SessionState(enum.Enum):
-    PENDING = "pending"
-    INDEXING = "indexing"
-    ANALYZING = "analyzing"
-    COMPLETED = "completed"
-    ERROR = "error"
+    """SessionComponent state; DB enum 'componentstate' (uppercase, same as sessionstate)."""
+    PENDING = "PENDING"
+    INDEXING = "INDEXING"
+    ANALYZING = "ANALYZING"
+    COMPLETED = "COMPLETED"
+    ERROR = "ERROR"
 
 class SessionComponent(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     transcript: Mapped[str] = mapped_column(Text, nullable=True)
-    state: Mapped[SessionState] = mapped_column(Enum(SessionState), nullable=False, default=SessionState.PENDING)
+    state: Mapped[SessionState] = mapped_column(
+        Enum(SessionState, name="componentstate"),
+        nullable=False,
+        default=SessionState.PENDING,
+    )
     indexed_asset_id: Mapped[str | None] = mapped_column(String, nullable=True)
     session_id: Mapped[int] = mapped_column(Integer, ForeignKey("session.id"), nullable=False)
     question_id: Mapped[int] = mapped_column(Integer, ForeignKey("question.id"), nullable=False)

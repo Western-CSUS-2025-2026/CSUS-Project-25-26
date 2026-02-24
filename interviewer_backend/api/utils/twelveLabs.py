@@ -1,6 +1,5 @@
 from twelvelabs import TwelveLabs
 from twelvelabs.indexes import IndexesCreateRequestModelsItem
-from twelvelabs.tasks import TasksRetrieveResponse
 from twelvelabs.types import ResponseFormat
 
 from api.exceptions import FailToConnectTwelveLabs, IndexCreatingFail, FailToCreateTask
@@ -138,6 +137,7 @@ class VideoAnalysis:
         Returns:
             Asset object containing asset_id and other metadata.
         """
+        file.file.seek(0)
         asset = self.client.assets.create(
             method="direct",
             file=file.file
@@ -193,8 +193,7 @@ class VideoAnalysis:
                 return " ".join(transcript_parts) if transcript_parts else None
             
             return None
-        except Exception as e:
-            print(f"[get_video_transcript] Error retrieving transcript: {e}")
+        except Exception:
             return None
 
 
@@ -218,8 +217,7 @@ class VideoAnalysis:
 
     def generate_interview_analysis(self, video_id: str, question: str):
         try:
-            prompt = f"""
-You are a senior technical interviewer and communication coach.
+            prompt = f"""You are a senior technical interviewer and communication coach.
 
 The video contains an answer to an interview question.
 Analyze the candidate's response.
@@ -228,33 +226,25 @@ QUESTION:
 {question}
 
 CRITICAL RULES (DO NOT VIOLATE):
-- Return ONE valid JSON object only
-- No markdown, no explanations, no extra text
+- Return ONE valid JSON object only — no markdown fences, no explanations, no extra text
+- The response must start with {{ and end with }}
 - Scores must be integers from 1 to 10
 - If a visible face is NOT present, all scores MUST be below 5
 - Feedback must be grounded in what the candidate actually said
+- Wrap the response in a "question_responses" array
 
-PRODUCE:
+Return EXACTLY this JSON structure:
+{{"question_responses": [{{"question": "<the interview question>", "body_language_score": <1-10>, "speech_score": <1-10>, "brevity_score": <1-10>, "material_score": <1-10>, "feedback": {{"points": ["<problem 1>", "<problem 2>", "<problem 3>"], "ways_to_improve": ["<improvement 1>", "<improvement 2>", "<improvement 3>"]}}, "improved_answer": {{"version": "<one polished answer paragraph>"}}}}]}}
 
-1) Scores:
-- body_language_score (1–10)
-- speech_score (1–10)
-- brevity_score (1–10)
-- material_score (1–10): how well the candidate used relevant content/examples/material to answer the question
+SCORING GUIDE:
+- body_language_score: posture, gestures, eye contact, facial expressions
+- speech_score: clarity, pace, filler words, articulation
+- brevity_score: conciseness, staying on topic, not rambling
+- material_score: how well the candidate used relevant content/examples to answer the question
 
-2) feedback.points  
-EXACTLY 3 problems or issues identified during the interview (e.g., unclear explanations, lack of examples, poor structure)
-
-3) feedback.ways_to_improve  
-EXACTLY 3 actionable improvements that directly address the problems in feedback.points (provide specific solutions for each problem)
-
-4) improved_answer.version  
-ONE polished answer paragraph the candidate can practice.
-- Natural
-- Professional
-- Not overly long
-- No buzzwords
-"""
+feedback.points: EXACTLY 3 specific problems identified
+feedback.ways_to_improve: EXACTLY 3 actionable improvements addressing the problems
+improved_answer.version: ONE polished, natural, professional answer paragraph"""
 
             result = self.client.analyze(
                 video_id=video_id,
@@ -265,13 +255,11 @@ ONE polished answer paragraph the candidate can practice.
                     type="json_schema",
                     json_schema={
                         "type": "object",
-                        "additionalProperties": False,
                         "properties": {
                             "question_responses": {
                                 "type": "array",
                                 "items": {
                                     "type": "object",
-                                    "additionalProperties": False,
                                     "properties": {
                                         "question": {"type": "string"},
                                         "body_language_score": {
@@ -296,7 +284,6 @@ ONE polished answer paragraph the candidate can practice.
                                         },
                                         "feedback": {
                                             "type": "object",
-                                            "additionalProperties": False,
                                             "properties": {
                                                 "points": {
                                                     "type": "array",
@@ -311,7 +298,6 @@ ONE polished answer paragraph the candidate can practice.
                                         },
                                         "improved_answer": {
                                             "type": "object",
-                                            "additionalProperties": False,
                                             "properties": {
                                                 "version": {"type": "string"}
                                             },

@@ -144,7 +144,6 @@ class VideoAnalysisStateResponse(Base):
 class SessionCreateResponse(Base):
     """Response after creating a session."""
     session_id: int
-    state: str
 
 
 class SessionComponentCreateRequest(Base):

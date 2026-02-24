@@ -1,5 +1,4 @@
 import json
-import logging
 
 from fastapi import APIRouter, Depends, UploadFile, File
 from fastapi_sqlalchemy import db
@@ -7,12 +6,11 @@ from fastapi_sqlalchemy import db
 from api.exceptions import ForbiddenAction
 from api.utils.security import Auth
 from api.utils.twelveLabs import VideoAnalysis
-from api.schemas.models import VideoAnalysisStateResponse, TwelveLabsWebhookRequest, QuestionResponseModel, FeedbackModel
+from api.schemas.models import TwelveLabsWebhookRequest
 from api.schemas.base import StatusResponseModel
 from api.models.db import SessionState, Session, UserSession, SessionComponent, Feedback, Grade
 
 
-logger = logging.getLogger(__name__)
 video = APIRouter(prefix="/video", tags=["Video"])
 analyzer = VideoAnalysis()
 
@@ -43,8 +41,9 @@ async def upload_video(
 
 @video.post("/webhook/twelvelabs")
 async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
-    indexed_asset_id = payload.indexed_asset_id or payload.id
-    state = (payload.state or payload.status or "").lower()
+    indexed_asset_id = payload.indexed_asset_id
+    state = (payload.state or "").lower()
+
     session_component_to_analyze = (
         SessionComponent.query(session=db.session)
         .filter(SessionComponent.indexed_asset_id == indexed_asset_id)
@@ -118,7 +117,6 @@ async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
         return StatusResponseModel(status="Success", message="Analysis completed successfully")
 
     except Exception as e:
-        logger.exception("Webhook analysis failed: %s", e)
         if session_component_to_analyze:
             session_component_to_analyze.state = SessionState.ERROR
         db.session.commit()

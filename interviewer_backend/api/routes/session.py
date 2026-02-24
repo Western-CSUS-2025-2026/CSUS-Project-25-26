@@ -50,5 +50,4 @@ async def create_session(
 
     return SessionCreateResponse(
         session_id=new_session.id,
-        state=SessionState.PENDING.value
     )
