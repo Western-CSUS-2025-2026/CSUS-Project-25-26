@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import datetime
+import enum
 import logging
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -26,8 +27,11 @@ class User(BaseDbModel):
     create_ts: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc), nullable=False
     )
-    sessions: Mapped[list[UserSession]] = relationship(
+    user_sessions: Mapped[list[UserSession]] = relationship(
         "UserSession", foreign_keys="UserSession.user_id", back_populates="user", cascade='all, delete'
+    )
+    interview_sessions: Mapped[list["Session"]] = relationship(
+        "Session", foreign_keys="Session.user_id", cascade='all, delete'
     )
 
 
@@ -45,7 +49,7 @@ class UserSession(BaseDbModel):
     user: Mapped[User] = relationship(
         "User",
         foreign_keys=[user_id],
-        back_populates="sessions",
+        back_populates="user_sessions",
         primaryjoin="UserSession.user_id==User.id",
     )
 
@@ -61,3 +65,134 @@ class UserMessageDelay(BaseDbModel):
     )
     user_email: Mapped[str] = mapped_column(String, unique=False, nullable=False)
     user_ip: Mapped[str] = mapped_column(String, unique=False, nullable=False)
+
+
+class Template(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    job_title: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    questions: Mapped[list["Question"]] = relationship(
+        "Question", foreign_keys="Question.template_id", back_populates="template", cascade="all, delete"
+    )
+
+
+class Question(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    template_id: Mapped[int] = mapped_column(Integer, ForeignKey("template.id"), nullable=False)
+    template: Mapped[Template] = relationship(
+        "Template",
+        foreign_keys=[template_id],
+        back_populates="questions",
+        primaryjoin="Question.template_id==Template.id",
+    )
+    session_components: Mapped[list["SessionComponent"]] = relationship(
+        "SessionComponent", foreign_keys="SessionComponent.question_id", back_populates="question"
+    )
+
+
+class Grade(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    body_language_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    speech_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    material_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    brevity_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    session_component_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("session_component.id"), nullable=False, unique=True
+    )
+    session_component: Mapped["SessionComponent"] = relationship(
+        "SessionComponent",
+        foreign_keys=[session_component_id],
+        back_populates="grade",
+        primaryjoin="Grade.session_component_id==SessionComponent.id",
+    )
+
+
+class Feedback(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    point: Mapped[str] = mapped_column(Text, nullable=False)
+    ways_to_improve: Mapped[str] = mapped_column(Text, nullable=True)
+    session_component_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("session_component.id"), nullable=False, unique=True
+    )
+    session_component: Mapped["SessionComponent"] = relationship(
+        "SessionComponent",
+        foreign_keys=[session_component_id],
+        back_populates="feedback",
+        primaryjoin="Feedback.session_component_id==SessionComponent.id",
+    )
+
+
+class Video(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    s3_key: Mapped[str] = mapped_column(String, nullable=True)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=True)
+    uploaded_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    checksum: Mapped[str] = mapped_column(String, nullable=True)
+    session_component_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("session_component.id"), nullable=False, unique=True
+    )
+    session_component: Mapped["SessionComponent"] = relationship(
+        "SessionComponent",
+        foreign_keys=[session_component_id],
+        back_populates="video",
+        primaryjoin="Video.session_component_id==SessionComponent.id",
+    )
+
+
+class SessionState(enum.Enum):
+    PENDING = "pending"
+    INDEXING = "indexing"
+    ANALYZING = "analyzing"
+    COMPLETED = "completed"
+    ERROR = "error"
+
+
+class SessionComponent(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    transcript: Mapped[str] = mapped_column(Text, nullable=True)
+    session_id: Mapped[int] = mapped_column(Integer, ForeignKey("session.id"), nullable=False)
+    question_id: Mapped[int] = mapped_column(Integer, ForeignKey("question.id"), nullable=False)
+    question: Mapped[Question] = relationship(
+        "Question",
+        foreign_keys=[question_id],
+        back_populates="session_components",
+        primaryjoin="SessionComponent.question_id==Question.id",
+    )
+    video: Mapped[Video] = relationship(
+        "Video", foreign_keys="Video.session_component_id", back_populates="session_component", cascade="all, delete"
+    )
+    grade: Mapped[Grade] = relationship(
+        "Grade", foreign_keys="Grade.session_component_id", back_populates="session_component", cascade="all, delete"
+    )
+    feedback: Mapped[Feedback] = relationship(
+        "Feedback",
+        foreign_keys="Feedback.session_component_id",
+        back_populates="session_component",
+        cascade="all, delete",
+    )
+    session: Mapped["Session"] = relationship(
+        "Session",
+        foreign_keys=[session_id],
+        back_populates="session_components",
+        primaryjoin="SessionComponent.session_id==Session.id",
+    )
+
+
+class Session(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
+    state: Mapped[SessionState] = mapped_column(Enum(SessionState), nullable=False, default=SessionState.PENDING)
+    overall_grade: Mapped[int] = mapped_column(Integer, nullable=True)
+    create_ts: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc), nullable=False
+    )
+    session_components: Mapped[list["SessionComponent"]] = relationship(
+        "SessionComponent", foreign_keys="SessionComponent.session_id", back_populates="session", cascade="all, delete"
+    )
+    user: Mapped[User] = relationship(
+        "User",
+        foreign_keys=[user_id],
+        back_populates="interview_sessions",
+        primaryjoin="Session.user_id==User.id",
+    )
