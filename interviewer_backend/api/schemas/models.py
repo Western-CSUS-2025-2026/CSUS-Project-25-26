@@ -157,3 +157,94 @@ class SessionComponentCreateResponse(Base):
     session_id: int
     question: str
     question_id: int
+class FeedbackGet(Base):
+    id: int
+    point: str
+    ways_to_improve: str | None
+
+
+class GradeGet(Base):
+    id: int
+    body_language_score: int
+    speech_score: int
+    material_score: int
+    brevity_score: int
+
+
+class VideoGet(Base):
+    id: int
+    s3_key: str | None
+
+
+class TemplateBase(Base):
+    job_title: str
+    description: str | None = None
+
+
+class TemplateCreate(TemplateBase):
+    pass
+
+
+class TemplateUpdate(Base):
+    job_title: str | None = None
+    description: str | None = None
+
+
+class TemplateGet(TemplateBase):
+    id: int
+
+
+class QuestionBase(Base):
+    question: str
+
+
+class QuestionCreate(QuestionBase):
+    template_id: int
+
+
+class QuestionUpdate(Base):
+    question: str | None = None
+
+
+class QuestionGet(QuestionBase):
+    id: int
+    template_id: int
+
+
+class TemplateWithQuestionsGet(TemplateGet):
+    questions: list[QuestionGet]
+
+
+class StatusResponse(Base):
+    status: str
+
+
+class SessionComponentGet(Base):
+    id: int
+    transcript: str | None
+    question_id: int
+    question: QuestionGet | None = None
+    grade: GradeGet | None = None
+    feedback: FeedbackGet | None = None
+    video: VideoGet | None = None
+
+
+class SessionGet(Base):
+    id: int
+    user_id: int
+    state: str
+    overall_grade: int | None
+    create_ts: datetime.datetime
+    session_components: list[SessionComponentGet] | None = None
+
+
+class SessionsList(Base):
+    sessions: list[SessionGet]
+
+
+class SessionCreate(Base):
+    pass
+
+
+class SessionStateUpdate(Base):
+    state: str

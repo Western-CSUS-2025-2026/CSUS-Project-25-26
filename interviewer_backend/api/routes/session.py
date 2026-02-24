@@ -1,16 +1,19 @@
-# api/routes/session.py
+import logging
 import random
+from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, Form
+from fastapi import APIRouter, Depends, Form, Query
 from fastapi_sqlalchemy import db
 
 from api.exceptions import ObjectNotFound
 from api.models.db import Session, UserSession, SessionState, Template, Question, SessionComponent
-from api.schemas.models import SessionCreateResponse, SessionComponentCreateResponse, SessionComponentCreateRequest
+from api.schemas.models import SessionGet, SessionsList, SessionCreateResponse, SessionComponentCreateResponse, SessionComponentCreateRequest
 from api.settings import get_settings
 from api.utils.security import Auth
+from api.utils.session_query import parse_include, get_session_options, serialize_session
 
-session = APIRouter(prefix="/session", tags=["Session"])
+logger: logging.Logger = logging.getLogger(__name__)
+session: APIRouter = APIRouter(prefix="/sessions", tags=["Sessions"])
 
 
 @session.post("", status_code=201, response_model=SessionCreateResponse)
@@ -51,3 +54,58 @@ async def create_session(
     return SessionCreateResponse(
         session_id=new_session.id,
     )
+
+
+@session.get("", response_model=SessionsList, response_model_exclude_none=True)
+async def get_user_sessions(
+    user_session: UserSession = Depends(Auth()),
+    limit: int = Query(default=10, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    include: Annotated[list[str], Query()] = [],
+) -> SessionsList:
+    """
+    Get history of user sessions.
+    Possible include options: components, grades, feedback, videos, questions
+    """
+    requested = parse_include(include)
+    options, valid_requested = get_session_options(requested)
+
+    sessions: list[Session] = (
+        Session.query(session=db.session)
+        .options(*options)
+        .filter(Session.user_id == user_session.user_id)
+        .order_by(Session.create_ts.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    return SessionsList(sessions=[serialize_session(s, valid_requested) for s in sessions])
+
+
+@session.get("/{session_id}", response_model=SessionGet, response_model_exclude_none=True)
+async def get_session(
+    session_id: int,
+    user_session: UserSession = Depends(Auth()),
+    include: Annotated[list[str], Query()] = [],
+) -> SessionGet:
+    """
+    Get a single user session by ID.
+    Possible include options: components, grades, feedback, videos, questions
+    """
+    requested = parse_include(include)
+    options, valid_requested = get_session_options(requested)
+
+    session_obj: Optional[Session] = (
+        Session.query(session=db.session)
+        .options(*options)
+        .filter(Session.id == session_id)
+        .filter(Session.user_id == user_session.user_id)
+        .one_or_none()
+    )
+
+    if not session_obj:
+        raise ObjectNotFound(Session, session_id)
+
+    return serialize_session(session_obj, valid_requested)
+  
