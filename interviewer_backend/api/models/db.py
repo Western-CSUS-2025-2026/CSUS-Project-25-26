@@ -121,20 +121,6 @@ class Feedback(BaseDbModel):
         primaryjoin="Feedback.session_component_id==SessionComponent.id",
     )
 
-class Video(BaseDbModel):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    s3_key: Mapped[str] = mapped_column(String, nullable=True)
-    size_bytes: Mapped[int] = mapped_column(Integer, nullable=True)
-    uploaded_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=True)
-    checksum: Mapped[str] = mapped_column(String, nullable=True)
-    session_component_id: Mapped[int] = mapped_column(Integer, ForeignKey("session_component.id"), nullable=False, unique=True)
-    session_component: Mapped["SessionComponent"] = relationship(
-        "SessionComponent",
-        foreign_keys=[session_component_id],
-        back_populates="video",
-        primaryjoin="Video.session_component_id==SessionComponent.id",
-    )
-
 class SessionState(enum.Enum):
     PENDING = "pending"
     INDEXING = "indexing"
@@ -158,9 +144,6 @@ class SessionComponent(BaseDbModel):
         foreign_keys=[question_id],
         back_populates="session_components",
         primaryjoin="SessionComponent.question_id==Question.id",
-    )
-    video: Mapped[Video] = relationship(
-        "Video", foreign_keys="Video.session_component_id", back_populates="session_component", cascade="all, delete"
     )
     grade: Mapped[Grade] = relationship(
         "Grade", foreign_keys="Grade.session_component_id", back_populates="session_component", cascade="all, delete"
@@ -200,6 +183,7 @@ class TwelveLabsIndex(BaseDbModel):
     create_ts: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc), nullable=False
     )
+    expires_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     user: Mapped[User] = relationship(
         "User",
         foreign_keys=[user_id],

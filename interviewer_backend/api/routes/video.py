@@ -1,4 +1,5 @@
 import json
+import logging
 
 from fastapi import APIRouter, Depends, UploadFile, File
 from fastapi_sqlalchemy import db
@@ -8,9 +9,10 @@ from api.utils.security import Auth
 from api.utils.twelveLabs import VideoAnalysis
 from api.schemas.models import VideoAnalysisStateResponse, TwelveLabsWebhookRequest, QuestionResponseModel, FeedbackModel
 from api.schemas.base import StatusResponseModel
-from api.models.db import SessionState, Session, UserSession, Question, SessionComponent, Feedback, Grade, Template
+from api.models.db import SessionState, Session, UserSession, SessionComponent, Feedback, Grade
 
 
+logger = logging.getLogger(__name__)
 video = APIRouter(prefix="/video", tags=["Video"])
 analyzer = VideoAnalysis()
 
@@ -48,6 +50,8 @@ async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
         .filter(SessionComponent.indexed_asset_id == indexed_asset_id)
         .one_or_none()
     )
+    if not session_component_to_analyze:
+        return StatusResponseModel(status="Success", message="Unknown asset, ignored")
 
     try:
         session = session_component_to_analyze.session
@@ -60,7 +64,7 @@ async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
         db.session.flush()
         question_text = session_component_to_analyze.question.question
         result = analyzer.generate_interview_analysis(
-            video_id=indexed_asset_id,            
+            video_id=indexed_asset_id,
             question=question_text
         )
 
@@ -68,74 +72,29 @@ async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
         analysis_dict = json.loads(data_string)
 
         if "question_responses" in analysis_dict:
+            our_question_text = session_component_to_analyze.question.question
             for qr in analysis_dict["question_responses"]:
-
-                default_template = (
-                    Template.query(session=db.session)
-                    .filter(Template.job_title == f"{session.user_id} Questions")
-                    .one_or_none()
-                )
-
-                if not default_template:
-                    default_template = Template.create(
-                        session=db.session,
-                        job_title=f"{session.user_id} Questions",
-                        description=f"Questions submitted by {session.user_id} during video uploads"
-                    )
-                    db.session.flush()
-
-
-                # Get question text from response
-                response_question_text = qr.get("question", "")
-                
-                # Find matching SessionComponent by question text
-                session_component = None
-                for sc in session.session_components:
-                    if sc.question.question == response_question_text:
-                        session_component = sc
-                        break
-                
-                # Skip if no matching component found
-                if not session_component:
+                if qr.get("question", "") != our_question_text:
                     continue
-
-                # Get or create Question record
-                question = (
-                    Question.query(session=db.session)
-                    .filter(Question.question == response_question_text)
-                    .one_or_none()
-                )
-
-                if not question:
-                    question = Question.create(
-                        session=db.session,
-                        question=response_question_text,
-                        template_id=default_template.id
-                    )
-                    db.session.flush()
 
                 Grade.create(
                     session=db.session,
-                    session_component_id=session_component.id,
+                    session_component_id=session_component_to_analyze.id,
                     body_language_score=qr.get("body_language_score", 0),
                     speech_score=qr.get("speech_score", 0),
                     brevity_score=qr.get("brevity_score", 0),
-                    material_score=0
+                    material_score=qr.get("material_score", 0),
                 )
 
-                # Create Feedback
-                # Note: DB has point (singular string) and ways_to_improve (string)
-                # TwelveLabs returns points (array) and ways_to_improve (array)
                 feedback_data = qr.get("feedback", {})
                 points_list = feedback_data.get("points", [])
                 ways_list = feedback_data.get("ways_to_improve", [])
-                
                 point_str = "\n".join(points_list) if points_list else ""
                 ways_str = "\n".join(ways_list) if ways_list else None
 
                 Feedback.create(
                     session=db.session,
-                    session_component_id=session_component.id,
+                    session_component_id=session_component_to_analyze.id,
                     point=point_str,
                     ways_to_improve=ways_str
                 )
@@ -148,16 +107,18 @@ async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
                 )
 
                 if transcript_text:
-                    session_component.transcript = transcript_text
+                    session_component_to_analyze.transcript = transcript_text
                     db.session.flush()
 
-                session_component.state = SessionState.COMPLETED
+                session_component_to_analyze.state = SessionState.COMPLETED
+                break
 
         db.session.commit()
 
         return StatusResponseModel(status="Success", message="Analysis completed successfully")
 
-    except Exception:
+    except Exception as e:
+        logger.exception("Webhook analysis failed: %s", e)
         if session_component_to_analyze:
             session_component_to_analyze.state = SessionState.ERROR
         db.session.commit()

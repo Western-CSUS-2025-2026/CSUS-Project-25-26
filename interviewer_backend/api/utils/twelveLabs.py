@@ -102,53 +102,46 @@ class VideoAnalysis:
         existing_index = (
             TwelveLabsIndex.query(session=session).filter(TwelveLabsIndex.user_id == user_id).one_or_none()
         )
-        
-        if existing_index:
-            expiration_date = existing_index.create_ts + datetime.timedelta(days=90)
-            is_expired = datetime.datetime.now(tz=datetime.timezone.utc) >= expiration_date
 
-            if not is_expired:
-                try:
-                    self.client.indexes.retrieve(existing_index.index_id)
-                    return existing_index.index_id
-                except Exception as e:
-                    print(f"[get_or_create_index] Index {existing_index.index_id} not found in TwelveLabs, creating new one")
-                    pass
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        if existing_index and now < existing_index.expires_at:
+            return existing_index.index_id
 
         index = self.create_index(index_name=f"user_{user_id}_index_{uuid.uuid4().hex}")
         index_id = index.id
 
-        # Delete old index if exists
+        # expires_at = now + lifetime - buffer (no TL retrieve each time; avoid edge cases)
+        lifetime_days = self.settings.INDEX_LIFETIME_DAYS - self.settings.INDEX_EXPIRY_BUFFER_DAYS
+        expires_at = now + datetime.timedelta(days=lifetime_days)
+
         if existing_index:
             session.delete(existing_index)
             session.flush()
 
-        TwelveLabsIndex.create(session=session, user_id=user_id, index_id=index_id)
-        
+        TwelveLabsIndex.create(
+            session=session,
+            user_id=user_id,
+            index_id=index_id,
+            expires_at=expires_at,
+        )
+
         return index_id
 
     
     def upload_asset(self, file: UploadFile):
         """
         Upload a video file to TwelveLabs assets.
-        
-        Uploads a video file directly to TwelveLabs using the direct upload method.
-        This is the first step before indexing a video for analysis.
-        
+
         Args:
             file: FastAPI UploadFile object containing the video file to upload.
-        
+
         Returns:
             Asset object containing asset_id and other metadata.
-        
-        Raises:
-            Exception: If asset upload fails (e.g., file too large, invalid format)
         """
         asset = self.client.assets.create(
             method="direct",
             file=file.file
         )
-
         return asset
 
         
@@ -247,6 +240,7 @@ PRODUCE:
 - body_language_score (1–10)
 - speech_score (1–10)
 - brevity_score (1–10)
+- material_score (1–10): how well the candidate used relevant content/examples/material to answer the question
 
 2) feedback.points  
 EXACTLY 3 problems or issues identified during the interview (e.g., unclear explanations, lack of examples, poor structure)
@@ -295,6 +289,11 @@ ONE polished answer paragraph the candidate can practice.
                                             "minimum": 1,
                                             "maximum": 10
                                         },
+                                        "material_score": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 10
+                                        },
                                         "feedback": {
                                             "type": "object",
                                             "additionalProperties": False,
@@ -324,6 +323,7 @@ ONE polished answer paragraph the candidate can practice.
                                         "body_language_score",
                                         "speech_score",
                                         "brevity_score",
+                                        "material_score",
                                         "feedback",
                                         "improved_answer"
                                     ]
