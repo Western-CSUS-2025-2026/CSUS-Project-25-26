@@ -1,12 +1,15 @@
+import json
+
 from twelvelabs import TwelveLabs
 from twelvelabs.indexes import IndexesCreateRequestModelsItem
 from twelvelabs.types import ResponseFormat
 
-from api.exceptions import FailToConnectTwelveLabs, IndexCreatingFail, FailToCreateTask
+from api.exceptions import FailToConnectTwelveLabs, FailToParseAnalysis, IndexCreatingFail, FailToCreateTask
 from api.settings import get_settings, Settings
-from api.models.db import TwelveLabsIndex
+from api.models.db import Feedback, Grade, Session, SessionComponent, SessionState, TwelveLabsIndex
 
 from fastapi import UploadFile
+from fastapi_sqlalchemy import db
 
 import datetime
 import uuid
@@ -256,67 +259,64 @@ improved_answer.version: ONE polished, natural, professional answer paragraph"""
                     json_schema={
                         "type": "object",
                         "properties": {
-                            "question_responses": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "question": {"type": "string"},
-                                        "body_language_score": {
-                                            "type": "integer",
-                                            "minimum": 1,
-                                            "maximum": 10
-                                        },
-                                        "speech_score": {
-                                            "type": "integer",
-                                            "minimum": 1,
-                                            "maximum": 10
-                                        },
-                                        "brevity_score": {
-                                            "type": "integer",
-                                            "minimum": 1,
-                                            "maximum": 10
-                                        },
-                                        "material_score": {
-                                            "type": "integer",
-                                            "minimum": 1,
-                                            "maximum": 10
-                                        },
-                                        "feedback": {
-                                            "type": "object",
-                                            "properties": {
-                                                "points": {
-                                                    "type": "array",
-                                                    "items": {"type": "string"}
-                                                },
-                                                "ways_to_improve": {
-                                                    "type": "array",
-                                                    "items": {"type": "string"}
-                                                }
-                                            },
-                                            "required": ["points", "ways_to_improve"]
-                                        },
-                                        "improved_answer": {
-                                            "type": "object",
-                                            "properties": {
-                                                "version": {"type": "string"}
-                                            },
-                                            "required": ["version"]
-                                        }
+                            "question_response": {
+                                "type": "object",
+                                "properties": {
+                                    "question": {"type": "string"},
+                                    "body_language_score": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 10
                                     },
-                                    "required": [
-                                        "question",
-                                        "body_language_score",
-                                        "speech_score",
-                                        "brevity_score",
-                                        "material_score",
-                                        "feedback",
-                                        "improved_answer"
-                                    ]
-                                }
+                                    "speech_score": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 10
+                                    },
+                                    "brevity_score": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 10
+                                    },
+                                    "material_score": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 10
+                                    },
+                                    "feedback": {
+                                        "type": "object",
+                                        "properties": {
+                                            "points": {
+                                                "type": "array",
+                                                "items": {"type": "string"}
+                                            },
+                                            "ways_to_improve": {
+                                                "type": "array",
+                                                "items": {"type": "string"}
+                                            }
+                                        },
+                                        "required": ["points", "ways_to_improve"]
+                                    },
+                                    "improved_answer": {
+                                        "type": "object",
+                                        "properties": {
+                                            "version": {"type": "string"}
+                                        },
+                                        "required": ["version"]
+                                    }
+                                },
+                                "required": [
+                                    "question",
+                                    "body_language_score",
+                                    "speech_score",
+                                    "brevity_score",
+                                    "material_score",
+                                    "feedback",
+                                    "improved_answer"
+                                ]
                             }
                         },
-                        "required": ["question_responses"]
+                        "required": ["question_response"]
                     }
                 )
             )
@@ -325,3 +325,78 @@ improved_answer.version: ONE polished, natural, professional answer paragraph"""
 
         except Exception as e:
             raise FailToCreateTask(str(e))
+
+    def process_indexed_asset(self, indexed_asset_id: str, state: str):  
+        with db():
+            session_component_to_analyze: SessionComponent = (
+                SessionComponent.query(session=db.session)
+                .filter(SessionComponent.indexed_asset_id == indexed_asset_id)
+                .one_or_none()
+            )
+            if not session_component_to_analyze:
+                return
+
+            try:
+                if state in ("error", "failed"):
+                    raise FailToCreateTask()
+
+                if session_component_to_analyze.state != SessionState.INDEXING:
+                    raise FailToCreateTask()
+
+                session: Session = session_component_to_analyze.session
+                session_component_to_analyze.state = SessionState.ANALYZING
+                db.session.flush()
+                question_text = session_component_to_analyze.question.question
+                result = self.generate_interview_analysis(
+                    video_id=indexed_asset_id,
+                    question=question_text
+                )
+
+                data_string = result.data if hasattr(result, "data") else str(result)
+                analysis_dict = json.loads(data_string)
+
+                qr = analysis_dict.get("question_response", None)
+                if not qr:
+                    raise FailToParseAnalysis()
+
+                Grade.create(
+                    session=db.session,
+                    session_component_id=session_component_to_analyze.id,
+                    body_language_score=qr.get("body_language_score", 0),
+                    speech_score=qr.get("speech_score", 0),
+                    brevity_score=qr.get("brevity_score", 0),
+                    material_score=qr.get("material_score", 0),
+                )
+
+                feedback_data = qr.get("feedback", {})
+                points_list = feedback_data.get("points", [])
+                ways_list = feedback_data.get("ways_to_improve", [])
+                point_str = "\n".join(points_list) if points_list else ""
+                ways_str = "\n".join(ways_list) if ways_list else None
+
+                Feedback.create(
+                    session=db.session,
+                    session_component_id=session_component_to_analyze.id,
+                    point=point_str,
+                    ways_to_improve=ways_str
+                )
+                db.session.flush()
+
+                index_id = self.get_or_create_index(session.user_id, session=db.session)
+                transcript_text = self.get_video_transcript(
+                    index_id=index_id,
+                    video_id=indexed_asset_id
+                )
+
+                if transcript_text:
+                    session_component_to_analyze.transcript = transcript_text
+                    db.session.flush()
+                session_component_to_analyze.state = SessionState.COMPLETED
+
+                db.session.commit()
+
+            except Exception as e:
+                print(e)
+                if session_component_to_analyze:
+                    session_component_to_analyze.state = SessionState.ERROR
+                db.session.commit()

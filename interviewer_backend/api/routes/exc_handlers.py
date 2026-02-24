@@ -4,6 +4,7 @@ from starlette.responses import JSONResponse
 from api.exceptions import (
     AlreadyExists,
     AuthFailed,
+    FailToParseAnalysis,
     ForbiddenAction,
     ObjectNotFound,
     RegistrationIncomplete,
@@ -79,6 +80,14 @@ async def index_creating_fail_handler(req: starlette.requests.Request, exc: Inde
 
 @app.exception_handler(FailToCreateTask)
 async def fail_to_create_task_handler(req: starlette.requests.Request, exc: FailToCreateTask):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=500,
+    )
+
+
+@app.exception_handler(FailToCreateTask)
+async def fail_to_parse_analysis_handler(req: starlette.requests.Request, exc: FailToParseAnalysis):
     return JSONResponse(
         content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
         status_code=500,

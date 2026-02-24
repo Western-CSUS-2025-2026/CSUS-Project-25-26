@@ -1,6 +1,4 @@
-import json
-
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile, File
 from fastapi_sqlalchemy import db
 
 from api.exceptions import ForbiddenAction
@@ -8,7 +6,7 @@ from api.utils.security import Auth
 from api.utils.twelveLabs import VideoAnalysis
 from api.schemas.models import TwelveLabsWebhookRequest
 from api.schemas.base import StatusResponseModel
-from api.models.db import SessionState, Session, UserSession, SessionComponent, Feedback, Grade
+from api.models.db import SessionState, Session, UserSession, SessionComponent
 
 
 video = APIRouter(prefix="/video", tags=["Video"])
@@ -40,84 +38,8 @@ async def upload_video(
 
 
 @video.post("/webhook/twelvelabs")
-async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest):
+async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest, background_tasks: BackgroundTasks):
     indexed_asset_id = payload.indexed_asset_id
     state = (payload.state or "").lower()
-
-    session_component_to_analyze = (
-        SessionComponent.query(session=db.session)
-        .filter(SessionComponent.indexed_asset_id == indexed_asset_id)
-        .one_or_none()
-    )
-    if not session_component_to_analyze:
-        return StatusResponseModel(status="Success", message="Unknown asset, ignored")
-
-    try:
-        session = session_component_to_analyze.session
-        if state in ("error", "failed"):
-            session_component_to_analyze.state = SessionState.ERROR
-            db.session.commit()
-            return StatusResponseModel(status="Success", message="Received (failure recorded)")
-
-        session_component_to_analyze.state = SessionState.ANALYZING
-        db.session.flush()
-        question_text = session_component_to_analyze.question.question
-        result = analyzer.generate_interview_analysis(
-            video_id=indexed_asset_id,
-            question=question_text
-        )
-
-        data_string = result.data if hasattr(result, "data") else str(result)
-        analysis_dict = json.loads(data_string)
-
-        if "question_responses" in analysis_dict:
-            our_question_text = session_component_to_analyze.question.question
-            for qr in analysis_dict["question_responses"]:
-                if qr.get("question", "") != our_question_text:
-                    continue
-
-                Grade.create(
-                    session=db.session,
-                    session_component_id=session_component_to_analyze.id,
-                    body_language_score=qr.get("body_language_score", 0),
-                    speech_score=qr.get("speech_score", 0),
-                    brevity_score=qr.get("brevity_score", 0),
-                    material_score=qr.get("material_score", 0),
-                )
-
-                feedback_data = qr.get("feedback", {})
-                points_list = feedback_data.get("points", [])
-                ways_list = feedback_data.get("ways_to_improve", [])
-                point_str = "\n".join(points_list) if points_list else ""
-                ways_str = "\n".join(ways_list) if ways_list else None
-
-                Feedback.create(
-                    session=db.session,
-                    session_component_id=session_component_to_analyze.id,
-                    point=point_str,
-                    ways_to_improve=ways_str
-                )
-                db.session.flush()
-
-                index_id = analyzer.get_or_create_index(session.user_id, session=db.session)
-                transcript_text = analyzer.get_video_transcript(
-                    index_id=index_id,
-                    video_id=indexed_asset_id
-                )
-
-                if transcript_text:
-                    session_component_to_analyze.transcript = transcript_text
-                    db.session.flush()
-
-                session_component_to_analyze.state = SessionState.COMPLETED
-                break
-
-        db.session.commit()
-
-        return StatusResponseModel(status="Success", message="Analysis completed successfully")
-
-    except Exception as e:
-        if session_component_to_analyze:
-            session_component_to_analyze.state = SessionState.ERROR
-        db.session.commit()
-        return StatusResponseModel(status="Success", message="Received (failure recorded)")
+    background_tasks.add_task(analyzer.process_indexed_asset, indexed_asset_id, state)
+    return StatusResponseModel(status="Success", message="Received")
