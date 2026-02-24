@@ -4,10 +4,14 @@ from starlette.responses import JSONResponse
 from api.exceptions import (
     AlreadyExists,
     AuthFailed,
+    FailToParseAnalysis,
     ForbiddenAction,
     ObjectNotFound,
     RegistrationIncomplete,
     TooManyEmailRequests,
+    FailToConnectTwelveLabs,
+    IndexCreatingFail,
+    FailToCreateTask,
 )
 from api.schemas.base import StatusResponseModel
 
@@ -54,5 +58,37 @@ async def registration_incomplete_handler(req: starlette.requests.Request, exc: 
 async def http_error_handler(req: starlette.requests.Request, exc: Exception):
     return JSONResponse(
         content=StatusResponseModel(status="Error", message="Internal server error").model_dump(),
+        status_code=500,
+    )
+
+
+@app.exception_handler(FailToConnectTwelveLabs)
+async def fail_to_connect_twelvelabs_handler(req: starlette.requests.Request, exc: FailToConnectTwelveLabs):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(), 
+        status_code=503
+    )
+
+
+@app.exception_handler(IndexCreatingFail)
+async def index_creating_fail_handler(req: starlette.requests.Request, exc: IndexCreatingFail):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=500,
+    )
+
+
+@app.exception_handler(FailToCreateTask)
+async def fail_to_create_task_handler(req: starlette.requests.Request, exc: FailToCreateTask):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=500,
+    )
+
+
+@app.exception_handler(FailToCreateTask)
+async def fail_to_parse_analysis_handler(req: starlette.requests.Request, exc: FailToParseAnalysis):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
         status_code=500,
     )

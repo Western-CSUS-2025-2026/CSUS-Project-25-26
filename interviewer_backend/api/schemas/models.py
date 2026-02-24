@@ -1,8 +1,8 @@
 import datetime
-from typing import Annotated
+from typing import Annotated, List, Optional
 
 from annotated_types import MaxLen
-from pydantic import field_validator
+from pydantic import Field, field_validator
 
 from api.schemas.base import Base
 from api.settings import get_settings
@@ -90,6 +90,73 @@ class UserGet(Base):
     username: str
 
 
+class AnalysisResult(Base):
+    confidence: int = Field(..., ge=1, le=10)
+    clarity: int = Field(..., ge=1, le=10)
+    speech_rate: int = Field(..., ge=1, le=10)
+    eye_contact: int = Field(..., ge=1, le=10)
+    body_language: int = Field(..., ge=1, le=10)
+    voice_tone: int = Field(..., ge=1, le=10)
+    relevant_to_question: int = Field(..., ge=1, le=10)
+    imp_points: List[str]
+    overall_summary: str
+    actionable_feedback: str
+
+
+class VideoUploadResponse(Base):
+    asset_id: str
+    indexed_asset_id: str
+    session_id: int
+    session_component_id: int
+    question: str
+    state: str
+
+
+class TwelveLabsWebhookRequest(Base):
+    indexed_asset_id: Optional[str] = None
+    state: Optional[str] = None
+
+
+class FeedbackModel(Base):
+    points: List[str]
+    ways_to_improve: List[str]
+
+
+class ImproveAnswerModel(Base):
+    version: str
+
+
+class QuestionResponseModel(Base):
+    question: str
+    body_language_score: int
+    speech_score: int
+    brevity_score: int
+    feedback: FeedbackModel
+
+
+class VideoAnalysisStateResponse(Base):
+    status: str
+    session_id: int
+    analysis_data: QuestionResponseModel | None = None
+    error: str | None = None
+
+
+class SessionCreateResponse(Base):
+    """Response after creating a session."""
+    session_id: int
+
+
+class SessionComponentCreateRequest(Base):
+    """Request to add a question/component to a session."""
+    question: str
+
+
+class SessionComponentCreateResponse(Base):
+    """Response after creating a session component."""
+    session_component_id: int
+    session_id: int
+    question: str
+    question_id: int
 class FeedbackGet(Base):
     id: int
     point: str
