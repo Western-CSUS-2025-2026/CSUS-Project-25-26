@@ -17,35 +17,10 @@ export default function CreateAccountEmailCard({
   onNext,
   onBackToLogin,
 }: CreateAccountEmailCardProps) {
-  const [result, formAction, isPending] = useActionState<
-    GetVerificationEmailResponse | undefined,
-    FormData
-  >(async (_prev, formData) => {
-    const raw = formData.get("email");
-    const email = typeof raw === "string" ? raw : "";
-
-    // if empty
-    if (email === "") return "INVALID_FORM";
-
-    const res = await getVerificationEmail(undefined, formData);
-
-    const Bypass = process.env.NODE_ENV === "development";
-
-    if (res === "SUCCESS") {
-      onNext(email);
-      return res;
-    }
-
-    // bypass errors from api 
-    if (Bypass) {
-      console.warn("[BYPASS]", res);
-      onNext(email);
-      return "SUCCESS"; 
-    }
-
-    // use real backend result once api call works
-    return res;
-  }, undefined);
+  const [result, formAction, isPending] = useActionState(
+    getVerificationEmail,
+    "LOADING",
+  );
 
   return (
     <>
@@ -68,7 +43,9 @@ export default function CreateAccountEmailCard({
                       placeholder="Enter your email"
                       autoComplete="email"
                       required
-                      aria-invalid={result && result !== "SUCCESS" ? true : undefined}
+                      aria-invalid={
+                        result && result !== "SUCCESS" ? true : undefined
+                      }
                     />
                   </div>
 
@@ -85,9 +62,12 @@ export default function CreateAccountEmailCard({
 
                     {result && result !== "SUCCESS" && (
                       <div className={styles.errorText} role="status">
-                        {result === "INVALID_FORM" && "Please enter your email."}
-                        {result === "INVALID_EMAIL" && "That email is not valid."}
-                        {result === "NETWORK_ERROR" && "Network error. Try again."}
+                        {result === "INVALID_FORM" &&
+                          "Please enter your email."}
+                        {result === "INVALID_EMAIL" &&
+                          "That email is not valid."}
+                        {result === "NETWORK_ERROR" &&
+                          "Network error. Try again."}
                       </div>
                     )}
                   </div>
