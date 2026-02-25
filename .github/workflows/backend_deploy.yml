@@ -88,6 +88,9 @@ jobs:
             --restart on-failure:3 \
             --network=web \
             --env DB_DSN='${{ secrets.DB_DSN }}' \
+            --env EMAIL='${{ secrets.EMAIL }}' \
+            --env EMAIL_PASS='${{ secrets.EMAIL_PASS }}' \
+            --env TWELVE_LABS_API_KEYS='${{ secrets.TWELVE_LABS_API_KEYS }}' \
             --env ROOT_PATH='' \
             --name ${{ env.CONTAINER_NAME }} \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
