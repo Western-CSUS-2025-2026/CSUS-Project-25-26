@@ -29,7 +29,7 @@ export async function login(
   }
 
   const cookiesResolved = await cookies();
-  cookiesResolved.set("sessionToken", userToken, {
+  cookiesResolved.set("authorization", userToken, {
     httpOnly: true,
     secure: true,
     maxAge: 60 * 60 * 24 * 7, // 1 week
@@ -41,5 +41,15 @@ async function authenticateUser(
   email: string,
   password: string,
 ): Promise<string | undefined> {
-  return undefined;
+  const body = JSON.stringify({ email: email, password: password });
+
+  const res = await fetchAPI("user/login", { body: body });
+
+  if (!res.ok) {
+    return undefined;
+  }
+
+  const responseBody: { token: string } = await res.json();
+
+  return responseBody.token;
 }
