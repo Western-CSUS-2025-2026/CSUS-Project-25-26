@@ -116,7 +116,7 @@ export default function RecordingSidebar() {
                 End Question
               </button>
               <p className={styles.warning}>
-                You cannot continue later after ending this question
+                You cannot continue later after ending this question.
               </p>
             </>
           )}
