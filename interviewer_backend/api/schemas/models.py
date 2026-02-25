@@ -1,5 +1,5 @@
 import datetime
-from typing import Annotated
+from typing import Annotated, List, Optional
 
 from annotated_types import MaxLen
 from pydantic import field_validator
@@ -90,6 +90,65 @@ class UserGet(Base):
     username: str
 
 
+class VideoUploadResponse(Base):
+    asset_id: str
+    indexed_asset_id: str
+    session_id: int
+    session_component_id: int
+    question: str
+    state: str
+
+
+class TwelveLabsWebhookRequest(Base):
+    indexed_asset_id: Optional[str] = None
+    state: Optional[str] = None
+
+
+class FeedbackModel(Base):
+    points: List[str]
+    ways_to_improve: List[str]
+
+
+class ImproveAnswerModel(Base):
+    version: str
+
+
+class QuestionResponseModel(Base):
+    question: str
+    body_language_score: int
+    speech_score: int
+    brevity_score: int
+    feedback: FeedbackModel
+
+
+class VideoAnalysisStateResponse(Base):
+    status: str
+    session_id: int
+    analysis_data: QuestionResponseModel | None = None
+    error: str | None = None
+
+
+class SessionCreateResponse(Base):
+    """Response after creating a session."""
+
+    session_id: int
+
+
+class SessionComponentCreateRequest(Base):
+    """Request to add a question/component to a session."""
+
+    question: str
+
+
+class SessionComponentCreateResponse(Base):
+    """Response after creating a session component."""
+
+    session_component_id: int
+    session_id: int
+    question: str
+    question_id: int
+
+
 class FeedbackGet(Base):
     id: int
     point: str
@@ -155,6 +214,7 @@ class StatusResponse(Base):
 class SessionComponentGet(Base):
     id: int
     transcript: str | None
+    state: str
     question_id: int
     question: QuestionGet | None = None
     grade: GradeGet | None = None
@@ -165,7 +225,6 @@ class SessionComponentGet(Base):
 class SessionGet(Base):
     id: int
     user_id: int
-    state: str
     overall_grade: int | None
     create_ts: datetime.datetime
     session_components: list[SessionComponentGet] | None = None
@@ -173,11 +232,3 @@ class SessionGet(Base):
 
 class SessionsList(Base):
     sessions: list[SessionGet]
-
-
-class SessionCreate(Base):
-    pass
-
-
-class SessionStateUpdate(Base):
-    state: str

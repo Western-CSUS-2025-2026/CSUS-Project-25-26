@@ -37,6 +37,15 @@ class Settings(BaseSettings):
     EMAIL_DELAY_TIME_IN_MINUTES: float = 1
     EMAIL_DELAY_COUNT: int = 3
 
+    TWELVE_LABS_API_KEYS: str | None = None
+    TWELVE_LABS_INDEX_NAME: str = "school"
+    # Index expiry: treat index as expired this many days before TL expiry to avoid edge cases
+    INDEX_EXPIRY_BUFFER_DAYS: int = 1
+    # Index lifetime in days when TL does not return expiry (create_ts + this - buffer = expires_at)
+    INDEX_LIFETIME_DAYS: int = 90
+
+    QUESTIONS_PER_SESSION: int = 2
+
     model_config = ConfigDict(case_sensitive=True, env_file=".env", extra="ignore")
 
 

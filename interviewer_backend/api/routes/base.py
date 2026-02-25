@@ -5,10 +5,12 @@ from fastapi_sqlalchemy import DBSessionMiddleware
 from api import __version__
 from api.settings import Settings, get_settings
 
-from .user import user as user_router
-from .session import session as session_router
 from .question import question as question_router
+from .session import session as session_router
 from .template import template as template_router
+from .user import user as user_router
+from .video import video as video_router
+
 
 settings: Settings = get_settings()
 app = FastAPI(
@@ -34,6 +36,7 @@ app.add_middleware(
 )
 
 app.include_router(user_router)
+app.include_router(video_router)
 app.include_router(session_router)
 app.include_router(template_router)
 app.include_router(question_router)

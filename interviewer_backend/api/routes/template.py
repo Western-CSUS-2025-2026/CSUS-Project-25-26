@@ -1,16 +1,13 @@
-from typing import List, Optional, Any, Dict
+from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, Depends
 from fastapi_sqlalchemy import db
 
 from api.exceptions import ObjectNotFound
 from api.models.db import Template, UserSession
-from api.schemas.models import (
-    TemplateCreate,
-    TemplateGet,
-    TemplateUpdate,
-    StatusResponse
-)
+from api.schemas.models import StatusResponse, TemplateCreate, TemplateGet, TemplateUpdate
 from api.utils.security import Auth
+
 
 template: APIRouter = APIRouter(prefix="/templates", tags=["Templates"])
 

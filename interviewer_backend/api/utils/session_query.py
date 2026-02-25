@@ -1,5 +1,7 @@
 from typing import List, Set, Tuple
+
 from sqlalchemy.orm import joinedload, raiseload
+
 from api.models.db import Session, SessionComponent
 from api.schemas.models import SessionComponentGet, SessionGet
 
@@ -43,6 +45,7 @@ def serialize_session(s: Session, valid_requested: Set[str]) -> SessionGet:
             SessionComponentGet(
                 id=c.id,
                 transcript=c.transcript,
+                state=c.state,
                 question_id=c.question_id,
                 question=c.question if "questions" in valid_requested else None,
                 grade=c.grade if "grades" in valid_requested else None,
@@ -55,7 +58,6 @@ def serialize_session(s: Session, valid_requested: Set[str]) -> SessionGet:
     return SessionGet(
         id=s.id,
         user_id=s.user_id,
-        state=s.state,
         overall_grade=s.overall_grade,
         create_ts=s.create_ts,
         session_components=components,
