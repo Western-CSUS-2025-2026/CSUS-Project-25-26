@@ -346,6 +346,7 @@ improved_answer.version: ONE polished, natural, professional answer paragraph"""
                 session: Session = session_component_to_analyze.session
                 session_component_to_analyze.state = SessionState.ANALYZING
                 db.session.flush()
+                db.session.commit()
                 question_text = session_component_to_analyze.question.question
                 result = self.generate_interview_analysis(
                     video_id=indexed_asset_id,

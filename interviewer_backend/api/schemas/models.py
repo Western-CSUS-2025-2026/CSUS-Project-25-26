@@ -90,19 +90,6 @@ class UserGet(Base):
     username: str
 
 
-class AnalysisResult(Base):
-    confidence: int = Field(..., ge=1, le=10)
-    clarity: int = Field(..., ge=1, le=10)
-    speech_rate: int = Field(..., ge=1, le=10)
-    eye_contact: int = Field(..., ge=1, le=10)
-    body_language: int = Field(..., ge=1, le=10)
-    voice_tone: int = Field(..., ge=1, le=10)
-    relevant_to_question: int = Field(..., ge=1, le=10)
-    imp_points: List[str]
-    overall_summary: str
-    actionable_feedback: str
-
-
 class VideoUploadResponse(Base):
     asset_id: str
     indexed_asset_id: str
@@ -224,6 +211,7 @@ class StatusResponse(Base):
 class SessionComponentGet(Base):
     id: int
     transcript: str | None
+    state: str
     question_id: int
     question: QuestionGet | None = None
     grade: GradeGet | None = None
@@ -234,7 +222,6 @@ class SessionComponentGet(Base):
 class SessionGet(Base):
     id: int
     user_id: int
-    state: str
     overall_grade: int | None
     create_ts: datetime.datetime
     session_components: list[SessionComponentGet] | None = None
@@ -242,11 +229,3 @@ class SessionGet(Base):
 
 class SessionsList(Base):
     sessions: list[SessionGet]
-
-
-class SessionCreate(Base):
-    pass
-
-
-class SessionStateUpdate(Base):
-    state: str
