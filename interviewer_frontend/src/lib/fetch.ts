@@ -1,6 +1,6 @@
 export function fetchAPI(
-  path: String,
-  options: { method: string; headers: Record<string, string>; body: string },
+  path: string,
+  options: { method?: string; headers?: Record<string, string>; body?: string },
 ) {
   const url = process.env.API_URL;
   if (url == undefined) {
@@ -10,6 +10,6 @@ export function fetchAPI(
   return fetch(fullUrl, options);
 }
 export function fetchAPIAuthorized(
-  path: String,
+  path: string,
   options: { method: string; headers: Record<string, string>; body: string },
 ) {}
