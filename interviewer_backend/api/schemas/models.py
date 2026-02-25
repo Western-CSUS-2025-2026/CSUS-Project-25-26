@@ -1,5 +1,5 @@
 import datetime
-from typing import Annotated, List, Optional
+from typing import Annotated, Dict, List, Union
 
 from annotated_types import MaxLen
 from pydantic import field_validator
@@ -99,9 +99,19 @@ class VideoUploadResponse(Base):
     state: str
 
 
+class TwelveLabsWebhookBody(Base):
+    id: str
+    metadata: dict[str, str]
+    status: str
+    models: List[Dict[str, Union[str, List[str]]]]
+    tags: list[str]
+
+
 class TwelveLabsWebhookRequest(Base):
-    indexed_asset_id: Optional[str] = None
-    state: Optional[str] = None
+    id: str
+    created_at: datetime
+    type: str
+    data: TwelveLabsWebhookBody
 
 
 class FeedbackModel(Base):

@@ -39,7 +39,7 @@ async def upload_video(
 
 @video.post("/webhook/twelvelabs")
 async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest, background_tasks: BackgroundTasks):
-    indexed_asset_id = payload.indexed_asset_id
-    state = (payload.state or "").lower()
+    indexed_asset_id = payload.data.id
+    state = (payload.data.status or "").lower()
     background_tasks.add_task(analyzer.process_indexed_asset, indexed_asset_id, state)
     return StatusResponseModel(status="Success", message="Received")
