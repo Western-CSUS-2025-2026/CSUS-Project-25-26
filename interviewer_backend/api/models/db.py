@@ -63,21 +63,6 @@ class UserSession(BaseDbModel):
         return self.expires <= datetime.datetime.now(tz=datetime.timezone.utc)
 
 
-class Video(BaseDbModel):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    s3_key: Mapped[str] = mapped_column(String, nullable=True)
-    size_bytes: Mapped[int] = mapped_column(Integer, nullable=True)
-    uploaded_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=True)
-    checksum: Mapped[str] = mapped_column(String, nullable=True)
-    session_component_id: Mapped[int] = mapped_column(Integer, ForeignKey("session_component.id"), nullable=False, unique=True)
-    session_component: Mapped["SessionComponent"] = relationship(
-        "SessionComponent",
-        foreign_keys=[session_component_id],
-        back_populates="video",
-        primaryjoin="Video.session_component_id==SessionComponent.id",
-    )
-
-
 class UserMessageDelay(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     delay_time: Mapped[datetime.datetime] = mapped_column(
