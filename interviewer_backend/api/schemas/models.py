@@ -101,15 +101,12 @@ class VideoUploadResponse(Base):
 
 class TwelveLabsWebhookBody(Base):
     id: str
-    metadata: dict[str, str]
     status: str
-    models: List[Dict[str, Union[str, List[str]]]]
-    tags: list[str]
 
 
 class TwelveLabsWebhookRequest(Base):
     id: str
-    created_at: datetime.datetime
+    created_at: str
     type: str
     data: TwelveLabsWebhookBody
 
