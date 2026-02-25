@@ -125,6 +125,7 @@ class VideoAnalysis:
             user_id=user_id,
             index_id=index_id,
             expires_at=expires_at,
+            create_ts=datetime.datetime.now(tz=datetime.timezone.utc)
         )
 
         return index_id

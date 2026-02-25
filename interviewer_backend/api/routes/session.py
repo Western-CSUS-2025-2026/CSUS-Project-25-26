@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import logging
 import random
 from typing import Annotated, Optional
@@ -34,6 +35,7 @@ async def create_session(
     new_session = Session.create(
         session=db.session,
         user_id=user_session.user_id,
+        create_ts=datetime.now(tz=timezone.utc),
     )
     db.session.flush()
 
