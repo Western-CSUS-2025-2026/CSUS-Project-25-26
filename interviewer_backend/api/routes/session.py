@@ -107,5 +107,4 @@ async def get_session(
     if not session_obj:
         raise ObjectNotFound(Session, session_id)
 
-    return serialize_session(session_obj, valid_requested)
-  
+    return serialize_session(session_obj, valid_requested)  

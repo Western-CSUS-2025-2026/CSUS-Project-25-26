@@ -157,6 +157,8 @@ class SessionComponentCreateResponse(Base):
     session_id: int
     question: str
     question_id: int
+
+
 class FeedbackGet(Base):
     id: int
     point: str
