@@ -7,7 +7,6 @@ import logging
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import JSONB
 
 from api.utils.user_session import calc_session_expire_date
 
@@ -35,8 +34,11 @@ class User(BaseDbModel):
         "Session", foreign_keys="Session.user_id", cascade='all, delete'
     )
     twelve_labs_index: Mapped["TwelveLabsIndex"] = relationship(
-        "TwelveLabsIndex", foreign_keys="TwelveLabsIndex.user_id", back_populates="user", uselist=False, 
-        cascade="all, delete"
+        "TwelveLabsIndex",
+        foreign_keys="TwelveLabsIndex.user_id",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete",
     )
 
 
@@ -147,6 +149,7 @@ class Video(BaseDbModel):
 
 class SessionState(enum.Enum):
     """SessionComponent state; DB enum 'componentstate' (uppercase, same as sessionstate)."""
+
     PENDING = "PENDING"
     INDEXING = "INDEXING"
     ANALYZING = "ANALYZING"

@@ -4,14 +4,14 @@ from starlette.responses import JSONResponse
 from api.exceptions import (
     AlreadyExists,
     AuthFailed,
+    FailToConnectTwelveLabs,
+    FailToCreateTask,
     FailToParseAnalysis,
     ForbiddenAction,
+    IndexCreatingFail,
     ObjectNotFound,
     RegistrationIncomplete,
     TooManyEmailRequests,
-    FailToConnectTwelveLabs,
-    IndexCreatingFail,
-    FailToCreateTask,
 )
 from api.schemas.base import StatusResponseModel
 
@@ -64,10 +64,7 @@ async def http_error_handler(req: starlette.requests.Request, exc: Exception):
 
 @app.exception_handler(FailToConnectTwelveLabs)
 async def fail_to_connect_twelvelabs_handler(req: starlette.requests.Request, exc: FailToConnectTwelveLabs):
-    return JSONResponse(
-        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(), 
-        status_code=503
-    )
+    return JSONResponse(content=StatusResponseModel(status="Error", message=exc.msg).model_dump(), status_code=503)
 
 
 @app.exception_handler(IndexCreatingFail)

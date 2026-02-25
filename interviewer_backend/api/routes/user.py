@@ -45,7 +45,12 @@ async def registration_initiate(
                 user.verification_token = verification_token
                 user.create_ts = datetime.now(tz=timezone.utc)
         else:
-            user = User.create(session=txn, email=user_data.email, verification_token=verification_token, create_ts=datetime.now(tz=timezone.utc))
+            user = User.create(
+                session=txn,
+                email=user_data.email,
+                verification_token=verification_token,
+                create_ts=datetime.now(tz=timezone.utc),
+            )
         if settings.EMAIL:
             SendEmailMessage.send(
                 user_data.email,
@@ -109,7 +114,12 @@ async def login(user_data: UserLogin) -> UserSessionGet:
         raise RegistrationIncomplete()
     if not validate_password(user_data.password, user.password_hash, user.salt):
         raise AuthFailed("Incorrect login or password")
-    user_session = UserSession.create(session=db.session, user_id=user.id, token=random_string(settings.TOKEN_LENGTH), create_ts=datetime.now(tz=timezone.utc))
+    user_session = UserSession.create(
+        session=db.session,
+        user_id=user.id,
+        token=random_string(settings.TOKEN_LENGTH),
+        create_ts=datetime.now(tz=timezone.utc),
+    )
     db.session.commit()
     return UserSessionGet(
         user_id=user_session.user_id,

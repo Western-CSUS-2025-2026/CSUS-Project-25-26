@@ -2,7 +2,7 @@ import datetime
 from typing import Annotated, List, Optional
 
 from annotated_types import MaxLen
-from pydantic import Field, field_validator
+from pydantic import field_validator
 
 from api.schemas.base import Base
 from api.settings import get_settings
@@ -130,16 +130,19 @@ class VideoAnalysisStateResponse(Base):
 
 class SessionCreateResponse(Base):
     """Response after creating a session."""
+
     session_id: int
 
 
 class SessionComponentCreateRequest(Base):
     """Request to add a question/component to a session."""
+
     question: str
 
 
 class SessionComponentCreateResponse(Base):
     """Response after creating a session component."""
+
     session_component_id: int
     session_id: int
     question: str

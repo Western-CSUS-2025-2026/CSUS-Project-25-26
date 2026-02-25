@@ -1,12 +1,12 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile, File
+from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile
 from fastapi_sqlalchemy import db
 
 from api.exceptions import ForbiddenAction
+from api.models.db import Session, SessionComponent, SessionState, UserSession
+from api.schemas.base import StatusResponseModel
+from api.schemas.models import TwelveLabsWebhookRequest
 from api.utils.security import Auth
 from api.utils.twelveLabs import VideoAnalysis
-from api.schemas.models import TwelveLabsWebhookRequest
-from api.schemas.base import StatusResponseModel
-from api.models.db import SessionState, Session, UserSession, SessionComponent
 
 
 video = APIRouter(prefix="/video", tags=["Video"])
