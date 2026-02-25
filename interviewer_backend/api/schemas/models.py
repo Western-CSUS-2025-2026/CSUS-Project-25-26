@@ -109,7 +109,7 @@ class TwelveLabsWebhookBody(Base):
 
 class TwelveLabsWebhookRequest(Base):
     id: str
-    created_at: datetime
+    created_at: datetime.datetime
     type: str
     data: TwelveLabsWebhookBody
 
