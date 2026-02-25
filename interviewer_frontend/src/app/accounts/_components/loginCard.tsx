@@ -1,21 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
 import Card from "@/components/card/card";
 import styles from "./loginCard.module.css";
 import { login, type LoginResponse } from "@/actions/login/login";
+import { useActionState } from "react";
 
 interface LoginCardProps {
   onSignUp: () => void;
 }
 
 export default function LoginCard({ onSignUp }: LoginCardProps) {
-  const [result, formAction, isPending] = useActionState<LoginResponse | undefined, FormData>(
-    async (_prevState, formData) => {
-      return await login(formData);
-    },
-    undefined
-  );
+  const [result, formAction, isPending] = useActionState(login, "LOADING");
 
   return (
     <>
@@ -60,13 +55,15 @@ export default function LoginCard({ onSignUp }: LoginCardProps) {
 
                     {result && result !== "SUCCESS" && (
                       <div className={styles.errorText}>
-                        {result === "NOT_AUTHORIZED" && "Email or password is incorrect."}
-                        {result === "NETWORK_ERROR" && "Network error. Try again."}
-                        {result === "UNVALID_FORM" && "Please fill out all fields."}
+                        {result === "NOT_AUTHORIZED" &&
+                          "Email or password is incorrect."}
+                        {result === "NETWORK_ERROR" &&
+                          "Network error. Try again."}
+                        {result === "UNVALID_FORM" &&
+                          "Please fill out all fields."}
                       </div>
                     )}
                   </div>
-
                 </form>
 
                 <div className={styles.linkText}>
@@ -96,3 +93,4 @@ export default function LoginCard({ onSignUp }: LoginCardProps) {
     </>
   );
 }
+

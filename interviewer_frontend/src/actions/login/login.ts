@@ -5,13 +5,17 @@ export type LoginResponse =
   | "NOT_AUTHORIZED"
   | "SUCCESS"
   | "NETWORK_ERROR"
-  | "UNVALID_FORM";
+  | "UNVALID_FORM"
+  | "LOADING";
 
-export async function login(formData: FormData): Promise<LoginResponse> {
+export async function login(
+  _prev: LoginResponse,
+  formData: FormData,
+): Promise<LoginResponse> {
   "use server";
   const email = formData.get("email");
   const password = formData.get("password");
-  if ((email == null || password == null) || (email == "" || password == "")) {
+  if (email == null || password == null || email == "" || password == "") {
     console.log("Email andd Password are required");
     return "UNVALID_FORM";
   }
