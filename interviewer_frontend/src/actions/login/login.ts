@@ -29,11 +29,12 @@ export async function login(
   }
 
   const cookiesResolved = await cookies();
-  cookiesResolved.set("authorization", userToken, {
+  cookiesResolved.set("session_token", userToken, {
     httpOnly: true,
     secure: true,
     maxAge: 60 * 60 * 24 * 7, // 1 week
   });
+
   return "SUCCESS";
 }
 
