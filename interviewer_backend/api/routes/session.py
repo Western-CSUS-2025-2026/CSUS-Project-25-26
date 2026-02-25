@@ -3,12 +3,12 @@ import random
 from datetime import datetime, timezone
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, Form, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi_sqlalchemy import db
 
 from api.exceptions import ObjectNotFound
 from api.models.db import Question, Session, SessionComponent, SessionState, Template, UserSession
-from api.schemas.models import SessionCreateResponse, SessionGet, SessionsList
+from api.schemas.models import SessionCreateRequest, SessionCreateResponse, SessionGet, SessionsList
 from api.settings import get_settings
 from api.utils.security import Auth
 from api.utils.session_query import get_session_options, parse_include, serialize_session
@@ -20,10 +20,11 @@ session: APIRouter = APIRouter(prefix="/sessions", tags=["Sessions"])
 
 @session.post("", status_code=201, response_model=SessionCreateResponse)
 async def create_session(
+    payload: SessionCreateRequest,
     user_session: UserSession = Depends(Auth()),
-    template_id: int = Form(...),
 ) -> SessionCreateResponse:
     # 1. Load template's questions (fail early if template empty or missing)
+    template_id = payload.template_id
     questions = Question.query(session=db.session).filter(Question.template_id == template_id).all()
     if not questions:
         raise ObjectNotFound(Template, template_id)
