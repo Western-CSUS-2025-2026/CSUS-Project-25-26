@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Template } from "@/types/template";
 import NewSessionModalClient from "./NewSessionModalClient";
 
@@ -16,7 +16,11 @@ function readParams() {
   return { isOpen, step, templateId };
 }
 
-export default function NewSessionModal({ templates }: { templates: Template[] }) {
+export default function NewSessionModal({
+  templates,
+}: {
+  templates: Template[];
+}) {
   const [state, setState] = useState(() => ({
     isOpen: false,
     step: "select" as Step,
@@ -45,6 +49,7 @@ export default function NewSessionModal({ templates }: { templates: Template[] }
 
   return (
     <NewSessionModalClient
+      loading={false}
       templates={templates}
       step={state.step}
       templateId={state.templateId}

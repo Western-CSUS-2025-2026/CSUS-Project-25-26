@@ -4,11 +4,14 @@ import { useMemo, useState } from "react";
 import { Template } from "@/types/template";
 import styles from "./newSessionModal.module.css";
 import { Search, X, ChevronLeft, Folder, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Step = "select" | "confirm";
 
-
-function setUrlParams(next: Record<string, string | null>, mode: "push" | "replace" = "push") {
+function setUrlParams(
+  next: Record<string, string | null>,
+  mode: "push" | "replace" = "push",
+) {
   const url = new URL(window.location.href);
   const sp = url.searchParams;
 
@@ -22,7 +25,6 @@ function setUrlParams(next: Record<string, string | null>, mode: "push" | "repla
   if (mode === "replace") window.history.replaceState({}, "", nextUrl);
   else window.history.pushState({}, "", nextUrl);
 
-  
   window.dispatchEvent(new Event("urlchange"));
 }
 
@@ -37,6 +39,7 @@ export default function NewSessionModalClient({
   step: Step;
   templateId: string;
 }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
 
   const selectedTemplate = useMemo(() => {
@@ -66,7 +69,7 @@ export default function NewSessionModalClient({
   }
 
   function startSession() {
-    alert("Start New Session (wired later)");
+    router.push(`/recording?templateId=${selectedTemplate?.id}`);
   }
 
   return (
@@ -82,7 +85,11 @@ export default function NewSessionModalClient({
             <div />
           )}
 
-          <button className={styles.closeBtn} onClick={close} aria-label="Close">
+          <button
+            className={styles.closeBtn}
+            onClick={close}
+            aria-label="Close"
+          >
             <X size={18} strokeWidth={1.5} />
           </button>
         </div>
@@ -111,8 +118,9 @@ export default function NewSessionModalClient({
 
               <div className={styles.list}>
                 {loading ? (
-                  
-                  <div style={{ padding: "14px", color: "var(--secondary-text)" }}>
+                  <div
+                    style={{ padding: "14px", color: "var(--secondary-text)" }}
+                  >
                     Loading templates...
                   </div>
                 ) : (
@@ -128,7 +136,9 @@ export default function NewSessionModalClient({
 
                       <div className={styles.itemText}>
                         <div className={styles.itemTitle}>{t.title}</div>
-                        <div className={styles.itemSubtitle}>{t.description}</div>
+                        <div className={styles.itemSubtitle}>
+                          {t.description}
+                        </div>
                       </div>
 
                       <div className={styles.chevron}>
@@ -143,9 +153,9 @@ export default function NewSessionModalClient({
             <>
               <h1 className={styles.h1}>Create Session</h1>
               <p className={styles.helpText}>
-                Creating a session from a template selects a variety of questions
-                from the template, so you can reuse templates and have different
-                questions each time.
+                Creating a session from a template selects a variety of
+                questions from the template, so you can reuse templates and have
+                different questions each time.
               </p>
 
               <h2 className={styles.h2}>Selected Template</h2>

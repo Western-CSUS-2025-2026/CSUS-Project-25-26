@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import LoginCard from "./_components/loginCard";
 import CreateAccountEmailCard from "./_components/createAccountEmail";
 import CreateAccountCode from "./_components/createAccountCode";
 import CreateAccountCard from "./_components/createAccountName";
 import CreateAccountPassword from "./_components/createAccountPassword";
+import { login } from "@/actions/login/login";
 
 type Mode =
   | "login"
@@ -23,9 +24,20 @@ export default function AccountsPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
+  const [state, action, isPending] = useActionState(login, "LOADING");
+
   return (
     <div>
-      {mode === "login" && <LoginCard onSignUp={() => setMode("signup-email")} />}
+      <form action={action}>
+        <div>{"State: " + state}</div>
+        <div>{"Pending: " + isPending}</div>
+        <input name="email"></input>
+        <input name="password"></input>
+        <button type="submit">Submit</button>
+      </form>
+      {mode === "login" && (
+        <LoginCard onSignUp={() => setMode("signup-email")} />
+      )}
 
       {mode === "signup-email" && (
         <CreateAccountEmailCard
@@ -74,3 +86,4 @@ export default function AccountsPage() {
     </div>
   );
 }
+

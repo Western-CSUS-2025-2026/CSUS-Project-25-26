@@ -1,6 +1,6 @@
 "use client";
 import Card from "@/components/card/card";
-/*import Webcam from "react-webcam";
+import Webcam from "react-webcam";
 import styles from "./webcamCard.module.css";
 import { RefObject } from "react";
 import { useWindowDimensions } from "@/lib/useWindowDimensions";
@@ -29,4 +29,4 @@ function WebcamCard({ webRef }: WebcamCardProps) {
   );
 }
 
-export default WebcamCard; */
+export default WebcamCard;
