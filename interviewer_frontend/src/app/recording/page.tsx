@@ -5,6 +5,7 @@ import TopBar from "./_components/recordingTopbar/topBar";
 import useSession from "@/lib/sessionLib/useSession";
 import Card from "@/components/card/card";
 import Modal from "@/components/modal/modal";
+import RecordingSidebar from "./_components/recordingSidebar/recordingSidebar";
 
 function RecordingPage() {
   const session = useSession();
@@ -23,13 +24,20 @@ function RecordingPage() {
       ></TopBar>
       <div style={{ display: "flex", flexDirection: "row", gap: "1em" }}>
         <WebcamCard webRef={session.webcam}></WebcamCard>
-        <Card>
-          <button onClick={session.startSession} style={{ color: "black" }}>
-            Start Recording
-          </button>
-          <div style={{ color: "green" }}>{session.state}</div>
-          <div style={{ color: "green" }}>{session.timerDisplay}</div>
-        </Card>
+        <RecordingSidebar
+          timeEnded={session.continueModalUp}
+          stage={session.state}
+          onStart={session.startSession}
+          onEnd={() => {}}
+          time={session.timerDisplay}
+        ></RecordingSidebar>
+        {/* <Card> */}
+        {/*   <button onClick={session.startSession} style={{ color: "black" }}> */}
+        {/*     Start Recording */}
+        {/*   </button> */}
+        {/*   <div style={{ color: "green" }}>{session.state}</div> */}
+        {/*   <div style={{ color: "green" }}>{session.timerDisplay}</div> */}
+        {/* </Card> */}
       </div>
       {session.finishModalUp ? (
         <Modal width="20em" height="20em">

@@ -1,57 +1,42 @@
-
-import Card from "@components/card/card.tsx";
-import { useState, useEffect } from "react";
+import { SessionState } from "@/lib/sessionLib/useSession";
+import Card from "../../../../components/card/card";
 import styles from "./recordingSidebar.module.css";
 
-type Stage = "preparing" | "answering";
+interface RecordingSidebarProps {
+  stage: SessionState;
+  time: number;
+  timeEnded: boolean;
+  onStart: () => void;
+  onEnd: () => void;
+}
 
-export default function RecordingSidebar() {
-  const [stage, setStage] = useState<Stage>("preparing");
-  const [timeRemaining, setTimeRemaining] = useState(30);
-  const [timeEnded, setTimeEnded] = useState(false);
-
-  let totalTime;
-  if (stage === "answering") {
-    totalTime = 120;
+export default function RecordingSidebar(props: RecordingSidebarProps) {
+  const timeEnded = props.timeEnded;
+  const stage = props.stage;
+  let totalTime: number;
+  if (stage == "Recording") {
+    totalTime = 7;
   } else {
-    totalTime = 30;
+    totalTime = 5;
   }
+  let timeRemaining = totalTime - props.time;
+  if (props.timeEnded == true) {
+    timeRemaining = 1;
+    totalTime = 1;
+  }
+
   const minutes = Math.floor(timeRemaining / 60);
-  const seconds = timeRemaining % 60;
-
-  useEffect(() => {
-    if (timeEnded) {
-      return;
-    }
-
-    if (timeRemaining <= 0) {
-      if (stage === "preparing") {
-        setStage("answering");
-        setTimeRemaining(120);
-      }
-      else if (stage === "answering") {
-        setTimeEnded(true);
-      }
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeRemaining(prev => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeRemaining, stage, timeEnded]);
+  const seconds = Math.floor(timeRemaining % 60);
 
   const progress = timeRemaining / totalTime;
   const radius = 120;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - progress);
 
-  let stageText;
-  if (stage === "preparing") {
+  let stageText: string;
+  if (stage === "Preparing") {
     stageText = "Preparing";
-  }
-  else {
+  } else {
     stageText = "Answering";
   }
 
@@ -82,7 +67,7 @@ export default function RecordingSidebar() {
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
-              style={{ transition: "stroke-dashoffset 1s linear" }}
+              style={{ transition: "stroke-dashoffset 0.35s linear" }}
             />
           </svg>
 
@@ -95,24 +80,15 @@ export default function RecordingSidebar() {
         </div>
 
         <div className={styles.footer}>
-          {!timeEnded && stage === "preparing" && (
-            <button
-              className={styles.primaryButton}
-              onClick={() => {
-                setStage("answering");
-                setTimeRemaining(120);
-              }}
-            >
+          {!timeEnded && stage === "Preparing" && (
+            <button className={styles.primaryButton} onClick={props.onStart}>
               Start
             </button>
           )}
 
-          {!timeEnded && stage === "answering" && (
+          {!timeEnded && stage === "Recording" && (
             <>
-              <button
-                className={styles.endButton}
-                onClick={() => setTimeEnded(true)}
-              >
+              <button className={styles.endButton} onClick={props.onEnd}>
                 End Question
               </button>
               <p className={styles.warning}>
@@ -121,9 +97,7 @@ export default function RecordingSidebar() {
             </>
           )}
 
-          {timeEnded && (
-            <p className={styles.endedText}>Question ended</p>
-          )}
+          {timeEnded && <p className={styles.endedText}>Question ended</p>}
         </div>
       </div>
     </Card>
