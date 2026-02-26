@@ -3,10 +3,7 @@
 import { useActionState } from "react";
 import Card from "@/components/card/card";
 import styles from "./loginCard.module.css";
-import {
-  getVerificationEmail,
-  type GetVerificationEmailResponse,
-} from "@/actions/login/register";
+import { getVerificationEmail } from "@/actions/login/register";
 
 interface CreateAccountEmailCardProps {
   onNext: (email: string) => void;

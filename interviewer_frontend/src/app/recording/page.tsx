@@ -5,9 +5,11 @@ import TopBar from "./_components/recordingTopbar/topBar";
 import useSession from "@/lib/sessionLib/useSession";
 import Card from "@/components/card/card";
 import Modal from "@/components/modal/modal";
+import { useSearchParams } from "next/navigation";
 
 function RecordingPage() {
-  const session = useSession();
+  const params = useSearchParams();
+  const session = useSession(Number(params.get("templateId")) ?? -1);
 
   return (
     <div style={{ gap: "1em", display: "flex", flexDirection: "column" }}>
@@ -48,4 +50,4 @@ function RecordingPage() {
   );
 }
 
-export default RecordingPage; */
+export default RecordingPage;

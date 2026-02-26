@@ -45,7 +45,7 @@ export async function getVerificationEmail(
     console.log(resBody);
 
     return "SUCCESS";
-  } catch (e) {
+  } catch (_e) {
     return "NETWORK_ERROR";
   }
 }
@@ -74,7 +74,7 @@ export async function checkVerificationCode(
   try {
     console.log("Body: " + JSON.stringify(body));
 
-    let res = await fetchAPI("user/registration/code-verify", {
+    const res = await fetchAPI("user/registration/code-verify", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -137,7 +137,7 @@ export async function completeRegistration(
   try {
     console.log("Body: " + JSON.stringify(body));
 
-    let res = await fetchAPI("user/registration/verify", {
+    const res = await fetchAPI("user/registration/verify", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

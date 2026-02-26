@@ -1,5 +1,6 @@
 "use server";
 
+import { fetchAPI } from "@/lib/fetch";
 import { cookies } from "next/headers";
 export type LoginResponse =
   | "NOT_AUTHORIZED"
@@ -43,9 +44,15 @@ async function authenticateUser(
   password: string,
 ): Promise<string | undefined> {
   const body = JSON.stringify({ email: email, password: password });
+  console.log("Body " + body);
 
-  const res = await fetchAPI("user/login", { body: body });
+  const res = await fetchAPI("user/login", {
+    headers: { "content-type": "application/json" },
+    method: "POST",
+    body: body,
+  });
 
+  console.log(res);
   if (!res.ok) {
     return undefined;
   }
