@@ -56,6 +56,7 @@ jobs:
       CONTAINER_NAME: csus_backend
     permissions:
       packages: read
+      contents: read
 
     steps:
       - name: Checkout repository
