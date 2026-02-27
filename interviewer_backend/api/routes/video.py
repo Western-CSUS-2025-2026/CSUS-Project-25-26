@@ -2,6 +2,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile
 from fastapi_sqlalchemy import db
 
 from api.exceptions import ForbiddenAction
+from api.metrics import record_webhook_failure
 from api.models.db import Session, SessionComponent, SessionState, UserSession
 from api.schemas.base import StatusResponseModel
 from api.schemas.models import TwelveLabsWebhookRequest
@@ -41,5 +42,7 @@ async def upload_video(
 async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest, background_tasks: BackgroundTasks):
     indexed_asset_id = payload.data.id
     state = (payload.data.status or "").lower()
+    if state in ('error', 'failed', 'timeout'):
+        record_webhook_failure(provider='twelvelabs', reason=state)
     background_tasks.add_task(analyzer.process_indexed_asset, indexed_asset_id, state)
     return StatusResponseModel(status="Success", message="Received")

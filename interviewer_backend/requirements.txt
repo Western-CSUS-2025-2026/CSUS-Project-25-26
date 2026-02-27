@@ -2,6 +2,7 @@ alembic
 aiohttp
 fastapi
 fastapi-sqlalchemy
+prometheus-fastapi-instrumentator
 gunicorn
 psycopg2-binary
 pydantic

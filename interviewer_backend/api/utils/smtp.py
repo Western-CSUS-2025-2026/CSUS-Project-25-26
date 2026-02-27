@@ -9,6 +9,7 @@ from retrying import retry
 from sqlalchemy.orm import Session as DbSession
 
 from api.exceptions import TooManyEmailRequests
+from api.metrics import observe_background_task
 from api.models.db import UserMessageDelay
 from api.settings import Settings, get_settings
 
@@ -94,25 +95,26 @@ class SendEmailMessage:
         retry_on_exception=lambda exc: isinstance(exc, smtplib.SMTPException),
     )
     def email_task(cls, to_email: str, file_name: str, subject: str, **kwargs):
-        with open(f"api/templates/{file_name}") as f:
-            tmp = f.read()
-            for key, value in kwargs.items():
-                if f'{{{{{key}}}}}' in tmp:
-                    tmp = tmp.replace(f'{{{{{key}}}}}', str(value))
-        message = MIMEMultipart('related')
-        message['Subject'] = subject
-        message['From'] = cls.from_email
-        message['To'] = to_email
+        with observe_background_task('email_task'):
+            with open(f"api/templates/{file_name}") as f:
+                tmp = f.read()
+                for key, value in kwargs.items():
+                    if f'{{{{{key}}}}}' in tmp:
+                        tmp = tmp.replace(f'{{{{{key}}}}}', str(value))
+            message = MIMEMultipart('related')
+            message['Subject'] = subject
+            message['From'] = cls.from_email
+            message['To'] = to_email
 
-        msgAlternative = MIMEMultipart('alternative')
-        message.attach(msgAlternative)
+            msgAlternative = MIMEMultipart('alternative')
+            message.attach(msgAlternative)
 
-        text = MIMEText(tmp, "html")
-        msgAlternative.attach(text)
+            text = MIMEText(tmp, "html")
+            msgAlternative.attach(text)
 
-        with smtplib.SMTP_SSL(cls.settings.SMTP_HOST, cls.settings.SMTP_PORT) as smtp:
-            smtp.login(cls.settings.EMAIL, cls.settings.EMAIL_PASS)
-            smtp.sendmail(cls.settings.EMAIL, to_email, message.as_string())
+            with smtplib.SMTP_SSL(cls.settings.SMTP_HOST, cls.settings.SMTP_PORT) as smtp:
+                smtp.login(cls.settings.EMAIL, cls.settings.EMAIL_PASS)
+                smtp.sendmail(cls.settings.EMAIL, to_email, message.as_string())
 
     @classmethod
     @retry(
