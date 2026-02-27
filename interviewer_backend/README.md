@@ -138,8 +138,8 @@ The provisioned dashboard **Backend Observability** includes:
 ### Server run (CI/CD)
 
 `METRICS_ENABLED` is deploy-time controlled:
-- default: `false`
-- set repo/environment variable `METRICS_ENABLED=true` to expose `/metrics`
+- default: `true`
+- set repo/environment variable `METRICS_ENABLED=false` to disable `/metrics`
 
 Grafana is configured for subpath hosting on the API domain:
 - default: `https://api.jobless.live/grafana/`

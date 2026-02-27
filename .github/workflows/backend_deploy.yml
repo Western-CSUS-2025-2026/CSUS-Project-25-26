@@ -125,7 +125,7 @@ jobs:
             --env EMAIL='${{ secrets.EMAIL }}' \
             --env EMAIL_PASS='${{ secrets.EMAIL_PASS }}' \
             --env TWELVE_LABS_API_KEYS='${{ secrets.TWELVE_LABS_API_KEYS }}' \
-            --env METRICS_ENABLED="${{ vars.METRICS_ENABLED || 'false' }}" \
+            --env METRICS_ENABLED="${{ vars.METRICS_ENABLED || 'true' }}" \
             --env ROOT_PATH='' \
             --label logging='promtail' \
             --label job='interviewer_backend' \
