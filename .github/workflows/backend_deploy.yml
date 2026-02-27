@@ -203,6 +203,7 @@ jobs:
             --env GF_SECURITY_ADMIN_USER='admin' \
             --env GF_SECURITY_ADMIN_PASSWORD='${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}' \
             --env GF_USERS_ALLOW_SIGN_UP='false' \
+            --env GF_METRICS_ENABLED='false' \
             --env GF_SERVER_ROOT_URL='${{ vars.GRAFANA_ROOT_URL || 'https://api.jobless.live/grafana/' }}' \
             --env GF_SERVER_SERVE_FROM_SUB_PATH='true' \
             --volume "${GITHUB_WORKSPACE}/interviewer_backend/observability/grafana/provisioning/datasources/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro" \

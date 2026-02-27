@@ -145,10 +145,6 @@ Grafana is configured for subpath hosting on the API domain:
 - default: `https://api.jobless.live/grafana/`
 - override with repo/environment variable `GRAFANA_ROOT_URL` if your server URL is different
 
-Grafana is configured for subpath hosting on the API domain:
-- default: `https://api.jobless.live/grafana/`
-- override with repo/environment variable `GRAFANA_ROOT_URL` if your server URL is different
-
 
 To stop local observability containers:
 ```bash
