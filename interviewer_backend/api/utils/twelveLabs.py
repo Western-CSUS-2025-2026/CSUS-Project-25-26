@@ -9,6 +9,7 @@ from twelvelabs.indexes import IndexesCreateRequestModelsItem
 from twelvelabs.types import ResponseFormat
 
 from api.exceptions import FailToConnectTwelveLabs, FailToCreateTask, FailToParseAnalysis, IndexCreatingFail
+from api.metrics import observe_background_task, record_external_api_failure, record_webhook_failure
 from api.models.db import Feedback, Grade, Session, SessionComponent, SessionState, TwelveLabsIndex
 from api.settings import Settings, get_settings
 
@@ -73,6 +74,7 @@ class VideoAnalysis:
             self.index_id = index.id
             return index
         except Exception as e:
+            record_external_api_failure(provider='twelvelabs', operation='create_index', error=e)
             raise IndexCreatingFail(str(e))
 
     def list_indexes(self):
@@ -128,9 +130,13 @@ class VideoAnalysis:
         Returns:
             Asset object containing asset_id and other metadata.
         """
-        file.file.seek(0)
-        asset = self.client.assets.create(method="direct", file=file.file)
-        return asset
+        try:
+            file.file.seek(0)
+            asset = self.client.assets.create(method="direct", file=file.file)
+            return asset
+        except Exception as e:
+            record_external_api_failure(provider='twelvelabs', operation='upload_asset', error=e)
+            raise
 
     def index_asset(self, index_id: str, asset_id: str):
         """
@@ -149,10 +155,14 @@ class VideoAnalysis:
         Raises:
             Exception: If indexing fails (e.g., invalid index_id or asset_id)
         """
-        indexed_asset = self.client.indexes.indexed_assets.create(
-            index_id=index_id, asset_id=asset_id, enable_video_stream=True
-        )
-        return indexed_asset
+        try:
+            indexed_asset = self.client.indexes.indexed_assets.create(
+                index_id=index_id, asset_id=asset_id, enable_video_stream=True
+            )
+            return indexed_asset
+        except Exception as e:
+            record_external_api_failure(provider='twelvelabs', operation='index_asset', error=e)
+            raise
 
     def get_video_transcript(self, index_id: str, video_id: str):
         """
@@ -173,7 +183,8 @@ class VideoAnalysis:
                 return " ".join(transcript_parts) if transcript_parts else None
 
             return None
-        except Exception:
+        except Exception as e:
+            record_external_api_failure(provider='twelvelabs', operation='get_video_transcript', error=e)
             return None
 
     def list_indexed_assets(self, index_id: str):
@@ -275,74 +286,78 @@ improved_answer.version: ONE polished, natural, professional answer paragraph"""
             return result
 
         except Exception as e:
+            record_external_api_failure(provider='twelvelabs', operation='generate_interview_analysis', error=e)
             raise FailToCreateTask(str(e))
 
     def process_indexed_asset(self, indexed_asset_id: str, state: str):
-        with db():
-            session_component_to_analyze: SessionComponent = (
-                SessionComponent.query(session=db.session)
-                .filter(SessionComponent.indexed_asset_id == indexed_asset_id)
-                .one_or_none()
-            )
-            if not session_component_to_analyze:
-                return
-
-            try:
-                if state in ("error", "failed"):
-                    raise FailToCreateTask()
-
-                if session_component_to_analyze.state != SessionState.INDEXING:
-                    raise FailToCreateTask()
-
-                session: Session = session_component_to_analyze.session
-                session_component_to_analyze.state = SessionState.ANALYZING
-                db.session.flush()
-                db.session.commit()
-                question_text = session_component_to_analyze.question.question
-                result = self.generate_interview_analysis(video_id=indexed_asset_id, question=question_text)
-
-                data_string = result.data if hasattr(result, "data") else str(result)
-                analysis_dict = json.loads(data_string)
-
-                qr = analysis_dict.get("question_response", None)
-                if not qr:
-                    raise FailToParseAnalysis()
-
-                Grade.create(
-                    session=db.session,
-                    session_component_id=session_component_to_analyze.id,
-                    body_language_score=qr.get("body_language_score", 0),
-                    speech_score=qr.get("speech_score", 0),
-                    brevity_score=qr.get("brevity_score", 0),
-                    material_score=qr.get("material_score", 0),
+        with observe_background_task('twelvelabs_process_indexed_asset'):
+            with db():
+                session_component_to_analyze: SessionComponent = (
+                    SessionComponent.query(session=db.session)
+                    .filter(SessionComponent.indexed_asset_id == indexed_asset_id)
+                    .one_or_none()
                 )
+                if not session_component_to_analyze:
+                    return
 
-                feedback_data = qr.get("feedback", {})
-                points_list = feedback_data.get("points", [])
-                ways_list = feedback_data.get("ways_to_improve", [])
-                point_str = "\n".join(points_list) if points_list else ""
-                ways_str = "\n".join(ways_list) if ways_list else None
+                try:
+                    if state in ("error", "failed"):
+                        record_webhook_failure(provider='twelvelabs', reason=f'processing_{state}')
+                        raise FailToCreateTask()
 
-                Feedback.create(
-                    session=db.session,
-                    session_component_id=session_component_to_analyze.id,
-                    point=point_str,
-                    ways_to_improve=ways_str,
-                )
-                db.session.flush()
+                    if session_component_to_analyze.state != SessionState.INDEXING:
+                        raise FailToCreateTask()
 
-                index_id = self.get_or_create_index(session.user_id, session=db.session)
-                transcript_text = self.get_video_transcript(index_id=index_id, video_id=indexed_asset_id)
-
-                if transcript_text:
-                    session_component_to_analyze.transcript = transcript_text
+                    session: Session = session_component_to_analyze.session
+                    session_component_to_analyze.state = SessionState.ANALYZING
                     db.session.flush()
-                session_component_to_analyze.state = SessionState.COMPLETED
+                    db.session.commit()
+                    question_text = session_component_to_analyze.question.question
+                    result = self.generate_interview_analysis(video_id=indexed_asset_id, question=question_text)
 
-                db.session.commit()
+                    data_string = result.data if hasattr(result, "data") else str(result)
+                    analysis_dict = json.loads(data_string)
 
-            except Exception as e:
-                print(e)
-                if session_component_to_analyze:
-                    session_component_to_analyze.state = SessionState.ERROR
-                db.session.commit()
+                    qr = analysis_dict.get("question_response", None)
+                    if not qr:
+                        raise FailToParseAnalysis()
+
+                    Grade.create(
+                        session=db.session,
+                        session_component_id=session_component_to_analyze.id,
+                        body_language_score=qr.get("body_language_score", 0),
+                        speech_score=qr.get("speech_score", 0),
+                        brevity_score=qr.get("brevity_score", 0),
+                        material_score=qr.get("material_score", 0),
+                    )
+
+                    feedback_data = qr.get("feedback", {})
+                    points_list = feedback_data.get("points", [])
+                    ways_list = feedback_data.get("ways_to_improve", [])
+                    point_str = "\n".join(points_list) if points_list else ""
+                    ways_str = "\n".join(ways_list) if ways_list else None
+
+                    Feedback.create(
+                        session=db.session,
+                        session_component_id=session_component_to_analyze.id,
+                        point=point_str,
+                        ways_to_improve=ways_str,
+                    )
+                    db.session.flush()
+
+                    index_id = self.get_or_create_index(session.user_id, session=db.session)
+                    transcript_text = self.get_video_transcript(index_id=index_id, video_id=indexed_asset_id)
+
+                    if transcript_text:
+                        session_component_to_analyze.transcript = transcript_text
+                        db.session.flush()
+                    session_component_to_analyze.state = SessionState.COMPLETED
+
+                    db.session.commit()
+
+                except Exception as e:
+                    record_external_api_failure(provider='twelvelabs', operation='process_indexed_asset', error=e)
+                    if session_component_to_analyze:
+                        session_component_to_analyze.state = SessionState.ERROR
+                    db.session.commit()
+                    raise

@@ -46,6 +46,8 @@ class Settings(BaseSettings):
 
     QUESTIONS_PER_SESSION: int = 2
 
+    METRICS_ENABLED: bool = False
+
     model_config = ConfigDict(case_sensitive=True, env_file=".env", extra="ignore")
 
 
