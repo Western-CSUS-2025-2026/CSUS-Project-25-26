@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_sqlalchemy import DBSessionMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from api import __version__
 from api.settings import Settings, get_settings
@@ -40,3 +41,10 @@ app.include_router(video_router)
 app.include_router(session_router)
 app.include_router(template_router)
 app.include_router(question_router)
+
+if settings.METRICS_ENABLED:
+    Instrumentator(excluded_handlers=['/metrics']).instrument(app).expose(
+        app,
+        endpoint='/metrics',
+        include_in_schema=False,
+    )
