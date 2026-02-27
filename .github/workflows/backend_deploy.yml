@@ -21,6 +21,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Free disk space on runner
+        run: |
+          df -h
+          docker container prune -f || true
+          docker image prune -af --filter "until=168h" || true
+          docker builder prune -af --filter "until=168h" || true
+          docker volume prune -f || true
+          if [ -d /home/deploy/actions-runner/_diag ]; then
+            find /home/deploy/actions-runner/_diag -type f -name "*.log" -mtime +3 -delete || true
+            ls -1t /home/deploy/actions-runner/_diag/*.log 2>/dev/null | tail -n +51 | xargs -r rm -f || true
+          fi
+          df -h
+
       - name: Log in to the Container registry
         uses: docker/login-action@v2
         with:
@@ -59,6 +72,19 @@ jobs:
       contents: read
 
     steps:
+      - name: Free disk space on runner
+        run: |
+          df -h
+          docker container prune -f || true
+          docker image prune -af --filter "until=168h" || true
+          docker builder prune -af --filter "until=168h" || true
+          docker volume prune -f || true
+          if [ -d /home/deploy/actions-runner/_diag ]; then
+            find /home/deploy/actions-runner/_diag -type f -name "*.log" -mtime +3 -delete || true
+            ls -1t /home/deploy/actions-runner/_diag/*.log 2>/dev/null | tail -n +51 | xargs -r rm -f || true
+          fi
+          df -h
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -93,6 +119,8 @@ jobs:
             --detach \
             --restart on-failure:3 \
             --network=web \
+            --log-opt max-size=10m \
+            --log-opt max-file=5 \
             --env DB_DSN='${{ secrets.DB_DSN }}' \
             --env EMAIL='${{ secrets.EMAIL }}' \
             --env EMAIL_PASS='${{ secrets.EMAIL_PASS }}' \
@@ -113,6 +141,8 @@ jobs:
             --detach \
             --restart unless-stopped \
             --network=web \
+            --log-opt max-size=10m \
+            --log-opt max-file=5 \
             --publish 9090:9090 \
             --volume "${GITHUB_WORKSPACE}/interviewer_backend/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro" \
             --volume interviewer_prometheus_data:/prometheus \
@@ -131,6 +161,8 @@ jobs:
             --detach \
             --restart unless-stopped \
             --network=web \
+            --log-opt max-size=10m \
+            --log-opt max-file=5 \
             --publish 3100:3100 \
             --volume "${GITHUB_WORKSPACE}/interviewer_backend/observability/loki/loki-config.yml:/etc/loki/config.yml:ro" \
             --volume interviewer_loki_data:/loki \
@@ -147,6 +179,8 @@ jobs:
             --detach \
             --restart unless-stopped \
             --network=web \
+            --log-opt max-size=10m \
+            --log-opt max-file=5 \
             --volume "${GITHUB_WORKSPACE}/interviewer_backend/observability/promtail/promtail-config.yml:/etc/promtail/config.yml:ro" \
             --volume /var/log:/var/log:ro \
             --volume /var/lib/docker/containers:/var/lib/docker/containers:ro \
@@ -164,10 +198,13 @@ jobs:
             --detach \
             --restart unless-stopped \
             --network=web \
+            --log-opt max-size=10m \
+            --log-opt max-file=5 \
             --env GF_SECURITY_ADMIN_USER='admin' \
             --env GF_SECURITY_ADMIN_PASSWORD='${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}' \
             --env GF_USERS_ALLOW_SIGN_UP='false' \
-            --env GF_SERVER_ROOT_URL='${{ vars.GRAFANA_ROOT_URL || 'https://grafana.jobless.live' }}' \
+            --env GF_SERVER_ROOT_URL='${{ vars.GRAFANA_ROOT_URL || 'https://api.jobless.live/grafana/' }}' \
+            --env GF_SERVER_SERVE_FROM_SUB_PATH='true' \
             --volume "${GITHUB_WORKSPACE}/interviewer_backend/observability/grafana/provisioning/datasources/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro" \
             --volume "${GITHUB_WORKSPACE}/interviewer_backend/observability/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro" \
             --volume "${GITHUB_WORKSPACE}/interviewer_backend/observability/grafana/dashboards:/etc/grafana/dashboards:ro" \

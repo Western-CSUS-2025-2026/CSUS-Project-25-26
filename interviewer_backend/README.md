@@ -141,6 +141,10 @@ The provisioned dashboard **Backend Observability** includes:
 - default: `false`
 - set repo/environment variable `METRICS_ENABLED=true` to expose `/metrics`
 
+Grafana is configured for subpath hosting on the API domain:
+- default: `https://api.jobless.live/grafana/`
+- override with repo/environment variable `GRAFANA_ROOT_URL` if your server URL is different
+
 
 To stop local observability containers:
 ```bash
