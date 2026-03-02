@@ -13,14 +13,6 @@ export async function sendRecording(
   formData.append("video", combineBlob, "video.webm");
   console.log(formData.get("video"));
 
-  // const res = await fetch(`https://api.jobless.live/video/${session_comp}`, {
-  //   method: "POST",
-  //   body: formData,
-  //   headers: {
-  //     Authorization:
-  //       "RUDeYHfPoUqGeSpQcqRnHaNAhkhAHOaAbDtOqEzxWZggqPuOogoZNSrZwayicQEN",
-  //   },
-  // });
   const res = await fetch(`/api/video/${session_comp}`, {
     method: "POST",
     body: formData,
@@ -33,6 +25,12 @@ export async function sendRecording(
     console.log("Failed to upload video");
     console.log(await res.json());
     console.log(res.headers);
+    return "Error";
+  }
+
+  const body: { success: boolean; body: string } = await res.json();
+
+  if (!body.success) {
     return "Error";
   }
 
