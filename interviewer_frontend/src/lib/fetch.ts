@@ -7,10 +7,10 @@ export function fetchAPI(
     throw new Error("API_URL is not defined");
   }
 
-  // ensure exactly one slash between base and path
+  // make sure one slash between base and path
   const fullUrl =
     base.replace(/\/$/, "") + "/" + path.toString().replace(/^\//, "");
 
-    
+
   return fetch(fullUrl, options);
 }

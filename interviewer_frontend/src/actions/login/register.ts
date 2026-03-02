@@ -76,11 +76,11 @@ export async function checkVerificationCode(
     const res = await fetchAPI(
       `user/registration/code-verify?email=${emailStr}&verification_token=${codeStr}`,
       {
-        method: "GET",
+        method: "GET", //only GET was allowed
         headers: {
           "Content-Type": "application/json",
         },
-        // no body for GET
+  
       },
     );
 
