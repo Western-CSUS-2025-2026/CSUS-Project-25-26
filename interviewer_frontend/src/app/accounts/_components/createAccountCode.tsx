@@ -23,9 +23,6 @@ export default function CreateAccountCode({
 }: CreateAccountCodeProps) {
   const CODE_LEN = 6;
 
-  // bypass toggle for api fetch failure
-  const Bypass = true;
-
   const [digits, setDigits] = useState<string[]>(Array(CODE_LEN).fill(""));
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
@@ -96,23 +93,25 @@ export default function CreateAccountCode({
   };
 
   const code = digits.join("");
+  const isComplete = digits.every((d) => d.length === 1);
 
   const [result, formAction, isPending] = useActionState<
     CheckVerificationCodeResponse | undefined,
     FormData
   >(async (_prev, formData) => {
-    const res = await checkVerificationCode(undefined, formData);
+    // block incomplete codes
+    const submittedCode = String(formData.get("code") ?? "");
+    const submittedEmail = String(formData.get("email") ?? "");
 
-    if (res === "SUCCESS") {
-      onNext(code); // pass the code
-      return res;
+    if (!submittedEmail || submittedCode.length !== CODE_LEN) {
+      return "INVALID_FORM";
     }
 
-    // bypass
-    if (Bypass) {
-      console.warn("[BYPASS]", res);
-      onNext(code); // pass code even in bypass
-      return "SUCCESS";
+    const res = await checkVerificationCode(undefined, formData);
+
+    // Only move on if backend says SUCCESS
+    if (res === "SUCCESS") {
+      onNext(submittedCode);
     }
 
     return res;
@@ -153,6 +152,7 @@ export default function CreateAccountCode({
                         maxLength={1}
                         onChange={(e) => handleChange(index, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(index, e)}
+                        disabled={isPending}
                         aria-label={`Digit ${index + 1}`}
                       />
                     ))}
@@ -162,15 +162,15 @@ export default function CreateAccountCode({
                     <button
                       className={styles.loginButton}
                       type="submit"
-                      disabled={isPending}
+                      disabled={isPending || !isComplete} 
                     >
                       {isPending ? "Verifying..." : "Next"}
                     </button>
 
                     {result && result !== "SUCCESS" && (
                       <div className={styles.errorText} role="status">
-                        {result === "INVALID_FORM" && "Enter the 6-digit code."}
-                        {result === "INVALID_CODE" && "That code is incorrect."}
+                        {result === "INVALID_FORM" && "Enter the full 6-digit code."}
+                        {result === "INVALID_CODE" && "That code is incorrect or expired."}
                         {result === "NETWORK_ERROR" && "Network error. Try again."}
                       </div>
                     )}
@@ -182,6 +182,7 @@ export default function CreateAccountCode({
                     type="button"
                     className={styles.linkButton}
                     onClick={onBackToLogin}
+                    disabled={isPending}
                   >
                     Back
                   </button>

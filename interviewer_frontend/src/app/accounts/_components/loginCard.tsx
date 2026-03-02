@@ -10,12 +10,11 @@ interface LoginCardProps {
 }
 
 export default function LoginCard({ onSignUp }: LoginCardProps) {
-  const [result, formAction, isPending] = useActionState<LoginResponse | undefined, FormData>(
-    async (_prevState, formData) => {
-      return await login(formData);
-    },
-    undefined
-  );
+  const [result, formAction, isPending] =
+    useActionState<LoginResponse | undefined, FormData>(
+      (_prev, formData) => login(formData),
+      undefined
+    );
 
   return (
     <>
@@ -28,7 +27,7 @@ export default function LoginCard({ onSignUp }: LoginCardProps) {
               <div className={styles.coloumn}>
                 <div className={styles.line}></div>
 
-                <form action={formAction}>
+                <form action={formAction} noValidate>
                   <div className={styles.infoBox}>
                     <p>Email</p>
                     <input
@@ -60,13 +59,13 @@ export default function LoginCard({ onSignUp }: LoginCardProps) {
 
                     {result && result !== "SUCCESS" && (
                       <div className={styles.errorText}>
-                        {result === "NOT_AUTHORIZED" && "Email or password is incorrect."}
+                        {result === "NOT_AUTHORIZED" &&
+                          "Email or password is incorrect."}
                         {result === "NETWORK_ERROR" && "Network error. Try again."}
                         {result === "UNVALID_FORM" && "Please fill out all fields."}
                       </div>
                     )}
                   </div>
-
                 </form>
 
                 <div className={styles.linkText}>

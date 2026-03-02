@@ -8,10 +8,11 @@ export type LoginResponse =
   | "UNVALID_FORM";
 
 export async function login(formData: FormData): Promise<LoginResponse> {
-  "use server";
+  console.log("EMAIL:", formData.get("email"));
+  console.log("PASS:", formData.get("password"));
   const email = formData.get("email");
   const password = formData.get("password");
-  if ((email == null || password == null) || (email == "" || password == "")) {
+  if ((email == null || password == null)) {
     console.log("Email andd Password are required");
     return "UNVALID_FORM";
   }

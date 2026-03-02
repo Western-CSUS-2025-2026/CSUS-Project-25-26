@@ -17,35 +17,24 @@ export default function CreateAccountEmailCard({
   onNext,
   onBackToLogin,
 }: CreateAccountEmailCardProps) {
-  const [result, formAction, isPending] = useActionState<
-    GetVerificationEmailResponse | undefined,
-    FormData
-  >(async (_prev, formData) => {
-    const raw = formData.get("email");
-    const email = typeof raw === "string" ? raw : "";
+  const [result, formAction, isPending] =
+    useActionState<GetVerificationEmailResponse | undefined, FormData>(
+      async (_prev, formData) => {
 
-    // if empty
-    if (email === "") return "INVALID_FORM";
+        const raw = formData.get("email");
+        const email = typeof raw === "string" ? raw.trim() : "";
 
-    const res = await getVerificationEmail(undefined, formData);
+        const res = await getVerificationEmail(undefined, formData);
 
-    const Bypass = process.env.NODE_ENV === "development";
+        if (res === "SUCCESS") {
+          onNext(email);
+          return res;
+}
 
-    if (res === "SUCCESS") {
-      onNext(email);
-      return res;
-    }
-
-    // bypass errors from api 
-    if (Bypass) {
-      console.warn("[BYPASS]", res);
-      onNext(email);
-      return "SUCCESS"; 
-    }
-
-    // use real backend result once api call works
-    return res;
-  }, undefined);
+        return res;
+      },
+      undefined
+    );
 
   return (
     <>
@@ -68,7 +57,7 @@ export default function CreateAccountEmailCard({
                       placeholder="Enter your email"
                       autoComplete="email"
                       required
-                      aria-invalid={result && result !== "SUCCESS" ? true : undefined}
+
                     />
                   </div>
 
