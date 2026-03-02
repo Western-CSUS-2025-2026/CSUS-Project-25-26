@@ -10,7 +10,7 @@ import { useSearchParams } from "next/navigation";
 
 function RecordingPage() {
   const params = useSearchParams();
-  const session = useSession(Number(params.get("templateId")) ?? -1);
+  const session = useSession(Number(params.get("sessionId")) ?? -1);
 
   return (
     <div style={{ gap: "1em", display: "flex", flexDirection: "column" }}>
@@ -27,7 +27,7 @@ function RecordingPage() {
       <div style={{ display: "flex", flexDirection: "row", gap: "1em" }}>
         <WebcamCard webRef={session.webcam}></WebcamCard>
         <RecordingSidebar
-          timeEnded={session.continueModalUp}
+          timeEnded={session.continueModalUp || session.finishModalUp}
           stage={session.state}
           onStart={session.startSession}
           onEnd={() => {}}

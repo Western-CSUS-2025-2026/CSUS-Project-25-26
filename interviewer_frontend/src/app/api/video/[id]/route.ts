@@ -16,13 +16,22 @@ export async function POST(
   const headers = new Headers(req.headers);
 
   headers.delete("Host");
-  return fetch(url + `/video/${id}`, {
+  headers.set("Authorization", `${token?.value}`);
+  headers.set(
+    "Content-Disposition",
+    'form-data; name="video"; filename="video.webm"',
+  );
+  console.log(headers);
+
+  const res = await fetch(url + `video/${id}`, {
     method: "POST",
-    headers: {
-      Authorization: `${token?.value}`,
-      ...headers,
-    },
+    headers: headers,
     body: req.body,
     duplex: "half",
   });
+  console.log(res);
+  const body = await res.json();
+  console.log(body);
+
+  return Response.json({ success: res.ok, body: body });
 }

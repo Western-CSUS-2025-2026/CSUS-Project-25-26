@@ -10,7 +10,7 @@ export async function sendRecording(
   const formData = new FormData();
 
   console.log("Len: " + chunks.length);
-  formData.append("video", combineBlob, "recording.webm");
+  formData.append("video", combineBlob, "video.webm");
   console.log(formData.get("video"));
 
   // const res = await fetch(`https://api.jobless.live/video/${session_comp}`, {

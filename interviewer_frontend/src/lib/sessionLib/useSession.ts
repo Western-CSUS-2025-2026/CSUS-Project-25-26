@@ -29,7 +29,7 @@ interface UseSessionReturn {
   startNextQuestion: () => void;
 }
 
-function useSession(templateId: number): UseSessionReturn {
+function useSession(sessionId: number): UseSessionReturn {
   const prepPhaseDurtion = 5000;
   const recordingPhaseDuration = 7000;
   const recording = useRecording();
@@ -53,28 +53,23 @@ function useSession(templateId: number): UseSessionReturn {
   const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
-    // createSession(templateId).then((sessionId) => {
-    const sessionId = { success: true, sessionId: 23 };
-    if (sessionId.success) {
-      getSessionNew(Number(sessionId.sessionId)).then((s) => {
-        if (s.success) {
-          const questions: Question[] = s.session.session_components.map(
-            (com) => {
-              return {
-                question: com.question.question,
-                component_id: com.id,
-                id: com.question.id,
-                template_id: com.question.template_id,
-              };
-            },
-          );
-          console.log(questions);
-          setQuestionList(questions);
-          setIsLoading(false);
-        }
-      });
-    }
-    // });
+    getSessionNew(Number(sessionId)).then((s) => {
+      if (s.success) {
+        const questions: Question[] = s.session.session_components.map(
+          (com) => {
+            return {
+              question: com.question.question,
+              component_id: com.id,
+              id: com.question.id,
+              template_id: com.question.template_id,
+            };
+          },
+        );
+        console.log(questions);
+        setQuestionList(questions);
+        setIsLoading(false);
+      }
+    });
   }, []);
 
   const startSession = () => {

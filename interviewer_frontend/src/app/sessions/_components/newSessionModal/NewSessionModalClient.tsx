@@ -5,6 +5,7 @@ import { Template } from "@/types/template";
 import styles from "./newSessionModal.module.css";
 import { Search, X, ChevronLeft, Folder, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { createSession } from "@/lib/sessionLib/createSession";
 
 type Step = "select" | "confirm";
 
@@ -69,7 +70,11 @@ export default function NewSessionModalClient({
   }
 
   function startSession() {
-    router.push(`/recording?templateId=${selectedTemplate?.id}`);
+    createSession(Number(selectedTemplate?.id ?? -1)).then((res) => {
+      if (res.success) {
+        router.push(`/recording?sessionId=${res.sessionId}`);
+      }
+    });
   }
 
   return (

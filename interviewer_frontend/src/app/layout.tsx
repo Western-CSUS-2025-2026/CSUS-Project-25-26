@@ -27,9 +27,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-          <AppShell>{children}</AppShell> //AppShell to toggle sidebar
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );
 }
-
