@@ -57,7 +57,6 @@ export default function CreateAccountEmailCard({
                       placeholder="Enter your email"
                       autoComplete="email"
                       required
-
                     />
                   </div>
 
@@ -74,9 +73,12 @@ export default function CreateAccountEmailCard({
 
                     {result && result !== "SUCCESS" && (
                       <div className={styles.errorText} role="status">
-                        {result === "INVALID_FORM" && "Please enter your email."}
-                        {result === "INVALID_EMAIL" && "That email is not valid."}
-                        {result === "NETWORK_ERROR" && "Network error. Try again."}
+                        {result === "INVALID_FORM" &&
+                          "Please enter your email."}
+                        {result === "INVALID_EMAIL" &&
+                          "That email is not valid."}
+                        {result === "NETWORK_ERROR" &&
+                          "Network error. Try again."}
                       </div>
                     )}
                   </div>

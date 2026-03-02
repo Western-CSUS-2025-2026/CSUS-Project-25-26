@@ -5,7 +5,8 @@ export type LoginResponse =
   | "NOT_AUTHORIZED"
   | "SUCCESS"
   | "NETWORK_ERROR"
-  | "UNVALID_FORM";
+  | "UNVALID_FORM"
+  | "LOADING";
 
 export async function login(formData: FormData): Promise<LoginResponse> {
   console.log("EMAIL:", formData.get("email"));

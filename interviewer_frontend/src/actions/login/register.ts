@@ -5,7 +5,8 @@ export type GetVerificationEmailResponse =
   | "SUCCESS"
   | "NETWORK_ERROR"
   | "INVALID_FORM"
-  | "INVALID_EMAIL";
+  | "INVALID_EMAIL"
+  | "LOADING";
 
 export async function getVerificationEmail(
   _prevValue: GetVerificationEmailResponse | undefined,
@@ -26,7 +27,7 @@ export async function getVerificationEmail(
     console.log("Body: " + JSON.stringify(body));
 
     // make the request
-    let res = await fetchAPI("user/registration/initiate", {
+    const res = await fetchAPI("user/registration/initiate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

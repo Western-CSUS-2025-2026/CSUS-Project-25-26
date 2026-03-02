@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
 import Card from "@/components/card/card";
 import styles from "./loginCard.module.css";
 import { login, type LoginResponse } from "@/actions/login/login";
+import { useActionState } from "react";
 
 interface LoginCardProps {
   onSignUp: () => void;
@@ -95,3 +95,4 @@ export default function LoginCard({ onSignUp }: LoginCardProps) {
     </>
   );
 }
+
