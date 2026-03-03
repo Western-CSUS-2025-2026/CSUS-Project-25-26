@@ -20,7 +20,7 @@ def get_s3_client():
 
 
 def generate_s3_key(session_component_id: int) -> str:
-    return f"videos/{session_component_id}/{uuid.uuid4().hex}.webm"
+    return f"videos/{session_component_id}/{uuid.uuid4().hex}"
 
 
 def generate_upload_url(s3_key: str) -> str:
