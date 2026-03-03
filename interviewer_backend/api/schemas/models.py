@@ -90,6 +90,11 @@ class UserGet(Base):
     username: str
 
 
+class PresignedURLResponse(Base):
+    url: str
+    s3_key: str
+
+
 class VideoUploadResponse(Base):
     asset_id: str
     indexed_asset_id: str

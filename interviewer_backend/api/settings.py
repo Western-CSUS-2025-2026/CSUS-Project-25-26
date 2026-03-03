@@ -46,6 +46,13 @@ class Settings(BaseSettings):
 
     QUESTIONS_PER_SESSION: int = 2
 
+    AWS_ACCESS_KEY_ID: str | None = None
+    AWS_SECRET_ACCESS_KEY: str | None = None
+    AWS_REGION: str = "us-east-1"
+    S3_BUCKET_NAME: str | None = None
+    S3_UPLOAD_URL_TTL: int = 300  # seconds (5 min)
+    S3_READ_URL_TTL: int = 3600  # seconds (1 hour)
+
     METRICS_ENABLED: bool = False
 
     model_config = ConfigDict(case_sensitive=True, env_file=".env", extra="ignore")
