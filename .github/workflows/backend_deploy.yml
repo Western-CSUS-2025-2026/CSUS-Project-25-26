@@ -128,6 +128,7 @@ jobs:
             --env METRICS_ENABLED="${{ vars.METRICS_ENABLED || 'true' }}" \
             --env AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}' \
             --env AWS_ACCESS_KEY_ID='${{ secrets.AWS_ACCESS_KEY_ID }}' \
+            --env AWS_REGION='${{ vars.AWS_REGION }}' \
             --env ROOT_PATH='' \
             --label logging='promtail' \
             --label job='interviewer_backend' \
