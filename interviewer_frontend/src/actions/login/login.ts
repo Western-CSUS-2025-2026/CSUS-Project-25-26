@@ -2,6 +2,7 @@
 
 import { fetchAPI } from "@/lib/fetch";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 export type LoginResponse =
   | "NOT_AUTHORIZED"
   | "SUCCESS"
@@ -36,7 +37,7 @@ export async function login(
     maxAge: 60 * 60 * 24 * 7, // 1 week
   });
 
-  return "SUCCESS";
+  redirect("/sessions");
 }
 
 async function authenticateUser(
