@@ -51,12 +51,14 @@ async def create_session(
 
     if len(recent_sessions_monthly) >= settings.VIDEO_UPLOAD_LIMIT_MONTHLY:
         next_month = (now.replace(day=1) + timedelta(days=32)).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        raise RateLimitExceeded(error_msg=f"Monthly limit exceeded, please try again at {next_month}")
+        next_month_str = next_month.strftime("%Y-%m-%d")
+        raise RateLimitExceeded(error_msg=f"Monthly limit exceeded, please try again at {next_month_str}")
 
     if len(recent_sessions_24h) >= settings.VIDEO_UPLOAD_LIMIT:
         oldest_session = min(recent_sessions_24h, key=lambda s: s.create_ts)
         expires_at = oldest_session.create_ts + timedelta(hours=24)
-        raise RateLimitExceeded(error_msg=f"Rate limit exceeded, please try again at {expires_at}")
+        expires_at_str = expires_at.strftime("%Y-%m-%d %H:%M:%S")
+        raise RateLimitExceeded(error_msg=f"Rate limit exceeded, please try again at {expires_at_str}")
 
 
     # 1. Load template's questions (fail early if template empty or missing)
