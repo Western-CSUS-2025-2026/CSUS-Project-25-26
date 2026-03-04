@@ -3,7 +3,10 @@
 import { useActionState } from "react";
 import Card from "@/components/card/card";
 import styles from "./loginCard.module.css";
-import { getVerificationEmail } from "@/actions/login/register";
+import {
+  getVerificationEmail,
+  type GetVerificationEmailResponse,
+} from "@/actions/login/register";
 
 interface CreateAccountEmailCardProps {
   onNext: (email: string) => void;
@@ -14,10 +17,24 @@ export default function CreateAccountEmailCard({
   onNext,
   onBackToLogin,
 }: CreateAccountEmailCardProps) {
-  const [result, formAction, isPending] = useActionState(
-    getVerificationEmail,
-    "LOADING",
-  );
+  const [result, formAction, isPending] =
+    useActionState<GetVerificationEmailResponse | undefined, FormData>(
+      async (_prev, formData) => {
+
+        const raw = formData.get("email");
+        const email = typeof raw === "string" ? raw.trim() : "";
+
+        const res = await getVerificationEmail(undefined, formData);
+
+        if (res === "SUCCESS") {
+          onNext(email);
+          return res;
+}
+
+        return res;
+      },
+      undefined
+    );
 
   return (
     <>
@@ -40,9 +57,6 @@ export default function CreateAccountEmailCard({
                       placeholder="Enter your email"
                       autoComplete="email"
                       required
-                      aria-invalid={
-                        result && result !== "SUCCESS" ? true : undefined
-                      }
                     />
                   </div>
 
