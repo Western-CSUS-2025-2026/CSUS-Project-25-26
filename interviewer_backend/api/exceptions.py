@@ -67,3 +67,8 @@ class FailToCreateTask(APIError):
 class FailToParseAnalysis(APIError):
     def __init__(self, error_msg: str = "Failed to to parse analysis"):
         super().__init__(error_msg)
+
+
+class RateLimitExceeded(APIError):
+    def __init__(self, error_msg: str = "Rate limit exceeded"):
+        super().__init__(error_msg)
