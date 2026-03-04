@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     QUESTIONS_PER_SESSION: int = 2
     VIDEO_UPLOAD_LIMIT: int = 2
     VIDEO_UPLOAD_LIMIT_MONTHLY: int = 10
+    VIDEO_UPLOAD_LIMIT_ENABLED: bool = False
 
     METRICS_ENABLED: bool = False
 
