@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     INDEX_LIFETIME_DAYS: int = 90
 
     QUESTIONS_PER_SESSION: int = 2
+    VIDEO_UPLOAD_LIMIT: int = 2
 
     METRICS_ENABLED: bool = False
 

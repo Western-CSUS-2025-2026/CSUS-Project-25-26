@@ -12,6 +12,7 @@ from api.exceptions import (
     ObjectNotFound,
     RegistrationIncomplete,
     TooManyEmailRequests,
+    RateLimitExceeded,
 )
 from api.schemas.base import StatusResponseModel
 
@@ -88,4 +89,12 @@ async def fail_to_parse_analysis_handler(req: starlette.requests.Request, exc: F
     return JSONResponse(
         content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
         status_code=500,
+    )
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exceeded_handler(req: starlette.requests.Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=429,
     )

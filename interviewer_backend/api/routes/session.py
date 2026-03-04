@@ -6,16 +6,19 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, Query
 from fastapi_sqlalchemy import db
 
-from api.exceptions import ObjectNotFound
+from api.exceptions import ObjectNotFound, RateLimitExceeded
 from api.models.db import Question, Session, SessionComponent, SessionState, Template, UserSession
 from api.schemas.models import SessionCreateRequest, SessionCreateResponse, SessionGet, SessionsList
 from api.settings import get_settings
 from api.utils.security import Auth
 from api.utils.session_query import get_session_options, parse_include, serialize_session
 
+from datetime import datetime, timezone, timedelta
+
 
 logger: logging.Logger = logging.getLogger(__name__)
 session: APIRouter = APIRouter(prefix="/sessions", tags=["Sessions"])
+settings = get_settings()
 
 
 @session.post("", status_code=201, response_model=SessionCreateResponse)
@@ -23,6 +26,27 @@ async def create_session(
     payload: SessionCreateRequest,
     user_session: UserSession = Depends(Auth()),
 ) -> SessionCreateResponse:
+
+    now = datetime.now(tz=timezone.utc)
+
+    recent_sessions = (
+        Session.query(session=db.session)
+        .filter(Session.user_id == user_session.user_id)
+        .order_by(Session.create_ts.desc())
+        .limit(settings.VIDEO_UPLOAD_LIMIT)
+        .all()
+    )
+
+    # count how many are expired
+    cutoff = now - timedelta(hours=24)
+    expired_counts = sum(1 for s in recent_sessions if s.create_ts <= cutoff)
+
+    if expired_counts == 0 and len(recent_sessions) >= settings.VIDEO_UPLOAD_LIMIT:
+        oldest_session = min(recent_sessions, key=lambda s: s.create_ts)
+        expires_at = oldest_session.create_ts + timedelta(hours=24)
+        raise RateLimitExceeded(error_msg=f"Rate limit exceeded, please try again at {expires_at}")
+
+
     # 1. Load template's questions (fail early if template empty or missing)
     template_id = payload.template_id
     questions = Question.query(session=db.session).filter(Question.template_id == template_id).all()
@@ -37,7 +61,6 @@ async def create_session(
     )
     db.session.flush()
 
-    settings = get_settings()
     count = min(settings.QUESTIONS_PER_SESSION, len(questions))
     chosen = random.sample(questions, count)  # pick 3 random questions no repeat
     for question in chosen:
