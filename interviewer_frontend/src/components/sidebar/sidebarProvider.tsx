@@ -3,13 +3,16 @@ import Sidebar from "./sidebar";
 
 interface SidebarProviderProps {
   children?: React.ReactNode;
+  showSidebar?: boolean;
 }
-function SidebarProvider(props: SidebarProviderProps) {
+
+function SidebarProvider({ children, showSidebar = true }: SidebarProviderProps) {
   return (
     <div className={styles.sidebarProvider}>
-      <Sidebar></Sidebar>
-      <div className={styles.mainContent}>{props.children}</div>
+      {showSidebar && <Sidebar />}
+      <div className={styles.mainContent}>{children}</div>
     </div>
   );
 }
+
 export default SidebarProvider;

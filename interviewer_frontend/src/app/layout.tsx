@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 // import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SidebarProvider from "@/components/sidebar/sidebarProvider";
+import AppShell from "./appShell";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -26,8 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <SidebarProvider>{children}</SidebarProvider>
+          <AppShell>{children}</AppShell> //AppShell to toggle sidebar
       </body>
     </html>
   );
 }
+

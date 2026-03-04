@@ -3,7 +3,6 @@ import styles from "./page.module.css";
 import WebcamCard from "./_components/webcam/webcamCard";
 import TopBar from "./_components/recordingTopbar/topBar";
 import useSession from "@/lib/sessionLib/useSession";
-import Card from "@/components/card/card";
 import Modal from "@/components/modal/modal";
 import RecordingSidebar from "./_components/recordingSidebar/recordingSidebar";
 

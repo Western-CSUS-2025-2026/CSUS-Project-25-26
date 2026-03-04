@@ -5,7 +5,8 @@ export type GetVerificationEmailResponse =
   | "SUCCESS"
   | "NETWORK_ERROR"
   | "INVALID_FORM"
-  | "INVALID_EMAIL";
+  | "INVALID_EMAIL"
+  | "LOADING";
 
 export async function getVerificationEmail(
   _prevValue: GetVerificationEmailResponse | undefined,
@@ -26,7 +27,7 @@ export async function getVerificationEmail(
     console.log("Body: " + JSON.stringify(body));
 
     // make the request
-    let res = await fetchAPI("user/registration/initiate", {
+    const res = await fetchAPI("user/registration/initiate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -39,12 +40,10 @@ export async function getVerificationEmail(
       return "INVALID_EMAIL";
     }
 
-    const resBody = await res.json();
-
-    console.log(resBody);
-
     return "SUCCESS";
+
   } catch (e) {
+    console.error("Fetch error:", e);
     return "NETWORK_ERROR";
   }
 }
@@ -66,28 +65,38 @@ export async function checkVerificationCode(
     return "INVALID_FORM";
   }
 
-  const body = {
-    email: email,
-    verification_token: code,
-  };
-  try {
-    console.log("Body: " + JSON.stringify(body));
+  const emailStr = encodeURIComponent(String(email));
+  const codeStr = encodeURIComponent(String(code));
 
-    let res = await fetchAPI("user/registration/code-verify", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+  try {
+    console.log(
+      "GET verify params:",
+      JSON.stringify({ email: String(email), verification_token: String(code) }),
+    );
+
+    const res = await fetchAPI(
+      `user/registration/code-verify?email=${emailStr}&verification_token=${codeStr}`,
+      {
+        method: "GET", //only GET was allowed
+        headers: {
+          "Content-Type": "application/json",
+        },
+  
       },
-      body: JSON.stringify(body),
-    });
+    );
+
     console.log("Fetched");
-    if (res.status != 200) {
-      // return "INVALID_EMAIL";
-      console.log("Bad request: " + res.status);
+    console.log("Status:", res.status);
+    console.log("Allow:", res.headers.get("allow"));
+
+    if (res.status !== 200) {
+      console.log("Bad request:", res.status);
+      const text = await res.text();
+      console.log("Response body:", text);
+      return "INVALID_CODE";
     }
 
     const resBody = await res.json();
-
     console.log(resBody);
 
     return "SUCCESS";

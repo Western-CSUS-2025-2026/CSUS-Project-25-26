@@ -1,0 +1,109 @@
+"use client";
+
+import { useActionState } from "react";
+import Card from "@/components/card/card";
+import styles from "./loginCard.module.css";
+import {
+  getVerificationEmail,
+  type GetVerificationEmailResponse,
+} from "@/actions/login/register";
+
+interface CreateAccountEmailCardProps {
+  onNext: (email: string) => void;
+  onBackToLogin: () => void;
+}
+
+export default function CreateAccountEmailCard({
+  onNext,
+  onBackToLogin,
+}: CreateAccountEmailCardProps) {
+  const [result, formAction, isPending] =
+    useActionState<GetVerificationEmailResponse | undefined, FormData>(
+      async (_prev, formData) => {
+
+        const raw = formData.get("email");
+        const email = typeof raw === "string" ? raw.trim() : "";
+
+        const res = await getVerificationEmail(undefined, formData);
+
+        if (res === "SUCCESS") {
+          onNext(email);
+          return res;
+}
+
+        return res;
+      },
+      undefined
+    );
+
+  return (
+    <>
+      <div className={styles.container}>
+        <div className="loginCardRadiusOverride">
+          <div className={styles.sizeBox}>
+            <Card fillHeight fillWidth>
+              <h1 className={styles.header}>Create Account</h1>
+
+              <div className={styles.coloumn}>
+                <div className={styles.line}></div>
+
+                <form action={formAction} noValidate>
+                  <div className={styles.infoBox}>
+                    <p>Email</p>
+                    <input
+                      name="email"
+                      type="email"
+                      className={styles.textBox}
+                      placeholder="Enter your email"
+                      autoComplete="email"
+                      required
+                    />
+                  </div>
+
+                  <div className={styles.blankSpace}></div>
+
+                  <div className={styles.loginWrapper}>
+                    <button
+                      className={styles.loginButton}
+                      type="submit"
+                      disabled={isPending}
+                    >
+                      {isPending ? "Sending..." : "Next"}
+                    </button>
+
+                    {result && result !== "SUCCESS" && (
+                      <div className={styles.errorText} role="status">
+                        {result === "INVALID_FORM" &&
+                          "Please enter your email."}
+                        {result === "INVALID_EMAIL" &&
+                          "That email is not valid."}
+                        {result === "NETWORK_ERROR" &&
+                          "Network error. Try again."}
+                      </div>
+                    )}
+                  </div>
+                </form>
+
+                <div>
+                  <button
+                    type="button"
+                    className={styles.linkButton}
+                    onClick={onBackToLogin}
+                  >
+                    Back
+                  </button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        .loginCardRadiusOverride .cardStyle {
+          border-radius: 2em !important;
+        }
+      `}</style>
+    </>
+  );
+}
