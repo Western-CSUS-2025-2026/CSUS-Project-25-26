@@ -2,7 +2,7 @@ import Gauge from "@/components/gauge/gauge";
 import styles from "./gradeCard.module.css";
 
 interface GradeCardProps {
-  score: number; // 0-1 value
+  score: number;
 }
 
 export default function GradeCard({ score }: GradeCardProps) {

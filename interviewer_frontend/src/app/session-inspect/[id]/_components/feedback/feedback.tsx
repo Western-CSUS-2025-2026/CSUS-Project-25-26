@@ -1,5 +1,5 @@
-import styles from "./feedback.module.css";
 import { Feedback as FeedbackType } from "@/types/session";
+import styles from "./feedback.module.css";
 
 interface FeedbackProps {
   feedback: FeedbackType[];

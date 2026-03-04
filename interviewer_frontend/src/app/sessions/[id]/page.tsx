@@ -1,25 +1,24 @@
+import styles from "./page.module.css";
 import { getSessionById } from "@/lib/getSessionById";
-import Breadcrumb from "./_components/breadcrumb/breadcrumb";
-import Feedback from "./_components/feedback/feedback";
 import GradeCard from "./_components/gradeCard/gradeCard";
-import QuestionBreakdown from "./_components/questionBreakdown/questionBreakdown";
 import QuestionsList from "./_components/questionsList/questionsList";
 import SkillsBreakdown from "./_components/skillsBreakdown/skillsBreakdown";
+import Feedback from "./_components/feedback/feedback";
 import Transcript from "./_components/transcript/transcript";
 import Video from "./_components/video/video";
-import styles from "./page.module.css";
+import QuestionBreakdown from "./_components/questionBreakdown/questionBreakdown";
+import Breadcrumb from "./_components/breadcrumb/breadcrumb";
 
-async function SessionOverview({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const session = await getSessionById(id);
+async function SessionOverview({ params }: { params: { id: string } }) {
+  const session = await getSessionById(params.id);
   const questions = session.grades
     .map((grade) => grade.question)
     .filter((q): q is string => q !== undefined);
 
   return (
     <div className={styles.pageWrapper}>
-      <Breadcrumb sessionId={id} />
-      <h2 className={styles.pageHeader}>Summary</h2>
+      <Breadcrumb sessionId={params.id} />
+      <h2 className={styles.sectionHeader}>Summary</h2>
 
       <div className={styles.container}>
         <div className={styles.leftColumn}>

@@ -1,22 +1,19 @@
 .skillsCard {
+  width: 100%;
+  max-width: 100%;
+  padding: 1.5em;
+  box-sizing: border-box;
+  overflow: hidden;
   background-color: var(--foreground);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1.5em;
-}
-
-.title {
-  color: var(--primary-text);
-  font-size: 1.875em;
-  font-weight: 590;
-  margin: 0 0 1.5em 0;
+  border-radius: 0.6em;
 }
 
 .skillsGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2em;
-  row-gap: 2.5em;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1em;
+  width: 100%;
 }
 
 .skillItem {

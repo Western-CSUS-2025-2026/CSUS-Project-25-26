@@ -1,12 +1,12 @@
 .questionSection {
-  margin-top: 3em;
+  margin: 3em 0 2em;
 }
 
 .questionTitle {
-  color: var(--primary-text);
-  font-size: 1.875em;
-  font-weight: 590;
   margin: 0 0 1.5em 0;
+  font-size: var(--h2-font-size);
+  font-weight: 600;
+  color: var(--primary-text);
 }
 
 .content {
@@ -16,14 +16,12 @@
   gap: 2em;
 }
 
-/* Grade Card - Top Left */
 .gradeCard {
-  background-color: var(--accent);
-  border-radius: 10px;
-  padding: 1.5em;
   display: flex;
   flex-direction: column;
   height: 350px;
+  padding: 1em;
+  background-color: var(--accent);
 }
 
 .header {
@@ -31,46 +29,42 @@
 }
 
 .title {
-  color: var(--accent-primary-text);
-  font-size: 1.5em;
-  font-weight: 590;
   margin: 0 0 0.5em 0;
+  font-size: var(--h3-font-size);
+  font-weight: 600;
+  color: var(--accent-primary-text);
 }
 
 .subtitle {
-  color: var(--accent-secondary-text);
-  font-size: 1em;
   margin: 0;
+  font-size: var(--p-font-size);
+  color: var(--accent-secondary-text);
 }
 
 .gaugeContainer {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 1;
 }
 
-/* Skills Card - Top Right */
 .skillsCard {
-  background-color: var(--foreground);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1.5em;
+  padding: 0.5em;
 }
 
 .skillsTitle {
-  color: var(--primary-text);
-  font-size: 1.5em;
-  font-weight: 590;
   margin: 0 0 1.5em 0;
+  font-size: var(--h3-font-size);
+  font-weight: 600;
+  color: var(--primary-text);
 }
 
 .barsContainer {
   display: flex;
-  justify-content: space-around;
   align-items: flex-end;
-  height: 250px;
+  justify-content: space-around;
   gap: 1em;
+  height: 250px;
 }
 
 .barItem {
@@ -82,43 +76,39 @@
 }
 
 .barWrapper {
-  width: 100%;
-  height: 200px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  width: 100%;
+  height: 200px;
 }
 
 .bar {
-  width: 52px;
-  height: 100%;
-  background-color: var(--border);
-  border-radius: 20px;
   display: flex;
   align-items: flex-end;
+  width: 52px;
+  height: 100%;
   overflow: hidden;
+  background-color: var(--border);
+  border-radius: 20px;
 }
 
 .barFill {
   width: 100%;
-  background-color: var(--accent);
   border-radius: 20px;
+  background-color: var(--accent);
   transition: height 0.3s ease;
 }
 
 .barLabel {
+  font-size: var(--p-font-size);
   color: var(--secondary-text);
-  font-size: 1.25em;
   text-align: center;
 }
 
-/* Feedback Card - Bottom, Spans Both Columns */
 .feedbackCard {
   grid-column: 1 / -1;
-  background-color: var(--foreground);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1.5em;
+  padding: 0.5em;
 }
 
 .feedbackHeader {
@@ -126,16 +116,16 @@
 }
 
 .feedbackTitle {
-  color: var(--primary-text);
-  font-size: 1.5em;
-  font-weight: 590;
   margin: 0 0 0.5em 0;
+  font-size: var(--h3-font-size);
+  font-weight: 600;
+  color: var(--primary-text);
 }
 
 .feedbackSubtitle {
-  color: var(--secondary-text);
-  font-size: 1em;
   margin: 0;
+  font-size: var(--p-font-size);
+  color: var(--secondary-text);
 }
 
 .feedbackGrid {
@@ -151,23 +141,28 @@
 }
 
 .feedbackPoint {
-  color: var(--primary-text);
-  font-size: 1em;
-  font-weight: 400;
   margin: 0;
+  font-size: var(--p-font-size);
+  font-weight: 400;
+  color: var(--primary-text);
 }
 
 .suggestionsList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
   display: flex;
   flex-direction: column;
   gap: 0.6em;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .suggestion {
-  color: var(--secondary-text);
-  font-size: 1em;
+  font-size: var(--p-font-size);
   line-height: 1.2;
+  color: var(--secondary-text);
+}
+
+.suggestion::before {
+  content: "• ";
+  margin-right: 0.5em;
 }

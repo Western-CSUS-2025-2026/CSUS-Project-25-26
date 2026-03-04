@@ -1,38 +1,34 @@
 .videoSection {
-  display: flex;
-  flex-direction: column;
-  gap: 1em;
-}
-
-.title {
-  color: var(--primary-text);
-  font-size: 1.875em;
-  font-weight: 590;
-  margin: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .videoCard {
-  background-color: var(--foreground);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1.5em;
-  height: 375px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1em;
+  width: 100%;
+  height: 375px;
+  overflow: hidden;
+  position: relative;
+  background-color: var(--background);
+  border-radius: 0.6em;
 }
 
 .placeholder {
-  color: var(--secondary-text);
-  font-size: 1.125em;
   margin: 0;
+  font-size: 1.125em;
+  color: var(--secondary-text);
+  text-align: center;
 }
 
 .url {
-  color: var(--secondary-text);
-  font-size: 0.875em;
   margin: 0;
+  font-size: 0.875em;
+  color: var(--secondary-text);
+  padding: 0 1em;
+  text-align: center;
   word-break: break-all;
 }

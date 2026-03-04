@@ -1,10 +1,10 @@
 .gradeCard {
-  height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: var(--accent);
+  height: 100%;
   padding: 1.5em;
-  border-radius: 8px;
+  background-color: var(--accent);
+  border-radius: 0.6em;
 }
 
 .header {
@@ -12,21 +12,22 @@
 }
 
 .title {
-  font-size: 1.2em;
+  margin: 0 0 0.5em 0;
+  font-size: var(--h3-font-size);
   font-weight: 600;
-  margin-bottom: 0.5em;
-  color: #1a1a1a; 
+  color: var(--accent-primary-text);
 }
 
 .subtitle {
-  font-size: 0.85em;
-  color: #4a4a4a; 
+  margin: 0;
+  font-size: var(--p-font-size);
+  color: var(--accent-secondary-text);
 }
 
 .gaugeContainer {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4a4a4a; 
+  flex: 1;
+  color: var(--accent-secondary-text);
 }
