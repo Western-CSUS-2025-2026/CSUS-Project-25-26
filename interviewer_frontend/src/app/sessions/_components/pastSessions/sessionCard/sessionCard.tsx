@@ -62,7 +62,7 @@ export default function SessionCard({ session }: SessionCardProps) {
           </div>
 
           {session.state === "COMPLETED" && (
-            <Gauge score={session.overallGrade.overallGrade} />
+            <Gauge score={session.overallGrade} />
           )}
 
           {session.state === "PROCESSING" && <LoadingSpinner></LoadingSpinner>}

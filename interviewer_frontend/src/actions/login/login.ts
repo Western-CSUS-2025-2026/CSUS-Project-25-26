@@ -1,6 +1,8 @@
 "use server";
 
+import { fetchAPI } from "@/lib/fetch";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 export type LoginResponse =
   | "NOT_AUTHORIZED"
   | "SUCCESS"
@@ -8,12 +10,14 @@ export type LoginResponse =
   | "UNVALID_FORM"
   | "LOADING";
 
-export async function login(formData: FormData): Promise<LoginResponse> {
-  console.log("EMAIL:", formData.get("email"));
-  console.log("PASS:", formData.get("password"));
+export async function login(
+  _prev: LoginResponse,
+  formData: FormData,
+): Promise<LoginResponse> {
+  "use server";
   const email = formData.get("email");
   const password = formData.get("password");
-  if ((email == null || password == null)) {
+  if (email == null || password == null || email == "" || password == "") {
     console.log("Email andd Password are required");
     return "UNVALID_FORM";
   }
@@ -27,17 +31,34 @@ export async function login(formData: FormData): Promise<LoginResponse> {
   }
 
   const cookiesResolved = await cookies();
-  cookiesResolved.set("sessionToken", userToken, {
+  cookiesResolved.set("session_token", userToken, {
     httpOnly: true,
     secure: true,
     maxAge: 60 * 60 * 24 * 7, // 1 week
   });
-  return "SUCCESS";
+
+  redirect("/sessions");
 }
 
 async function authenticateUser(
   email: string,
   password: string,
 ): Promise<string | undefined> {
-  return undefined;
+  const body = JSON.stringify({ email: email, password: password });
+  console.log("Body " + body);
+
+  const res = await fetchAPI("user/login", {
+    headers: { "content-type": "application/json" },
+    method: "POST",
+    body: body,
+  });
+
+  console.log(res);
+  if (!res.ok) {
+    return undefined;
+  }
+
+  const responseBody: { token: string } = await res.json();
+
+  return responseBody.token;
 }

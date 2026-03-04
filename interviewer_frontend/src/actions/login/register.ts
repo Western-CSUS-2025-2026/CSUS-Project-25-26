@@ -145,7 +145,7 @@ export async function completeRegistration(
   try {
     console.log("Body: " + JSON.stringify(body));
 
-    let res = await fetchAPI("user/registration/verify", {
+    const res = await fetchAPI("user/registration/verify", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

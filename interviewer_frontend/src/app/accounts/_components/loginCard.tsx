@@ -10,11 +10,10 @@ interface LoginCardProps {
 }
 
 export default function LoginCard({ onSignUp }: LoginCardProps) {
-  const [result, formAction, isPending] =
-    useActionState<LoginResponse | undefined, FormData>(
-      (_prev, formData) => login(formData),
-      undefined
-    );
+  const [result, formAction, isPending] = useActionState<
+    LoginResponse,
+    FormData
+  >(login, "LOADING");
 
   return (
     <>
@@ -61,8 +60,10 @@ export default function LoginCard({ onSignUp }: LoginCardProps) {
                       <div className={styles.errorText}>
                         {result === "NOT_AUTHORIZED" &&
                           "Email or password is incorrect."}
-                        {result === "NETWORK_ERROR" && "Network error. Try again."}
-                        {result === "UNVALID_FORM" && "Please fill out all fields."}
+                        {result === "NETWORK_ERROR" &&
+                          "Network error. Try again."}
+                        {result === "UNVALID_FORM" &&
+                          "Please fill out all fields."}
                       </div>
                     )}
                   </div>
@@ -95,4 +96,3 @@ export default function LoginCard({ onSignUp }: LoginCardProps) {
     </>
   );
 }
-

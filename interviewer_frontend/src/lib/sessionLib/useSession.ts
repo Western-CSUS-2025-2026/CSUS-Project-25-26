@@ -1,9 +1,12 @@
+"use client";
 import { RefObject, useEffect, useState } from "react";
 import { useRecording } from "./useRecording";
 import Webcam from "react-webcam";
 import { useTimer } from "./useTimer";
-import { getSessionInfo } from "../getSessionInfo";
+import { getQuestions, Question } from "./getQuestions";
 import { sendRecording } from "./sendRecording";
+import { createSession } from "./createSession";
+import { getSessionNew } from "../getNewSession";
 
 export type SessionState = "Recording" | "Preparing";
 
@@ -26,14 +29,20 @@ interface UseSessionReturn {
   startNextQuestion: () => void;
 }
 
-function useSession(): UseSessionReturn {
+function useSession(sessionId: number): UseSessionReturn {
   const prepPhaseDurtion = 5000;
   const recordingPhaseDuration = 7000;
   const recording = useRecording();
-  const [questionList, setQuestionList] = useState<string[]>([]);
+  const [questionList, setQuestionList] = useState<Question[]>([]);
   const [questionNum, setQuestionNum] = useState(0);
   const [videosUploaded, setVideosUploaded] = useState(0);
-  const [currentQuestion, setCurrentQuestion] = useState("Start and questions will appear here...");
+  const [currentQuestion, setCurrentQuestion] = useState<Question>({
+    question: "Start and questions will appear here...",
+    id: -1,
+    template_id: -1,
+    component_id: -1,
+  });
+
   const timer = useTimer();
 
   const [finishModalUp, setFinishModalUp] = useState(false);
@@ -44,10 +53,22 @@ function useSession(): UseSessionReturn {
   const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
-    setIsLoading(true);
-    getSessionInfo().then((info) => {
-      setQuestionList(info.questions);
-      setIsLoading(false);
+    getSessionNew(Number(sessionId)).then((s) => {
+      if (s.success) {
+        const questions: Question[] = s.session.session_components.map(
+          (com) => {
+            return {
+              question: com.question.question,
+              component_id: com.id,
+              id: com.question.id,
+              template_id: com.question.template_id,
+            };
+          },
+        );
+        console.log(questions);
+        setQuestionList(questions);
+        setIsLoading(false);
+      }
     });
   }, []);
 
@@ -84,13 +105,15 @@ function useSession(): UseSessionReturn {
   };
   const endRecordingPhase = () => {
     setState("Preparing");
-    recording.endRecording();
+    const chunks = recording.endRecording();
 
-    sendRecording(recording.recordedChunks).then((res) => {
-      if (res == "Ok") {
-        setVideosUploaded((prev) => prev + 1);
-      }
-    });
+    sendRecording(questionList[questionNum].component_id, chunks).then(
+      (res) => {
+        if (res == "Ok") {
+          setVideosUploaded((prev) => prev + 1);
+        }
+      },
+    );
     setQuestionNum((prev) => {
       return prev + 1;
     });
@@ -126,7 +149,7 @@ function useSession(): UseSessionReturn {
     continueModalUp: continueModalUp,
     videosUploadedCount: videosUploaded,
     timerDisplay: timer.elapsed / 1000,
-    currentQuestion: currentQuestion,
+    currentQuestion: currentQuestion.question,
     webcam: recording.webRef,
     recordingDuration: recordingDuration(),
     isInitalLoading: isLoading,

@@ -7,7 +7,7 @@ import { getPastSessions } from "@/lib/pastSessions";
 export default function PastSessionsGrid() {
   return (
     <div className={styles.frame}>
-      <h2>Past Sessions</h2>
+      <h2>Suggested Sessions</h2>
       <Suspense
         fallback={
           <div className={styles.grid}>

@@ -1,5 +1,5 @@
 "use client";
-import { RefObject, useCallback, useRef, useState } from "react";
+import { RefObject, useRef, useState } from "react";
 import Webcam from "react-webcam";
 
 interface UseRecordingReturn {
@@ -7,7 +7,7 @@ interface UseRecordingReturn {
   capturing: boolean;
   recordedChunks: Blob[];
   startRecording: () => void;
-  endRecording: () => void;
+  endRecording: () => Blob[];
   download: () => void;
   toggleRecording: () => void;
   startTime: Date | undefined;
@@ -17,6 +17,7 @@ interface UseRecordingReturn {
 export function useRecording(): UseRecordingReturn {
   const webRef = useRef<Webcam>(null);
   const mediaRef = useRef<MediaRecorder>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const [capturing, setCapturing] = useState(false);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [startTime, setStartTime] = useState<undefined | Date>();
@@ -25,21 +26,18 @@ export function useRecording(): UseRecordingReturn {
     setCapturing(!capturing);
   };
 
-  const handleData = useCallback(
-    ({ data }: BlobEvent) => {
-      if (!capturing) {
-        return;
-      }
-      if (data.size > 0) {
-        setRecordedChunks((prev) => prev.concat(data));
-      }
-    },
-    [setRecordedChunks],
-  );
+  const handleData = ({ data }: BlobEvent) => {
+    if (data.size > 0) {
+      chunksRef.current.push(data);
+      setRecordedChunks((prev) => prev.concat(data));
+    }
+  };
 
-  const startRecording = useCallback(() => {
+  const startRecording = () => {
     setStartTime(new Date());
     setEndTime(undefined);
+    chunksRef.current = [];
+    setRecordedChunks([]);
     setCapturing(true);
     if (webRef.current == null) {
       console.log("Web ref is null");
@@ -58,15 +56,15 @@ export function useRecording(): UseRecordingReturn {
     });
 
     mediaRef.current.addEventListener("dataavailable", handleData);
-    mediaRef.current.start();
-  }, [webRef, setCapturing, mediaRef, handleData]);
-
-  const endRecording = useCallback(() => {
+    mediaRef.current.start(1000);
+  };
+  const endRecording = (): Blob[] => {
     setEndTime(new Date());
     mediaRef.current?.stop();
     setCapturing(false);
-  }, [setCapturing, mediaRef]);
-  const handleDownload = useCallback(() => {
+    return chunksRef.current;
+  };
+  const handleDownload = () => {
     if (recordedChunks.length) {
       const blob = new Blob(recordedChunks, {
         type: "video/webm",
@@ -81,7 +79,7 @@ export function useRecording(): UseRecordingReturn {
       window.URL.revokeObjectURL(url);
       setRecordedChunks([]);
     }
-  }, [recordedChunks]);
+  };
   return {
     toggleRecording: toggleRecording,
     webRef: webRef,
