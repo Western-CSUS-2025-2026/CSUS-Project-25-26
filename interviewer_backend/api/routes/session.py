@@ -28,21 +28,33 @@ async def create_session(
 ) -> SessionCreateResponse:
 
     now = datetime.now(tz=timezone.utc)
+    cutoff_24h = now - timedelta(hours=24)
+    cutoff_monthly = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-    recent_sessions = (
+    recent_sessions_24h = (
         Session.query(session=db.session)
         .filter(Session.user_id == user_session.user_id)
+        .filter(Session.create_ts >= cutoff_24h)
         .order_by(Session.create_ts.desc())
         .limit(settings.VIDEO_UPLOAD_LIMIT)
         .all()
     )
 
-    # count how many are expired
-    cutoff = now - timedelta(hours=24)
-    expired_counts = sum(1 for s in recent_sessions if s.create_ts <= cutoff)
+    recent_sessions_monthly = (
+        Session.query(session=db.session)
+        .filter(Session.user_id == user_session.user_id)
+        .filter(Session.create_ts >= cutoff_monthly)
+        .order_by(Session.create_ts.desc())
+        .limit(settings.VIDEO_UPLOAD_LIMIT_MONTHLY)
+        .all()
+    )
 
-    if expired_counts == 0 and len(recent_sessions) >= settings.VIDEO_UPLOAD_LIMIT:
-        oldest_session = min(recent_sessions, key=lambda s: s.create_ts)
+    if len(recent_sessions_monthly) >= settings.VIDEO_UPLOAD_LIMIT_MONTHLY:
+        next_month = (now.replace(day=1) + timedelta(days=32)).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        raise RateLimitExceeded(error_msg=f"Monthly limit exceeded, please try again at {next_month}")
+
+    if len(recent_sessions_24h) >= settings.VIDEO_UPLOAD_LIMIT:
+        oldest_session = min(recent_sessions_24h, key=lambda s: s.create_ts)
         expires_at = oldest_session.create_ts + timedelta(hours=24)
         raise RateLimitExceeded(error_msg=f"Rate limit exceeded, please try again at {expires_at}")
 
