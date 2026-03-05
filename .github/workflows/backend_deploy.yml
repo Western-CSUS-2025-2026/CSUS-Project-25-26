@@ -126,6 +126,10 @@ jobs:
             --env EMAIL_PASS='${{ secrets.EMAIL_PASS }}' \
             --env TWELVE_LABS_API_KEYS='${{ secrets.TWELVE_LABS_API_KEYS }}' \
             --env METRICS_ENABLED="${{ vars.METRICS_ENABLED || 'true' }}" \
+            --env AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}' \
+            --env AWS_ACCESS_KEY_ID='${{ secrets.AWS_ACCESS_KEY_ID }}' \
+            --env AWS_REGION='${{ vars.AWS_REGION }}' \
+            --env S3_BUCKET_NAME='${{ vars.S3_BUCKET_NAME }}' \
             --env ROOT_PATH='' \
             --label logging='promtail' \
             --label job='interviewer_backend' \
