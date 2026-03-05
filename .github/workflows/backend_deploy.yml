@@ -21,6 +21,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Free disk space on runner
+        run: |
+          df -h
+          docker container prune -f || true
+          docker image prune -af --filter "until=168h" || true
+          docker builder prune -af --filter "until=168h" || true
+          docker volume prune -f || true
+          if [ -d /home/deploy/actions-runner/_diag ]; then
+            find /home/deploy/actions-runner/_diag -type f -name "*.log" -mtime +3 -delete || true
+            ls -1t /home/deploy/actions-runner/_diag/*.log 2>/dev/null | tail -n +51 | xargs -r rm -f || true
+          fi
+          df -h
+
       - name: Log in to the Container registry
         uses: docker/login-action@v2
         with:
@@ -56,8 +69,25 @@ jobs:
       CONTAINER_NAME: csus_backend
     permissions:
       packages: read
+      contents: read
 
     steps:
+      - name: Free disk space on runner
+        run: |
+          df -h
+          docker container prune -f || true
+          docker image prune -af --filter "until=168h" || true
+          docker builder prune -af --filter "until=168h" || true
+          docker volume prune -f || true
+          if [ -d /home/deploy/actions-runner/_diag ]; then
+            find /home/deploy/actions-runner/_diag -type f -name "*.log" -mtime +3 -delete || true
+            ls -1t /home/deploy/actions-runner/_diag/*.log 2>/dev/null | tail -n +51 | xargs -r rm -f || true
+          fi
+          df -h
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Log in to the Container registry
         uses: docker/login-action@v2
         with:
@@ -70,10 +100,12 @@ jobs:
 
       - name: Run DB migrations
         run: |
+          docker network create web || true
+
           docker run \
             --rm \
             --network=web \
-            --env DB_DSN=${{ secrets.DB_DSN }} \
+            --env DB_DSN='${{ secrets.DB_DSN }}' \
             --name ${{ env.CONTAINER_NAME }}_migration \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest  \
             alembic upgrade head
@@ -87,10 +119,100 @@ jobs:
             --detach \
             --restart on-failure:3 \
             --network=web \
+            --log-opt max-size=10m \
+            --log-opt max-file=5 \
             --env DB_DSN='${{ secrets.DB_DSN }}' \
             --env EMAIL='${{ secrets.EMAIL }}' \
             --env EMAIL_PASS='${{ secrets.EMAIL_PASS }}' \
             --env TWELVE_LABS_API_KEYS='${{ secrets.TWELVE_LABS_API_KEYS }}' \
+            --env METRICS_ENABLED="${{ vars.METRICS_ENABLED || 'true' }}" \
+            --env AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}' \
+            --env AWS_ACCESS_KEY_ID='${{ secrets.AWS_ACCESS_KEY_ID }}' \
+            --env AWS_REGION='${{ vars.AWS_REGION }}' \
+            --env S3_BUCKET_NAME='${{ vars.S3_BUCKET_NAME }}' \
             --env ROOT_PATH='' \
+            --label logging='promtail' \
+            --label job='interviewer_backend' \
             --name ${{ env.CONTAINER_NAME }} \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Run Prometheus container
+        run: |
+          docker stop interviewer_prometheus || true
+          docker rm interviewer_prometheus || true
+
+          docker run \
+            --detach \
+            --restart unless-stopped \
+            --network=web \
+            --log-opt max-size=10m \
+            --log-opt max-file=5 \
+            --publish 9090:9090 \
+            --volume "${GITHUB_WORKSPACE}/interviewer_backend/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro" \
+            --volume interviewer_prometheus_data:/prometheus \
+            --name interviewer_prometheus \
+            prom/prometheus:latest \
+            --config.file=/etc/prometheus/prometheus.yml \
+            --storage.tsdb.path=/prometheus \
+            --web.enable-lifecycle
+
+      - name: Run Loki container
+        run: |
+          docker stop interviewer_loki || true
+          docker rm interviewer_loki || true
+
+          docker run \
+            --detach \
+            --restart unless-stopped \
+            --network=web \
+            --log-opt max-size=10m \
+            --log-opt max-file=5 \
+            --publish 3100:3100 \
+            --volume "${GITHUB_WORKSPACE}/interviewer_backend/observability/loki/loki-config.yml:/etc/loki/config.yml:ro" \
+            --volume interviewer_loki_data:/loki \
+            --name interviewer_loki \
+            grafana/loki:2.9.8 \
+            -config.file=/etc/loki/config.yml
+
+      - name: Run Promtail container
+        run: |
+          docker stop interviewer_promtail || true
+          docker rm interviewer_promtail || true
+
+          docker run \
+            --detach \
+            --restart unless-stopped \
+            --network=web \
+            --log-opt max-size=10m \
+            --log-opt max-file=5 \
+            --volume "${GITHUB_WORKSPACE}/interviewer_backend/observability/promtail/promtail-config.yml:/etc/promtail/config.yml:ro" \
+            --volume /var/log:/var/log:ro \
+            --volume /var/lib/docker/containers:/var/lib/docker/containers:ro \
+            --volume /var/run/docker.sock:/var/run/docker.sock:ro \
+            --name interviewer_promtail \
+            grafana/promtail:3.6.7 \
+            -config.file=/etc/promtail/config.yml
+
+      - name: Run Grafana container
+        run: |
+          docker stop interviewer_grafana || true
+          docker rm interviewer_grafana || true
+
+          docker run \
+            --detach \
+            --restart unless-stopped \
+            --network=web \
+            --log-opt max-size=10m \
+            --log-opt max-file=5 \
+            --env GF_SECURITY_ADMIN_USER='admin' \
+            --env GF_SECURITY_ADMIN_PASSWORD='${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}' \
+            --env GF_USERS_ALLOW_SIGN_UP='false' \
+            --env GF_METRICS_ENABLED='false' \
+            --env GF_SERVER_ROOT_URL='${{ vars.GRAFANA_ROOT_URL || 'https://api.jobless.live/grafana/' }}' \
+            --env GF_SERVER_SERVE_FROM_SUB_PATH='true' \
+            --volume "${GITHUB_WORKSPACE}/interviewer_backend/observability/grafana/provisioning/datasources/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro" \
+            --volume "${GITHUB_WORKSPACE}/interviewer_backend/observability/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro" \
+            --volume "${GITHUB_WORKSPACE}/interviewer_backend/observability/grafana/dashboards:/etc/grafana/dashboards:ro" \
+            --volume interviewer_grafana_data:/var/lib/grafana \
+            --name interviewer_grafana \
+            grafana/grafana:latest
