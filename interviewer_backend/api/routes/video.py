@@ -13,6 +13,7 @@ from api.schemas.models import PresignedURLResponse, TwelveLabsWebhookRequest
 from api.utils.s3 import generate_read_url, generate_s3_key, generate_upload_url
 from api.utils.security import Auth
 from api.utils.twelveLabs import VideoAnalysis
+from api.utils.twelvelabs_webhook import verify_twelvelabs_signature
 
 
 logger = logging.getLogger(__name__)
@@ -152,7 +153,15 @@ def _process_s3_upload(s3_key: str, size_bytes: int | None):
 
 
 @video.post("/webhook/twelvelabs")
-async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest, background_tasks: BackgroundTasks):
+async def twelvelabs_webhook(
+    request: Request, 
+    background_tasks: BackgroundTasks
+):
+
+    raw_body = verify_twelvelabs_signature(request)
+    payload = json.loads(raw_body)
+
+
     indexed_asset_id = payload.data.id
     state = (payload.data.status or "").lower()
     if state in ('error', 'failed', 'timeout'):
