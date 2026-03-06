@@ -75,5 +75,5 @@ class RateLimitExceeded(APIError):
 
 
 class WebhookVerificationFailed(APIError):
-    def __init__(self, error_msg: str = "Webhook signature verification failed"):
+    def __init__(self, error_msg: str = "Invalid TL-Signature"):
         super().__init__(error_msg)

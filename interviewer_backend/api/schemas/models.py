@@ -104,18 +104,6 @@ class VideoUploadResponse(Base):
     state: str
 
 
-class TwelveLabsWebhookBody(Base):
-    id: str
-    status: str
-
-
-class TwelveLabsWebhookRequest(Base):
-    id: str
-    created_at: str
-    type: str
-    data: TwelveLabsWebhookBody
-
-
 class FeedbackModel(Base):
     points: List[str]
     ways_to_improve: List[str]

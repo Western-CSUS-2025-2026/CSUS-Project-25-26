@@ -9,7 +9,7 @@ from api.exceptions import ForbiddenAction
 from api.metrics import observe_background_task, record_webhook_failure
 from api.models.db import Session, SessionComponent, SessionState, UserSession, Video
 from api.schemas.base import StatusResponseModel
-from api.schemas.models import PresignedURLResponse, TwelveLabsWebhookRequest
+from api.schemas.models import PresignedURLResponse
 from api.utils.s3 import generate_read_url, generate_s3_key, generate_upload_url
 from api.utils.security import Auth
 from api.utils.twelveLabs import VideoAnalysis
@@ -157,17 +157,12 @@ async def twelvelabs_webhook(
     request: Request, 
     background_tasks: BackgroundTasks
 ):
-    logger.info("TL webhook: received request")
     raw_body = await request.body()
-    logger.info("TL webhook: raw_body=%s", raw_body[:200])
-
     raw_body = verify_twelvelabs_signature(raw_body, request.headers.get("TL-Signature"))
     payload = json.loads(raw_body)
-    logger.info("TL webhook: parsed payload keys=%s", list(payload.keys()))
 
     indexed_asset_id = payload["data"]["id"]
     state = (payload["data"]["status"] or "").lower()
-    logger.info("TL webhook: asset_id=%s state=%s", indexed_asset_id, state)
 
     if state in ("error", "failed", "timeout"):
         record_webhook_failure(provider="twelvelabs", reason=state)
