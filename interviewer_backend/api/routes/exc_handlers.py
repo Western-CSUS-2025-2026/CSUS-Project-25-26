@@ -13,6 +13,7 @@ from api.exceptions import (
     RegistrationIncomplete,
     TooManyEmailRequests,
     RateLimitExceeded,
+    WebhookVerificationFailed,
 )
 from api.schemas.base import StatusResponseModel
 
@@ -97,4 +98,12 @@ async def rate_limit_exceeded_handler(req: starlette.requests.Request, exc: Rate
     return JSONResponse(
         content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
         status_code=429,
+    )
+
+
+@app.exception_handler(WebhookVerificationFailed)
+async def webhook_verification_failed_handler(req: starlette.requests.Request, exc: WebhookVerificationFailed):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=400,
     )
