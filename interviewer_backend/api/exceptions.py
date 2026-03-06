@@ -72,3 +72,8 @@ class FailToParseAnalysis(APIError):
 class RateLimitExceeded(APIError):
     def __init__(self, error_msg: str = "Rate limit exceeded"):
         super().__init__(error_msg)
+
+
+class WebhookVerificationFailed(APIError):
+    def __init__(self, error_msg: str = "Webhook signature verification failed"):
+        super().__init__(error_msg)

@@ -157,15 +157,19 @@ async def twelvelabs_webhook(
     request: Request, 
     background_tasks: BackgroundTasks
 ):
-
+    logger.info("TL webhook: received request")
     raw_body = await request.body()
+    logger.info("TL webhook: raw_body=%s", raw_body[:200])
+
     raw_body = verify_twelvelabs_signature(raw_body, request.headers.get("TL-Signature"))
     payload = json.loads(raw_body)
-
+    logger.info("TL webhook: parsed payload keys=%s", list(payload.keys()))
 
     indexed_asset_id = payload["data"]["id"]
     state = (payload["data"]["status"] or "").lower()
-    if state in ('error', 'failed', 'timeout'):
-        record_webhook_failure(provider='twelvelabs', reason=state)
+    logger.info("TL webhook: asset_id=%s state=%s", indexed_asset_id, state)
+
+    if state in ("error", "failed", "timeout"):
+        record_webhook_failure(provider="twelvelabs", reason=state)
     background_tasks.add_task(analyzer.process_indexed_asset, indexed_asset_id, state)
     return StatusResponseModel(status="Success", message="Received")
