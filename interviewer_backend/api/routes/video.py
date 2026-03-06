@@ -139,7 +139,7 @@ def _process_s3_upload(s3_key: str, size_bytes: int | None):
 
                 # Generate a short-lived read URL so TwelveLabs can fetch the video from S3
                 read_url = generate_read_url(s3_key)
-                asset = analyzer.client.assets.create(method="import", url=read_url)
+                asset = analyzer.client.assets.create(method="url", url=read_url)
                 indexed_asset = analyzer.index_asset(index_id=index_id, asset_id=asset.id)
 
                 session_component.indexed_asset_id = indexed_asset.id
