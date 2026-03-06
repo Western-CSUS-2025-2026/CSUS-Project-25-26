@@ -13,6 +13,7 @@ from api.schemas.models import PresignedURLResponse, TwelveLabsWebhookRequest
 from api.utils.s3 import generate_read_url, generate_s3_key, generate_upload_url
 from api.utils.security import Auth
 from api.utils.twelveLabs import VideoAnalysis
+from api.utils.twelvelabs_webhook import verify_twelvelabs_signature
 
 
 logger = logging.getLogger(__name__)
@@ -138,7 +139,7 @@ def _process_s3_upload(s3_key: str, size_bytes: int | None):
 
                 # Generate a short-lived read URL so TwelveLabs can fetch the video from S3
                 read_url = generate_read_url(s3_key)
-                asset = analyzer.client.assets.create(method="import", url=read_url)
+                asset = analyzer.client.assets.create(method="url", url=read_url)
                 indexed_asset = analyzer.index_asset(index_id=index_id, asset_id=asset.id)
 
                 session_component.indexed_asset_id = indexed_asset.id
@@ -152,9 +153,18 @@ def _process_s3_upload(s3_key: str, size_bytes: int | None):
 
 
 @video.post("/webhook/twelvelabs")
-async def twelvelabs_webhook(payload: TwelveLabsWebhookRequest, background_tasks: BackgroundTasks):
-    indexed_asset_id = payload.data.id
-    state = (payload.data.status or "").lower()
+async def twelvelabs_webhook(
+    request: Request, 
+    background_tasks: BackgroundTasks
+):
+
+    raw_body = await request.body()
+    raw_body = verify_twelvelabs_signature(raw_body, request.headers.get("TL-Signature"))
+    payload = json.loads(raw_body)
+
+
+    indexed_asset_id = payload["data"]["id"]
+    state = (payload["data"]["status"] or "").lower()
     if state in ('error', 'failed', 'timeout'):
         record_webhook_failure(provider='twelvelabs', reason=state)
     background_tasks.add_task(analyzer.process_indexed_asset, indexed_asset_id, state)

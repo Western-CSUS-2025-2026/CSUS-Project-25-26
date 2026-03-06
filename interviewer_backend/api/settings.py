@@ -38,25 +38,17 @@ class Settings(BaseSettings):
     EMAIL_DELAY_COUNT: int = 3
 
     TWELVE_LABS_API_KEYS: str | None = None
+    TWELVE_LABS_WEBHOOK_SECRET: str | None = None  # From TL dashboard, for webhook signature verification
     TWELVE_LABS_INDEX_NAME: str = "school"
     # Index expiry: treat index as expired this many days before TL expiry to avoid edge cases
     INDEX_EXPIRY_BUFFER_DAYS: int = 1
     # Index lifetime in days when TL does not return expiry (create_ts + this - buffer = expires_at)
     INDEX_LIFETIME_DAYS: int = 90
 
-    QUESTIONS_PER_SESSION: int = 2
+    QUESTIONS_PER_SESSION: int = 3
     VIDEO_UPLOAD_LIMIT: int = 2
     VIDEO_UPLOAD_LIMIT_MONTHLY: int = 10
     VIDEO_UPLOAD_LIMIT_ENABLED: bool = False
-
-    AWS_ACCESS_KEY_ID: str | None = None
-    AWS_SECRET_ACCESS_KEY: str | None = None
-    AWS_REGION: str = "us-east-1"
-    S3_BUCKET_NAME: str | None = None
-    S3_UPLOAD_URL_TTL: int = 300  # seconds (5 min)
-    S3_READ_URL_TTL: int = 3600  # seconds (1 hour)
-
-    METRICS_ENABLED: bool = False
 
     AWS_ACCESS_KEY_ID: str | None = None
     AWS_SECRET_ACCESS_KEY: str | None = None

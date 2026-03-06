@@ -125,6 +125,7 @@ jobs:
             --env EMAIL='${{ secrets.EMAIL }}' \
             --env EMAIL_PASS='${{ secrets.EMAIL_PASS }}' \
             --env TWELVE_LABS_API_KEYS='${{ secrets.TWELVE_LABS_API_KEYS }}' \
+            --env TWELVE_LABS_WEBHOOK_SECRET='${{ secrets.TWELVE_LABS_WEBHOOK_SECRET }}' \
             --env METRICS_ENABLED="${{ vars.METRICS_ENABLED || 'true' }}" \
             --env AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}' \
             --env AWS_ACCESS_KEY_ID='${{ secrets.AWS_ACCESS_KEY_ID }}' \
