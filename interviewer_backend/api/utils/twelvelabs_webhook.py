@@ -9,9 +9,8 @@ settings = get_settings()
 WEBHOOK_SECRET = settings.TWELVE_LABS_WEBHOOK_SECRET
 
 
-def verify_twelvelabs_signature(request: Request) -> bytes:
+def verify_twelvelabs_signature(raw_body: bytes, signature_header: str) -> bytes:
     """Verify Twelve Labs webhook signature. Returns raw body if valid."""
-    signature_header = request.headers.get("TL-Signature")
     if not signature_header:
         raise HTTPException(status_code=400, detail="TL-Signature header is required")
     
@@ -30,7 +29,6 @@ def verify_twelvelabs_signature(request: Request) -> bytes:
     if abs(time.time() - int(timestamp)) > 300:
         raise HTTPException(status_code=400, detail="Timestamp is too old")
 
-    raw_body = request.body()
     signed_payload = f"{timestamp}.{raw_body.decode()}"
 
     expected_sig = hmac.new(
