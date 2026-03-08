@@ -14,6 +14,8 @@ from api.exceptions import (
     TooManyEmailRequests,
     RateLimitExceeded,
     WebhookVerificationFailed,
+    S3VerificationFailed,
+    SNSVerificationFailed,
 )
 from api.schemas.base import StatusResponseModel
 
@@ -106,4 +108,20 @@ async def webhook_verification_failed_handler(req: starlette.requests.Request, e
     return JSONResponse(
         content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
         status_code=400,
+    )
+
+
+@app.exception_handler(S3VerificationFailed)
+async def s3_verification_failed_handler(req: starlette.requests.Request, exc: S3VerificationFailed):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=400,
+    )
+
+
+@app.exception_handler(SNSVerificationFailed)
+async def sns_verification_failed_handler(req: starlette.requests.Request, exc: SNSVerificationFailed):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=403,
     )

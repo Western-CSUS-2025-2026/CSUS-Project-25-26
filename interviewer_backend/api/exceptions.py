@@ -77,3 +77,13 @@ class RateLimitExceeded(APIError):
 class WebhookVerificationFailed(APIError):
     def __init__(self, error_msg: str = "Invalid TL-Signature"):
         super().__init__(error_msg)
+
+
+class S3VerificationFailed(APIError):
+    def __init__(self, error_msg: str = "Invalid S3 signature"):
+        super().__init__(error_msg)
+
+
+class SNSVerificationFailed(APIError):
+    def __init__(self, error_msg: str = "Invalid SNS signature"):
+        super().__init__(error_msg)
