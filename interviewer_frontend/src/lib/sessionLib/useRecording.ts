@@ -7,7 +7,7 @@ interface UseRecordingReturn {
   capturing: boolean;
   recordedChunks: Blob[];
   startRecording: () => void;
-  endRecording: () => Blob[];
+  endRecording: (callback: (blob: Blob) => void) => void;
   download: () => void;
   toggleRecording: () => void;
   startTime: Date | undefined;
@@ -58,11 +58,14 @@ export function useRecording(): UseRecordingReturn {
     mediaRef.current.addEventListener("dataavailable", handleData);
     mediaRef.current.start(1000);
   };
-  const endRecording = (): Blob[] => {
+  const endRecording = (callback: (blob: Blob) => void) => {
     setEndTime(new Date());
+    mediaRef.current!.onstop = (_e) => {
+      const combine = new Blob(chunksRef.current, { type: "video/webm" });
+      callback(combine);
+    };
     mediaRef.current?.stop();
     setCapturing(false);
-    return chunksRef.current;
   };
   const handleDownload = () => {
     if (recordedChunks.length) {

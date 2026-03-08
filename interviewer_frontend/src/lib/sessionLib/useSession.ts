@@ -3,10 +3,10 @@ import { RefObject, useEffect, useState } from "react";
 import { useRecording } from "./useRecording";
 import Webcam from "react-webcam";
 import { useTimer } from "./useTimer";
-import { getQuestions, Question } from "./getQuestions";
+import { Question } from "./getQuestions";
 import { sendRecording } from "./sendRecording";
-import { createSession } from "./createSession";
 import { getSessionNew } from "../getNewSession";
+import fixWebmDuration from "fix-webm-duration";
 
 export type SessionState = "Recording" | "Preparing";
 
@@ -105,15 +105,25 @@ function useSession(sessionId: number): UseSessionReturn {
   };
   const endRecordingPhase = () => {
     setState("Preparing");
-    const chunks = recording.endRecording();
+    recording.endRecording((chunk) => {
+      fixWebmDuration(chunk, 7000).then((fixed) => {
+        const video = document.createElement("video");
+        video.onloadedmetadata = () => {
+          console.log(video.duration);
+        };
 
-    sendRecording(questionList[questionNum].component_id, chunks).then(
-      (res) => {
-        if (res == "Ok") {
-          setVideosUploaded((prev) => prev + 1);
-        }
-      },
-    );
+        video.src = URL.createObjectURL(fixed);
+
+        sendRecording(questionList[questionNum].component_id, fixed).then(
+          (res) => {
+            if (res == "Ok") {
+              setVideosUploaded((prev) => prev + 1);
+            }
+          },
+        );
+      });
+    });
+
     setQuestionNum((prev) => {
       return prev + 1;
     });

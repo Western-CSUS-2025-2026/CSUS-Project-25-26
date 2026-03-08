@@ -28,6 +28,7 @@ export async function fetchAPIAuthorized(
 
   if (!res.ok) {
     console.log("Bad Auth Request");
+    console.log(options);
     console.log(res);
     console.log(await res.json());
     return { success: false };
