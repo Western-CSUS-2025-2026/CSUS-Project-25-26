@@ -45,7 +45,6 @@ async function authenticateUser(
   password: string,
 ): Promise<string | undefined> {
   const body = JSON.stringify({ email: email, password: password });
-  console.log("Body " + body);
 
   const res = await fetchAPI("user/login", {
     headers: { "content-type": "application/json" },

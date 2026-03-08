@@ -65,7 +65,6 @@ function useSession(sessionId: number): UseSessionReturn {
             };
           },
         );
-        console.log(questions);
         setQuestionList(questions);
         setIsLoading(false);
       }

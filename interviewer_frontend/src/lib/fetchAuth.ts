@@ -34,6 +34,5 @@ export async function fetchAPIAuthorized(
     return { success: false };
   }
   const body = await res.json();
-  console.log(body);
   return { success: true, body: body };
 }
