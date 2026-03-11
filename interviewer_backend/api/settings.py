@@ -10,12 +10,18 @@ class Settings(BaseSettings):
     """Application settings"""
 
     DB_DSN: PostgresDsn = 'postgresql://postgres@localhost:5432/postgres'
+    DB_POOL_SIZE: Annotated[int, Gt(0)] = 10
+    DB_POOL_MAX_OVERFLOW: Annotated[int, Gt(-1)] = 10
+    DB_POOL_TIMEOUT_SECONDS: Annotated[int, Gt(0)] = 10
+    DB_POOL_RECYCLE_SECONDS: Annotated[int, Gt(0)] = 1800
     ROOT_PATH: str = '/api'
     CORS_ALLOW_ORIGINS: list[str] = ['*']
     CORS_ALLOW_CREDENTIALS: bool = True
     CORS_ALLOW_METHODS: list[str] = ['*']
     CORS_ALLOW_HEADERS: list[str] = ['*']
     SESSION_TIME_IN_DAYS: int = 7
+    SESSION_TOUCH_INTERVAL_SECONDS: Annotated[int, Gt(0)] = 120
+    MAX_ACTIVE_SESSIONS_PER_USER: Annotated[int, Gt(0)] = 256
     MAX_NAME_LENGTH: int = 32
 
     EMAIL: str | None = None

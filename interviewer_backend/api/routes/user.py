@@ -114,11 +114,30 @@ async def login(user_data: UserLogin) -> UserSessionGet:
         raise RegistrationIncomplete()
     if not validate_password(user_data.password, user.password_hash, user.salt):
         raise AuthFailed("Incorrect login or password")
+
+    now = datetime.now(tz=timezone.utc)
+    max_active_sessions = max(settings.MAX_ACTIVE_SESSIONS_PER_USER, 1)
+    (
+        UserSession.query(session=db.session)
+        .filter(UserSession.user_id == user.id)
+        .filter(UserSession.expires < now)
+        .delete(synchronize_session=False)
+    )
+    stale_sessions: list[UserSession] = (
+        UserSession.query(session=db.session)
+        .filter(UserSession.user_id == user.id)
+        .order_by(UserSession.create_ts.desc())
+        .offset(max_active_sessions - 1)
+        .all()
+    )
+    for stale_session in stale_sessions:
+        db.session.delete(stale_session)
+
     user_session = UserSession.create(
         session=db.session,
         user_id=user.id,
         token=random_string(settings.TOKEN_LENGTH),
-        create_ts=datetime.now(tz=timezone.utc),
+        create_ts=now,
     )
     db.session.commit()
     return UserSessionGet(

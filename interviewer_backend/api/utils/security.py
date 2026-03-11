@@ -40,9 +40,12 @@ class Auth(SecurityBase):
         )
         if not user_session:
             self._except()
-        user_session.last_activity = datetime.datetime.now(tz=datetime.timezone.utc)
         if user_session.expired:
             self._except()
-        user_session.expires = calc_session_expire_date()
-        db.session.commit()
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        touch_interval = datetime.timedelta(seconds=settings.SESSION_TOUCH_INTERVAL_SECONDS)
+        if now - user_session.last_activity >= touch_interval:
+            user_session.last_activity = now
+            user_session.expires = calc_session_expire_date(now)
+            db.session.commit()
         return user_session
