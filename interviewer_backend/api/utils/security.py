@@ -3,6 +3,7 @@ import datetime
 from fastapi.openapi.models import APIKey, APIKeyIn
 from fastapi.security.base import SecurityBase
 from fastapi_sqlalchemy import db
+from sqlalchemy.orm import joinedload
 from starlette.requests import Request
 
 from api.exceptions import AuthFailed
@@ -36,7 +37,10 @@ class Auth(SecurityBase):
         if not token:
             self._except()
         user_session: UserSession = (
-            UserSession.query(session=db.session).filter(UserSession.token == token).one_or_none()
+            UserSession.query(session=db.session)
+            .options(joinedload(UserSession.user))
+            .filter(UserSession.token == token)
+            .one_or_none()
         )
         if not user_session:
             self._except()
