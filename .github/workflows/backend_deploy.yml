@@ -126,6 +126,11 @@ jobs:
             --env EMAIL_PASS='${{ secrets.EMAIL_PASS }}' \
             --env TWELVE_LABS_API_KEYS='${{ secrets.TWELVE_LABS_API_KEYS }}' \
             --env TWELVE_LABS_WEBHOOK_SECRET='${{ secrets.TWELVE_LABS_WEBHOOK_SECRET }}' \
+            --env WEB_CONCURRENCY="${{ vars.WEB_CONCURRENCY || '1' }}" \
+            --env DB_POOL_SIZE="${{ vars.DB_POOL_SIZE || '5' }}" \
+            --env DB_POOL_MAX_OVERFLOW="${{ vars.DB_POOL_MAX_OVERFLOW || '5' }}" \
+            --env DB_POOL_TIMEOUT_SECONDS="${{ vars.DB_POOL_TIMEOUT_SECONDS || '10' }}" \
+            --env DB_POOL_RECYCLE_SECONDS="${{ vars.DB_POOL_RECYCLE_SECONDS || '1800' }}" \
             --env METRICS_ENABLED="${{ vars.METRICS_ENABLED || 'true' }}" \
             --env AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}' \
             --env AWS_ACCESS_KEY_ID='${{ secrets.AWS_ACCESS_KEY_ID }}' \
