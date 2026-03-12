@@ -6,7 +6,7 @@ from fastapi_sqlalchemy import db
 from api.exceptions import ObjectNotFound
 from api.models.db import Template
 from api.schemas.models import StatusResponse, TemplateCreate, TemplateGet, TemplateUpdate
-from api.utils.security import Auth, AuthUser
+from api.utils.security import Auth, AuthUser, CsrfProtect
 
 
 template: APIRouter = APIRouter(prefix="/templates", tags=["Templates"])
@@ -15,7 +15,8 @@ template: APIRouter = APIRouter(prefix="/templates", tags=["Templates"])
 @template.post("", response_model=TemplateGet)
 def create_template(
     payload: TemplateCreate,
-    _: AuthUser = Depends(Auth()),
+    _csrf: None = Depends(CsrfProtect()),
+    _auth: AuthUser = Depends(Auth()),
 ):
     new_template: Template = Template(**payload.model_dump())
     db.session.add(new_template)
@@ -45,7 +46,8 @@ def get_template(template_id: int, _: AuthUser = Depends(Auth())):
 def update_template(
     template_id: int,
     payload: TemplateUpdate,
-    _: AuthUser = Depends(Auth()),
+    _csrf: None = Depends(CsrfProtect()),
+    _auth: AuthUser = Depends(Auth()),
 ) -> TemplateGet:
     db_template: Optional[Template] = Template.query(session=db.session).get(template_id)
 
@@ -62,7 +64,11 @@ def update_template(
 
 
 @template.delete("/{template_id}")
-def delete_template(template_id: int, _: AuthUser = Depends(Auth())) -> StatusResponse:
+def delete_template(
+    template_id: int,
+    _csrf: None = Depends(CsrfProtect()),
+    _auth: AuthUser = Depends(Auth()),
+) -> StatusResponse:
     db_template: Optional[Template] = Template.query(session=db.session).get(template_id)
 
     if not db_template:

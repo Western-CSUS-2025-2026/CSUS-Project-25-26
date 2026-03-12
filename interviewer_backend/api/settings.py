@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_LENGTH: Annotated[int, Gt(15)] = 64
     ACCESS_TOKEN_COOKIE_NAME: str = "access_token"
     REFRESH_TOKEN_COOKIE_NAME: str = "refresh_token"
+    CSRF_COOKIE_NAME: str = "csrf_token"
+    CSRF_HEADER_NAME: str = "X-CSRF-Token"
+    CSRF_TOKEN_BYTES: Annotated[int, Gt(7)] = 32
     AUTH_COOKIE_PATH: str = "/"
     REFRESH_COOKIE_PATH: str = "/user"
     AUTH_COOKIE_DOMAIN: str | None = None

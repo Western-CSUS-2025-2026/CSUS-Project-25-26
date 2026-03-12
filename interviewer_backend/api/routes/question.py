@@ -6,7 +6,7 @@ from fastapi_sqlalchemy import db
 from api.exceptions import ObjectNotFound
 from api.models.db import Question, Template
 from api.schemas.models import QuestionCreate, QuestionGet, StatusResponse
-from api.utils.security import Auth, AuthUser
+from api.utils.security import Auth, AuthUser, CsrfProtect
 
 
 question = APIRouter(prefix="/questions", tags=["Questions"])
@@ -15,7 +15,8 @@ question = APIRouter(prefix="/questions", tags=["Questions"])
 @question.post("", response_model=QuestionGet)
 def create_question(
     payload: QuestionCreate,
-    _: AuthUser = Depends(Auth()),
+    _csrf: None = Depends(CsrfProtect()),
+    _auth: AuthUser = Depends(Auth()),
 ) -> QuestionGet:
     db_template: Optional[Template] = Template.query(session=db.session).get(payload.template_id)
 
@@ -45,7 +46,11 @@ def get_questions_for_template(
 
 
 @question.delete("/{question_id}")
-def delete_question(question_id: int, _: AuthUser = Depends(Auth())) -> StatusResponse:
+def delete_question(
+    question_id: int,
+    _csrf: None = Depends(CsrfProtect()),
+    _auth: AuthUser = Depends(Auth()),
+) -> StatusResponse:
     db_question: Optional[Question] = Question.query(session=db.session).get(question_id)
 
     if not db_question:

@@ -28,7 +28,7 @@ from api.utils.jwt_auth import (
     get_refresh_token_expire_date,
     hash_refresh_token,
 )
-from api.utils.security import Auth, AuthUser
+from api.utils.security import Auth, AuthUser, CsrfProtect, generate_csrf_token
 from api.utils.smtp import SendEmailMessage
 from api.utils.token import random_int, random_string
 
@@ -59,6 +59,7 @@ def _set_auth_cookies(
     refresh_token: str,
     refresh_expires_at: datetime,
 ) -> None:
+    csrf_token = generate_csrf_token()
     response.set_cookie(
         key=settings.ACCESS_TOKEN_COOKIE_NAME,
         value=access_token,
@@ -80,6 +81,17 @@ def _set_auth_cookies(
         path=settings.REFRESH_COOKIE_PATH,
         domain=settings.AUTH_COOKIE_DOMAIN,
     )
+    response.set_cookie(
+        key=settings.CSRF_COOKIE_NAME,
+        value=csrf_token,
+        max_age=get_refresh_token_expires_in(),
+        expires=refresh_expires_at,
+        httponly=False,
+        secure=settings.AUTH_COOKIE_SECURE,
+        samesite=settings.AUTH_COOKIE_SAMESITE,
+        path=settings.AUTH_COOKIE_PATH,
+        domain=settings.AUTH_COOKIE_DOMAIN,
+    )
 
 
 def _clear_auth_cookies(response: Response) -> None:
@@ -99,6 +111,11 @@ def _clear_auth_cookies(response: Response) -> None:
             path=settings.AUTH_COOKIE_PATH,
             domain=settings.AUTH_COOKIE_DOMAIN,
         )
+    response.delete_cookie(
+        key=settings.CSRF_COOKIE_NAME,
+        path=settings.AUTH_COOKIE_PATH,
+        domain=settings.AUTH_COOKIE_DOMAIN,
+    )
 
 
 def _get_refresh_token(payload: RefreshRequest | LogoutRequest | None, request: Request) -> str | None:
@@ -222,6 +239,7 @@ async def refresh(
     request: Request,
     response: Response,
     payload: RefreshRequest | None = Body(default=None),
+    _: None = Depends(CsrfProtect()),
 ) -> AuthRefreshResponse:
     refresh_token_raw = _get_refresh_token(payload, request)
     if not refresh_token_raw:
@@ -267,6 +285,7 @@ async def logout(
     request: Request,
     response: Response,
     payload: LogoutRequest | None = Body(default=None),
+    _: None = Depends(CsrfProtect()),
 ) -> StatusResponseModel:
     now = datetime.now(tz=timezone.utc)
     refresh_token_raw = _get_refresh_token(payload, request)
@@ -298,7 +317,10 @@ async def me(current_user: AuthUser = Depends(Auth())) -> MyUserGet:
 
 
 @user.delete("", response_model=StatusResponseModel)
-async def delete_user(current_user: AuthUser = Depends(Auth())) -> StatusResponseModel:
+async def delete_user(
+    _: None = Depends(CsrfProtect()),
+    current_user: AuthUser = Depends(Auth()),
+) -> StatusResponseModel:
     User.delete(session=db.session, id=current_user.user_id)
     db.session.commit()
     return StatusResponseModel(status="Success", message="User deleted")

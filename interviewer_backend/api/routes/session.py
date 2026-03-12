@@ -11,7 +11,7 @@ from api.exceptions import ObjectNotFound, RateLimitExceeded
 from api.models.db import Question, Session, SessionComponent, SessionState, Template
 from api.schemas.models import SessionCreateRequest, SessionCreateResponse, SessionGet, SessionsList
 from api.settings import get_settings
-from api.utils.security import Auth, AuthUser
+from api.utils.security import Auth, AuthUser, CsrfProtect
 from api.utils.session_query import get_session_options, parse_include, serialize_session
 
 
@@ -23,6 +23,7 @@ settings = get_settings()
 @session.post("", status_code=201, response_model=SessionCreateResponse)
 async def create_session(
     payload: SessionCreateRequest,
+    _: None = Depends(CsrfProtect()),
     current_user: AuthUser = Depends(Auth()),
 ) -> SessionCreateResponse:
     if settings.VIDEO_UPLOAD_LIMIT_ENABLED:
