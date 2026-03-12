@@ -105,22 +105,21 @@ function useSession(sessionId: number): UseSessionReturn {
   const endRecordingPhase = () => {
     setState("Preparing");
     recording.endRecording((chunk) => {
-      fixWebmDuration(chunk, 7000).then((fixed) => {
-        const video = document.createElement("video");
-        video.onloadedmetadata = () => {
-          console.log(video.duration);
-        };
+      const fixed = chunk;
+      const video = document.createElement("video");
+      video.onloadedmetadata = () => {
+        console.log("Duration " + video.duration);
+      };
 
-        video.src = URL.createObjectURL(fixed);
+      video.src = URL.createObjectURL(fixed);
 
-        sendRecording(questionList[questionNum].component_id, fixed).then(
-          (res) => {
-            if (res == "Ok") {
-              setVideosUploaded((prev) => prev + 1);
-            }
-          },
-        );
-      });
+      sendRecording(questionList[questionNum].component_id, fixed).then(
+        (res) => {
+          if (res == "Ok") {
+            setVideosUploaded((prev) => prev + 1);
+          }
+        },
+      );
     });
 
     setQuestionNum((prev) => {

@@ -8,7 +8,7 @@ interface UseRecordingReturn {
   recordedChunks: Blob[];
   startRecording: () => void;
   endRecording: (callback: (blob: Blob) => void) => void;
-  download: () => void;
+  download: (blob: Blob) => void;
   toggleRecording: () => void;
   startTime: Date | undefined;
   endTime: Date | undefined;
@@ -52,7 +52,7 @@ export function useRecording(): UseRecordingReturn {
       return;
     }
     mediaRef.current = new MediaRecorder(webRef.current.stream, {
-      mimeType: "video/webm",
+      mimeType: "video/mp4",
     });
 
     mediaRef.current.addEventListener("dataavailable", handleData);
@@ -61,27 +61,22 @@ export function useRecording(): UseRecordingReturn {
   const endRecording = (callback: (blob: Blob) => void) => {
     setEndTime(new Date());
     mediaRef.current!.onstop = (_e) => {
-      const combine = new Blob(chunksRef.current, { type: "video/webm" });
+      const combine = new Blob(chunksRef.current, { type: "video/mp4" });
       callback(combine);
     };
     mediaRef.current?.stop();
     setCapturing(false);
   };
-  const handleDownload = () => {
-    if (recordedChunks.length) {
-      const blob = new Blob(recordedChunks, {
-        type: "video/webm",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      document.body.appendChild(a);
-      a.style = "display: none";
-      a.href = url;
-      a.download = "react-webcam-stream-capture.webm";
-      a.click();
-      window.URL.revokeObjectURL(url);
-      setRecordedChunks([]);
-    }
+  const handleDownload = (blob: Blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+    a.href = url;
+    a.download = "react-webcam-stream-capture.webm";
+    a.click();
+    window.URL.revokeObjectURL(url);
+    setRecordedChunks([]);
   };
   return {
     toggleRecording: toggleRecording,

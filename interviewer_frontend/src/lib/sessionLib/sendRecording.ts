@@ -4,9 +4,9 @@ import { fetchAPIAuthorized } from "../fetchAuth";
 type Response = "Ok" | "Error";
 export async function sendRecording(
   session_comp: number,
-  chunks: Blob,
+  chunk: Blob,
 ): Promise<Response> {
-  const combineBlob = chunks;
+  const combineBlob = chunk;
 
   const res = await fetchAPIAuthorized(`video/${session_comp}/upload-url`, {
     method: "GET",
@@ -21,7 +21,7 @@ export async function sendRecording(
   const video_res = await fetch(res.body.url, {
     method: "PUT",
     headers: {
-      "Content-Type": "video/webm",
+      "Content-Type": "video/mp4",
     },
     body: combineBlob,
   });
