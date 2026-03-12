@@ -24,8 +24,6 @@ export async function getVerificationEmail(
     email: email,
   };
   try {
-    console.log("Body: " + JSON.stringify(body));
-
     // make the request
     const res = await fetchAPI("user/registration/initiate", {
       method: "POST",
@@ -41,7 +39,6 @@ export async function getVerificationEmail(
     }
 
     return "SUCCESS";
-
   } catch (e) {
     console.error("Fetch error:", e);
     return "NETWORK_ERROR";
@@ -71,7 +68,10 @@ export async function checkVerificationCode(
   try {
     console.log(
       "GET verify params:",
-      JSON.stringify({ email: String(email), verification_token: String(code) }),
+      JSON.stringify({
+        email: String(email),
+        verification_token: String(code),
+      }),
     );
 
     const res = await fetchAPI(
@@ -81,7 +81,6 @@ export async function checkVerificationCode(
         headers: {
           "Content-Type": "application/json",
         },
-  
       },
     );
 

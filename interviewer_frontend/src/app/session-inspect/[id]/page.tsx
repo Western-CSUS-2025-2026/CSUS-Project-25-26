@@ -1,23 +1,33 @@
-import Card from "@/components/card/card";
+import { Suspense } from "react";
 import styles from "./page.module.css";
+import { getSessionNew } from "@/lib/getNewSession";
 
-function SessionOverview() {
+async function SessionOverview({ params }: { params: { id: string } }) {
+  const { id } = await params;
+
   return (
     <div className={styles.container}>
-      <div className={styles.leftColumn}>
-        <div className={styles.topContainer}>
-          {/* Session Overview goes here */}
-          {/* Questions Overviews will go here */}
-        </div>
-      </div>
-      <div className={styles.rightColumn}>
-        <h1>Recording</h1>
-        <Card height="10em"></Card>
-        <h1>Transcript</h1>
-        <Card height="15em"></Card>
-      </div>
+      <Suspense fallback={"loading"}>
+        <SessionString id={id}></SessionString>
+      </Suspense>
     </div>
   );
 }
 
+async function SessionString(props: { id: string }) {
+  console.log(props.id);
+  const sessions = await getSessionNew(Number(props.id));
+
+  if (sessions.success) {
+    return (
+      <div>
+        <pre>{JSON.stringify(sessions, null, 2) + " "}</pre>
+      </div>
+    );
+  } else {
+    return <div>{"Error"}</div>;
+  }
+}
+
 export default SessionOverview;
+

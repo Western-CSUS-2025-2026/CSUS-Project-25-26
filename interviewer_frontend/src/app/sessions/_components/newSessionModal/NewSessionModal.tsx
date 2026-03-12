@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Template } from "@/types/template";
 import NewSessionModalClient from "./NewSessionModalClient";
+import { useSearchParams } from "next/navigation";
 
 type Step = "select" | "confirm";
 
@@ -26,24 +27,13 @@ export default function NewSessionModal({
     step: "select" as Step,
     templateId: "",
   }));
+  const params = useSearchParams();
 
   useEffect(() => {
     const update = () => setState(readParams());
 
-    // initial read
     update();
-
-    // back/forward
-    window.addEventListener("popstate", update);
-
-    // our custom event (pushState)
-    window.addEventListener("urlchange", update);
-
-    return () => {
-      window.removeEventListener("popstate", update);
-      window.removeEventListener("urlchange", update);
-    };
-  }, []);
+  }, [params]);
 
   if (!state.isOpen) return null;
 

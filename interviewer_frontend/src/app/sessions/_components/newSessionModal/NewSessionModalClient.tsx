@@ -25,8 +25,6 @@ function setUrlParams(
 
   if (mode === "replace") window.history.replaceState({}, "", nextUrl);
   else window.history.pushState({}, "", nextUrl);
-
-  window.dispatchEvent(new Event("urlchange"));
 }
 
 export default function NewSessionModalClient({
