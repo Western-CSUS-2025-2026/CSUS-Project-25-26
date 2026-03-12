@@ -68,14 +68,24 @@ class UserLogin(Base):
     password: str
 
 
-class UserSessionGet(Base):
+class RefreshRequest(Base):
+    refresh_token: str
+
+
+class LogoutRequest(Base):
+    refresh_token: str
+
+
+class AuthRefreshResponse(Base):
+    access_token: str
+    token_type: str
+    expires_in: int
+    refresh_token: str
+    refresh_expires_at: datetime.datetime
+
+
+class AuthLoginResponse(AuthRefreshResponse):
     user_id: int
-    expires: datetime.datetime
-    token: str
-
-
-class UserSessionsGet(Base):
-    sessions: list[UserSessionGet]
 
 
 class MyUserGet(Base):

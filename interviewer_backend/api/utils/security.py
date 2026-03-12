@@ -1,28 +1,30 @@
-import datetime
-
-from fastapi.openapi.models import APIKey, APIKeyIn
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.security.base import SecurityBase
-from fastapi_sqlalchemy import db
-from sqlalchemy.orm import joinedload
+from jwt import InvalidTokenError
 from starlette.requests import Request
 
 from api.exceptions import AuthFailed
-from api.models.db import UserSession
 from api.settings import get_settings
-from api.utils.user_session import calc_session_expire_date
+from api.utils.jwt_auth import decode_access_token
 
 
-settings = get_settings()
+class AuthUser:
+    user_id: int
+
+    def __init__(self, user_id: int):
+        self.user_id = user_id
 
 
 class Auth(SecurityBase):
-    model = APIKey.model_construct(in_=APIKeyIn.header, name="Authorization")
-    scheme_name = "token"
+    _bearer = HTTPBearer(auto_error=False)
+    model = _bearer.model
+    scheme_name = _bearer.scheme_name
     allow_none: bool
 
     def __init__(self, allow_none=False) -> None:
         super().__init__()
         self.allow_none = allow_none
+        self.settings = get_settings()
 
     def _except(self):
         raise AuthFailed("Not authorized")
@@ -30,26 +32,21 @@ class Auth(SecurityBase):
     async def __call__(
         self,
         request: Request,
-    ) -> UserSession | None:
-        token = request.headers.get("Authorization")
+    ) -> AuthUser | None:
+        token = request.cookies.get(self.settings.ACCESS_TOKEN_COOKIE_NAME)
+        if not token:
+            credentials: HTTPAuthorizationCredentials | None = await self._bearer(request)
+            if credentials is not None:
+                token = credentials.credentials
+
         if not token and self.allow_none:
             return None
         if not token:
             self._except()
-        user_session: UserSession = (
-            UserSession.query(session=db.session)
-            .options(joinedload(UserSession.user))
-            .filter(UserSession.token == token)
-            .one_or_none()
-        )
-        if not user_session:
+
+        try:
+            payload = decode_access_token(token)
+            user_id = int(payload["sub"])
+        except (InvalidTokenError, KeyError, TypeError, ValueError):
             self._except()
-        if user_session.expired:
-            self._except()
-        now = datetime.datetime.now(tz=datetime.timezone.utc)
-        touch_interval = datetime.timedelta(seconds=settings.SESSION_TOUCH_INTERVAL_SECONDS)
-        if now - user_session.last_activity >= touch_interval:
-            user_session.last_activity = now
-            user_session.expires = calc_session_expire_date(now)
-            db.session.commit()
-        return user_session
+        return AuthUser(user_id=user_id)

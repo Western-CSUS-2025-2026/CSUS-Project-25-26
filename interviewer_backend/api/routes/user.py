@@ -1,24 +1,34 @@
 import logging
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Request
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, Request, Response
 from fastapi_sqlalchemy import db
 
 from api.exceptions import AlreadyExists, AuthFailed, ObjectNotFound, RegistrationIncomplete
-from api.models.db import User, UserSession
+from api.models.db import RefreshSession, User
 from api.schemas.base import StatusResponseModel
 from api.schemas.models import (
+    AuthLoginResponse,
+    AuthRefreshResponse,
+    LogoutRequest,
     MyUserGet,
     RegistrationInitiate,
     RegistrationVerify,
     RegistrationVerifyCode,
+    RefreshRequest,
     UserLogin,
-    UserSessionGet,
-    UserSessionsGet,
 )
 from api.settings import get_settings
 from api.utils.enc import hash_password, validate_password
-from api.utils.security import Auth
+from api.utils.jwt_auth import (
+    create_access_token,
+    generate_refresh_token,
+    get_access_token_expires_in,
+    get_refresh_token_expires_in,
+    get_refresh_token_expire_date,
+    hash_refresh_token,
+)
+from api.utils.security import Auth, AuthUser
 from api.utils.smtp import SendEmailMessage
 from api.utils.token import random_int, random_string
 
@@ -27,6 +37,77 @@ settings = get_settings()
 
 logger = logging.getLogger(__name__)
 user = APIRouter(prefix="/user", tags=["User"])
+
+
+def _issue_refresh_session(user_id: int, now: datetime) -> tuple[str, datetime]:
+    refresh_token = generate_refresh_token()
+    refresh_expires_at = get_refresh_token_expire_date(now)
+    RefreshSession.create(
+        session=db.session,
+        user_id=user_id,
+        token_hash=hash_refresh_token(refresh_token),
+        expires_at=refresh_expires_at,
+        create_ts=now,
+    )
+    return refresh_token, refresh_expires_at
+
+
+def _set_auth_cookies(
+    response: Response,
+    *,
+    access_token: str,
+    refresh_token: str,
+    refresh_expires_at: datetime,
+) -> None:
+    response.set_cookie(
+        key=settings.ACCESS_TOKEN_COOKIE_NAME,
+        value=access_token,
+        max_age=get_access_token_expires_in(),
+        httponly=True,
+        secure=settings.AUTH_COOKIE_SECURE,
+        samesite=settings.AUTH_COOKIE_SAMESITE,
+        path=settings.AUTH_COOKIE_PATH,
+        domain=settings.AUTH_COOKIE_DOMAIN,
+    )
+    response.set_cookie(
+        key=settings.REFRESH_TOKEN_COOKIE_NAME,
+        value=refresh_token,
+        max_age=get_refresh_token_expires_in(),
+        expires=refresh_expires_at,
+        httponly=True,
+        secure=settings.AUTH_COOKIE_SECURE,
+        samesite=settings.AUTH_COOKIE_SAMESITE,
+        path=settings.REFRESH_COOKIE_PATH,
+        domain=settings.AUTH_COOKIE_DOMAIN,
+    )
+
+
+def _clear_auth_cookies(response: Response) -> None:
+    response.delete_cookie(
+        key=settings.ACCESS_TOKEN_COOKIE_NAME,
+        path=settings.AUTH_COOKIE_PATH,
+        domain=settings.AUTH_COOKIE_DOMAIN,
+    )
+    response.delete_cookie(
+        key=settings.REFRESH_TOKEN_COOKIE_NAME,
+        path=settings.REFRESH_COOKIE_PATH,
+        domain=settings.AUTH_COOKIE_DOMAIN,
+    )
+    if settings.REFRESH_COOKIE_PATH != settings.AUTH_COOKIE_PATH:
+        response.delete_cookie(
+            key=settings.REFRESH_TOKEN_COOKIE_NAME,
+            path=settings.AUTH_COOKIE_PATH,
+            domain=settings.AUTH_COOKIE_DOMAIN,
+        )
+
+
+def _get_refresh_token(payload: RefreshRequest | LogoutRequest | None, request: Request) -> str | None:
+    if payload and payload.refresh_token:
+        return payload.refresh_token
+    token = request.cookies.get(settings.REFRESH_TOKEN_COOKIE_NAME)
+    if token:
+        return token
+    return None
 
 
 @user.post("/registration/initiate", response_model=StatusResponseModel)
@@ -52,9 +133,10 @@ async def registration_initiate(
                 create_ts=datetime.now(tz=timezone.utc),
             )
         if settings.EMAIL:
+            client_ip = request.client.host
             SendEmailMessage.send(
                 user_data.email,
-                request.client.host,
+                client_ip,
                 "EmailRegConfirm.html",
                 "Email Verification | WesternPrep",
                 txn,
@@ -105,8 +187,8 @@ async def registration_verify(user_data: RegistrationVerify) -> StatusResponseMo
     return StatusResponseModel(status="Success", message="Registration complete")
 
 
-@user.post("/login", response_model=UserSessionGet)
-async def login(user_data: UserLogin) -> UserSessionGet:
+@user.post("/login", response_model=AuthLoginResponse)
+async def login(user_data: UserLogin, response: Response) -> AuthLoginResponse:
     user: User | None = User.query(session=db.session).filter(User.email == user_data.email).one_or_none()
     if user is None:
         raise AuthFailed("Incorrect login or password")
@@ -116,63 +198,107 @@ async def login(user_data: UserLogin) -> UserSessionGet:
         raise AuthFailed("Incorrect login or password")
 
     now = datetime.now(tz=timezone.utc)
-    max_active_sessions = max(settings.MAX_ACTIVE_SESSIONS_PER_USER, 1)
-    (
-        UserSession.query(session=db.session)
-        .filter(UserSession.user_id == user.id)
-        .filter(UserSession.expires < now)
-        .delete(synchronize_session=False)
-    )
-    stale_sessions: list[UserSession] = (
-        UserSession.query(session=db.session)
-        .filter(UserSession.user_id == user.id)
-        .order_by(UserSession.create_ts.desc())
-        .offset(max_active_sessions - 1)
-        .all()
-    )
-    for stale_session in stale_sessions:
-        db.session.delete(stale_session)
-
-    user_session = UserSession.create(
-        session=db.session,
-        user_id=user.id,
-        token=random_string(settings.TOKEN_LENGTH),
-        create_ts=now,
+    access_token = create_access_token(user.id, now=now)
+    refresh_token, refresh_expires_at = _issue_refresh_session(user.id, now)
+    _set_auth_cookies(
+        response,
+        access_token=access_token,
+        refresh_token=refresh_token,
+        refresh_expires_at=refresh_expires_at,
     )
     db.session.commit()
-    return UserSessionGet(
-        user_id=user_session.user_id,
-        expires=user_session.expires,
-        token=user_session.token,
+    return AuthLoginResponse(
+        user_id=user.id,
+        access_token=access_token,
+        token_type="Bearer",
+        expires_in=get_access_token_expires_in(),
+        refresh_token=refresh_token,
+        refresh_expires_at=refresh_expires_at,
     )
+
+
+@user.post("/refresh", response_model=AuthRefreshResponse)
+async def refresh(
+    request: Request,
+    response: Response,
+    payload: RefreshRequest | None = Body(default=None),
+) -> AuthRefreshResponse:
+    refresh_token_raw = _get_refresh_token(payload, request)
+    if not refresh_token_raw:
+        raise AuthFailed("Not authorized")
+
+    now = datetime.now(tz=timezone.utc)
+    token_hash = hash_refresh_token(refresh_token_raw)
+    refresh_session: RefreshSession | None = (
+        RefreshSession.query(session=db.session)
+        .filter(RefreshSession.token_hash == token_hash)
+        .with_for_update()
+        .one_or_none()
+    )
+    if (
+        not refresh_session
+        or refresh_session.revoked_at is not None
+        or refresh_session.expires_at <= now
+    ):
+        raise AuthFailed("Not authorized")
+
+    refresh_session.revoked_at = now
+    access_token = create_access_token(refresh_session.user_id, now=now)
+    refresh_token, refresh_expires_at = _issue_refresh_session(refresh_session.user_id, now)
+    _set_auth_cookies(
+        response,
+        access_token=access_token,
+        refresh_token=refresh_token,
+        refresh_expires_at=refresh_expires_at,
+    )
+    db.session.commit()
+
+    return AuthRefreshResponse(
+        access_token=access_token,
+        token_type="Bearer",
+        expires_in=get_access_token_expires_in(),
+        refresh_token=refresh_token,
+        refresh_expires_at=refresh_expires_at,
+    )
+
+
+@user.post("/logout", response_model=StatusResponseModel)
+async def logout(
+    request: Request,
+    response: Response,
+    payload: LogoutRequest | None = Body(default=None),
+) -> StatusResponseModel:
+    now = datetime.now(tz=timezone.utc)
+    refresh_token_raw = _get_refresh_token(payload, request)
+    if refresh_token_raw:
+        token_hash = hash_refresh_token(refresh_token_raw)
+        refresh_session: RefreshSession | None = (
+            RefreshSession.query(session=db.session)
+            .filter(RefreshSession.token_hash == token_hash)
+            .one_or_none()
+        )
+        if refresh_session and refresh_session.revoked_at is None:
+            refresh_session.revoked_at = now
+            db.session.commit()
+    _clear_auth_cookies(response)
+    return StatusResponseModel(status="Success", message="Logged out")
 
 
 @user.get("", response_model=MyUserGet)
-async def me(user_session: UserSession = Depends(Auth())) -> MyUserGet:
+async def me(current_user: AuthUser = Depends(Auth())) -> MyUserGet:
+    user_obj: User | None = User.query(session=db.session).filter(User.id == current_user.user_id).one_or_none()
+    if not user_obj:
+        raise AuthFailed("Not authorized")
     return MyUserGet(
-        id=user_session.user_id,
-        email=user_session.user.email,
-        first_name=user_session.user.first_name,
-        last_name=user_session.user.last_name,
+        id=user_obj.id,
+        email=user_obj.email,
+        first_name=user_obj.first_name,
+        last_name=user_obj.last_name,
     )
 
 
-@user.get("/sessions", response_model=UserSessionsGet)
-async def get_sessions(user_session: UserSession = Depends(Auth())) -> UserSessionsGet:
-    response = UserSessionsGet(sessions=[])
-    for session in user_session.user.user_sessions:
-        response.sessions.append(
-            UserSessionGet(
-                user_id=session.user_id,
-                expires=session.expires,
-                token=session.token,
-            )
-        )
-    return UserSessionsGet.model_validate(response)
-
-
 @user.delete("", response_model=StatusResponseModel)
-async def delete_user(user_session: UserSession = Depends(Auth())) -> StatusResponseModel:
-    User.delete(session=db.session, id=user_session.user_id)
+async def delete_user(current_user: AuthUser = Depends(Auth())) -> StatusResponseModel:
+    User.delete(session=db.session, id=current_user.user_id)
     db.session.commit()
     return StatusResponseModel(status="Success", message="User deleted")

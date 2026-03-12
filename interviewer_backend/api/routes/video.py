@@ -7,11 +7,11 @@ from fastapi_sqlalchemy import db
 
 from api.exceptions import ForbiddenAction
 from api.metrics import observe_background_task, record_webhook_failure
-from api.models.db import Session, SessionComponent, SessionState, UserSession, Video
+from api.models.db import Session, SessionComponent, SessionState, Video
 from api.schemas.base import StatusResponseModel
 from api.schemas.models import PresignedURLResponse
 from api.utils.s3 import generate_read_url, generate_s3_key, generate_upload_url
-from api.utils.security import Auth
+from api.utils.security import Auth, AuthUser
 from api.utils.twelveLabs import VideoAnalysis
 from api.utils.twelvelabs_webhook import verify_twelvelabs_signature
 
@@ -25,13 +25,13 @@ analyzer = VideoAnalysis()
 @video.get("/{session_component_id}/upload-url", response_model=PresignedURLResponse)
 async def get_upload_url(
     session_component_id: int,
-    user_session: UserSession = Depends(Auth()),
+    current_user: AuthUser = Depends(Auth()),
 ):
     """Get a presigned S3 URL to upload a video for a session component in PENDING state."""
     session_component = SessionComponent.get(session_component_id, session=db.session)
     session = session_component.session
 
-    if session.user_id != user_session.user_id:
+    if session.user_id != current_user.user_id:
         raise ForbiddenAction(Session)
 
     if session_component.state != SessionState.PENDING:
@@ -54,13 +54,13 @@ async def get_upload_url(
 @video.get("/{session_component_id}/watch-url", response_model=PresignedURLResponse)
 async def get_watch_url(
     session_component_id: int,
-    user_session: UserSession = Depends(Auth()),
+    current_user: AuthUser = Depends(Auth()),
 ):
     """Get a presigned S3 URL to watch a previously uploaded video."""
     session_component = SessionComponent.get(session_component_id, session=db.session)
     session = session_component.session
 
-    if session.user_id != user_session.user_id:
+    if session.user_id != current_user.user_id:
         raise ForbiddenAction(Session)
 
     video_record = (
