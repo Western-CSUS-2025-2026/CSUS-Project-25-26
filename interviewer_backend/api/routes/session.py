@@ -8,10 +8,10 @@ from fastapi_sqlalchemy import db
 from sqlalchemy import func
 
 from api.exceptions import ObjectNotFound, RateLimitExceeded
-from api.models.db import Question, Session, SessionComponent, SessionState, Template, UserSession
+from api.models.db import Question, Session, SessionComponent, SessionState, Template
 from api.schemas.models import SessionCreateRequest, SessionCreateResponse, SessionGet, SessionsList
 from api.settings import get_settings
-from api.utils.security import Auth
+from api.utils.security import Auth, AuthUser, CsrfProtect
 from api.utils.session_query import get_session_options, parse_include, serialize_session
 
 
@@ -23,7 +23,8 @@ settings = get_settings()
 @session.post("", status_code=201, response_model=SessionCreateResponse)
 async def create_session(
     payload: SessionCreateRequest,
-    user_session: UserSession = Depends(Auth()),
+    _: None = Depends(CsrfProtect()),
+    current_user: AuthUser = Depends(Auth()),
 ) -> SessionCreateResponse:
     if settings.VIDEO_UPLOAD_LIMIT_ENABLED:
         now = datetime.now(tz=timezone.utc)
@@ -32,7 +33,7 @@ async def create_session(
 
         monthly_count = (
             db.session.query(func.count(Session.id))
-            .filter(Session.user_id == user_session.user_id)
+            .filter(Session.user_id == current_user.user_id)
             .filter(Session.create_ts >= cutoff_monthly)
             .scalar()
             or 0
@@ -46,7 +47,7 @@ async def create_session(
 
         recent_24h_count = (
             db.session.query(func.count(Session.id))
-            .filter(Session.user_id == user_session.user_id)
+            .filter(Session.user_id == current_user.user_id)
             .filter(Session.create_ts >= cutoff_24h)
             .scalar()
             or 0
@@ -55,7 +56,7 @@ async def create_session(
             latest_limited_sessions = (
                 Session.query(session=db.session)
                 .with_entities(Session.create_ts)
-                .filter(Session.user_id == user_session.user_id)
+                .filter(Session.user_id == current_user.user_id)
                 .filter(Session.create_ts >= cutoff_24h)
                 .order_by(Session.create_ts.desc())
                 .limit(settings.VIDEO_UPLOAD_LIMIT)
@@ -68,7 +69,6 @@ async def create_session(
                 raise RateLimitExceeded(error_msg=f"Rate limit exceeded, please try again at {expires_at_str}")
             raise RateLimitExceeded(error_msg="Rate limit exceeded, please try again later")
 
-
     # 1. Load template's questions (fail early if template empty or missing)
     template_id = payload.template_id
     questions = Question.query(session=db.session).filter(Question.template_id == template_id).all()
@@ -78,7 +78,7 @@ async def create_session(
     # 2. Create session (progress tracked on SessionComponent only)
     new_session = Session.create(
         session=db.session,
-        user_id=user_session.user_id,
+        user_id=current_user.user_id,
         create_ts=datetime.now(tz=timezone.utc),
     )
     db.session.flush()
@@ -103,7 +103,7 @@ async def create_session(
 
 @session.get("", response_model=SessionsList, response_model_exclude_none=True)
 async def get_user_sessions(
-    user_session: UserSession = Depends(Auth()),
+    current_user: AuthUser = Depends(Auth()),
     limit: int = Query(default=10, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     include: Annotated[list[str], Query()] = [],
@@ -118,7 +118,7 @@ async def get_user_sessions(
     sessions: list[Session] = (
         Session.query(session=db.session)
         .options(*options)
-        .filter(Session.user_id == user_session.user_id)
+        .filter(Session.user_id == current_user.user_id)
         .order_by(Session.create_ts.desc())
         .offset(offset)
         .limit(limit)
@@ -131,7 +131,7 @@ async def get_user_sessions(
 @session.get("/{session_id}", response_model=SessionGet, response_model_exclude_none=True)
 async def get_session(
     session_id: int,
-    user_session: UserSession = Depends(Auth()),
+    current_user: AuthUser = Depends(Auth()),
     include: Annotated[list[str], Query()] = [],
 ) -> SessionGet:
     """
@@ -145,7 +145,7 @@ async def get_session(
         Session.query(session=db.session)
         .options(*options)
         .filter(Session.id == session_id)
-        .filter(Session.user_id == user_session.user_id)
+        .filter(Session.user_id == current_user.user_id)
         .one_or_none()
     )
 

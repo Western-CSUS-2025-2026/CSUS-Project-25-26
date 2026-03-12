@@ -10,9 +10,9 @@ from api.exceptions import (
     ForbiddenAction,
     IndexCreatingFail,
     ObjectNotFound,
+    RateLimitExceeded,
     RegistrationIncomplete,
     TooManyEmailRequests,
-    RateLimitExceeded,
     WebhookVerificationFailed,
 )
 from api.schemas.base import StatusResponseModel

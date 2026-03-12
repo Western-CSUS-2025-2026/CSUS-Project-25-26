@@ -8,6 +8,7 @@ gunicorn
 psycopg2-binary
 pydantic
 pydantic-settings
+PyJWT
 python-multipart
 SQLAlchemy
 uvicorn

@@ -40,6 +40,12 @@ class User(BaseDbModel):
         uselist=False,
         cascade="all, delete",
     )
+    refresh_sessions: Mapped[list["RefreshSession"]] = relationship(
+        "RefreshSession",
+        foreign_keys="RefreshSession.user_id",
+        back_populates="user",
+        cascade="all, delete",
+    )
 
 
 class UserSession(BaseDbModel):
@@ -63,6 +69,23 @@ class UserSession(BaseDbModel):
     @hybrid_property
     def expired(self) -> bool:
         return self.expires <= datetime.datetime.now(tz=datetime.timezone.utc)
+
+
+class RefreshSession(BaseDbModel):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
+    token_hash: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    expires_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    revoked_at: Mapped[datetime.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    create_ts: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc), nullable=False
+    )
+    user: Mapped[User] = relationship(
+        "User",
+        foreign_keys=[user_id],
+        back_populates="refresh_sessions",
+        primaryjoin="RefreshSession.user_id==User.id",
+    )
 
 
 class UserMessageDelay(BaseDbModel):

@@ -7,11 +7,11 @@ from fastapi_sqlalchemy import db
 
 from api.exceptions import ForbiddenAction
 from api.metrics import observe_background_task, record_webhook_failure
-from api.models.db import Session, SessionComponent, SessionState, UserSession, Video
+from api.models.db import Session, SessionComponent, SessionState, Video
 from api.schemas.base import StatusResponseModel
 from api.schemas.models import PresignedURLResponse
 from api.utils.s3 import generate_read_url, generate_s3_key, generate_upload_url
-from api.utils.security import Auth
+from api.utils.security import Auth, AuthUser
 from api.utils.twelveLabs import VideoAnalysis
 from api.utils.twelvelabs_webhook import verify_twelvelabs_signature
 
@@ -25,13 +25,13 @@ analyzer = VideoAnalysis()
 @video.get("/{session_component_id}/upload-url", response_model=PresignedURLResponse)
 async def get_upload_url(
     session_component_id: int,
-    user_session: UserSession = Depends(Auth()),
+    current_user: AuthUser = Depends(Auth()),
 ):
     """Get a presigned S3 URL to upload a video for a session component in PENDING state."""
     session_component = SessionComponent.get(session_component_id, session=db.session)
     session = session_component.session
 
-    if session.user_id != user_session.user_id:
+    if session.user_id != current_user.user_id:
         raise ForbiddenAction(Session)
 
     if session_component.state != SessionState.PENDING:
@@ -54,19 +54,17 @@ async def get_upload_url(
 @video.get("/{session_component_id}/watch-url", response_model=PresignedURLResponse)
 async def get_watch_url(
     session_component_id: int,
-    user_session: UserSession = Depends(Auth()),
+    current_user: AuthUser = Depends(Auth()),
 ):
     """Get a presigned S3 URL to watch a previously uploaded video."""
     session_component = SessionComponent.get(session_component_id, session=db.session)
     session = session_component.session
 
-    if session.user_id != user_session.user_id:
+    if session.user_id != current_user.user_id:
         raise ForbiddenAction(Session)
 
     video_record = (
-        Video.query(session=db.session)
-        .filter(Video.session_component_id == session_component_id)
-        .one_or_none()
+        Video.query(session=db.session).filter(Video.session_component_id == session_component_id).one_or_none()
     )
     if not video_record or not video_record.s3_key:
         raise ForbiddenAction(Video)
@@ -114,9 +112,7 @@ def _process_s3_upload(s3_key: str, size_bytes: int | None):
     """Look up the Video by s3_key, start TwelveLabs indexing if component is PENDING."""
     with observe_background_task("process_s3_upload"):
         with db():
-            video_record: Video | None = (
-                Video.query(session=db.session).filter(Video.s3_key == s3_key).one_or_none()
-            )
+            video_record: Video | None = Video.query(session=db.session).filter(Video.s3_key == s3_key).one_or_none()
             if not video_record:
                 logger.warning("S3 webhook: no Video found for s3_key=%s", s3_key)
                 return
@@ -153,10 +149,7 @@ def _process_s3_upload(s3_key: str, size_bytes: int | None):
 
 
 @video.post("/webhook/twelvelabs")
-async def twelvelabs_webhook(
-    request: Request, 
-    background_tasks: BackgroundTasks
-):
+async def twelvelabs_webhook(request: Request, background_tasks: BackgroundTasks):
     raw_body = await request.body()
     raw_body = verify_twelvelabs_signature(raw_body, request.headers.get("TL-Signature"))
     payload = json.loads(raw_body)
