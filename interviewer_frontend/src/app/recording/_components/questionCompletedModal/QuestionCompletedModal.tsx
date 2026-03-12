@@ -21,9 +21,7 @@ export default function QuestionCompletedModal({
 
         <h1 className={styles.title}>Question Completed</h1>
 
-        <p className={styles.subtitle}>
-          Ready for Question {nextQuestion}?
-        </p>
+        <p className={styles.subtitle}>Ready for Question {nextQuestion}?</p>
 
         <button className={styles.nextButton} onClick={onNext}>
           <span>Next Question (#{nextQuestion})</span>
@@ -32,3 +30,4 @@ export default function QuestionCompletedModal({
     </div>
   );
 }
+

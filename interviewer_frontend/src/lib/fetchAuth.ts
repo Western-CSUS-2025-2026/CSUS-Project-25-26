@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export async function fetchAPIAuthorized(
   path: string,
@@ -18,7 +19,7 @@ export async function fetchAPIAuthorized(
 
   const headers = new Headers(options.headers);
   if (token?.value) {
-    headers.set("Authorization", `${token.value}`);
+    headers.set("Authorization", `Bearer ${token.value}`);
   }
 
   const res = await fetch(url + path, {
@@ -31,7 +32,7 @@ export async function fetchAPIAuthorized(
     console.log(options);
     console.log(res);
     console.log(await res.json());
-    return { success: false };
+    redirect("/accounts");
   }
   const body = await res.json();
   return { success: true, body: body };

@@ -57,7 +57,7 @@ async function authenticateUser(
     return undefined;
   }
 
-  const responseBody: { token: string } = await res.json();
+  const responseBody: { access_token: string } = await res.json();
 
-  return responseBody.token;
+  return responseBody.access_token;
 }

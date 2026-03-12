@@ -1,6 +1,5 @@
 import { defaultTemplate } from "@/types/template";
 import { RawSession, SimpleSession } from "@/types/simpleSession";
-import { defaultGrading } from "@/types/session";
 import { fetchAPIAuthorized } from "./fetchAuth";
 
 /** Fetches a users past sessions

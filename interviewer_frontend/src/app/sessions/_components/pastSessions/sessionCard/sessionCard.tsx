@@ -3,6 +3,8 @@ import type { SimpleSession } from "@/types/simpleSession";
 import styles from "./sessionCard.module.css";
 import Gauge from "../../../../../components/gauge/gauge";
 import LoadingSpinner from "@/components/loadingSpinner/loadingSpinner";
+import { redirect } from "next/navigation";
+import Link from "next/link";
 
 interface SessionCardProps {
   session: SimpleSession;
@@ -14,6 +16,9 @@ export default function SessionCard({ session }: SessionCardProps) {
       return "Completed";
     }
     return "Processing";
+  };
+  const onRouteToInspect = () => {
+    redirect(`/session-inspect/${session.id}`);
   };
   return (
     <Card>
@@ -35,14 +40,19 @@ export default function SessionCard({ session }: SessionCardProps) {
               <p>&nbsp;</p>
             )}
           </div>
-
-          <div className={styles.buttonBackground}>
-            {session.state === "PROCESSING" ? (
+          {session.state === "PROCESSING" ? (
+            <div className={styles.buttonBackground}>
+              {" "}
               <p className={styles.buttonGenText}>Generating Report...</p>
-            ) : (
+            </div>
+          ) : (
+            <Link
+              href={`/session-inspect/${session.id}`}
+              className={styles.buttonBackground}
+            >
               <p className={styles.buttonText}>View Full Report</p>
-            )}
-          </div>
+            </Link>
+          )}
         </div>
 
         {/* RIGHT COLUMN */}
