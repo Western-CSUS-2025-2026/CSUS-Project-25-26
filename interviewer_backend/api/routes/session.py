@@ -69,7 +69,6 @@ async def create_session(
                 raise RateLimitExceeded(error_msg=f"Rate limit exceeded, please try again at {expires_at_str}")
             raise RateLimitExceeded(error_msg="Rate limit exceeded, please try again later")
 
-
     # 1. Load template's questions (fail early if template empty or missing)
     template_id = payload.template_id
     questions = Question.query(session=db.session).filter(Question.template_id == template_id).all()

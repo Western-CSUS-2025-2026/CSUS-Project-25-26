@@ -6,6 +6,7 @@ import time
 from api.exceptions import WebhookVerificationFailed
 from api.settings import get_settings
 
+
 logger = logging.getLogger(__name__)
 
 settings = get_settings()
@@ -45,4 +46,3 @@ def verify_twelvelabs_signature(raw_body: bytes, signature_header: str) -> bytes
         raise WebhookVerificationFailed()
 
     return raw_body
-

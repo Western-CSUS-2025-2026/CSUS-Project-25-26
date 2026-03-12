@@ -64,9 +64,7 @@ async def get_watch_url(
         raise ForbiddenAction(Session)
 
     video_record = (
-        Video.query(session=db.session)
-        .filter(Video.session_component_id == session_component_id)
-        .one_or_none()
+        Video.query(session=db.session).filter(Video.session_component_id == session_component_id).one_or_none()
     )
     if not video_record or not video_record.s3_key:
         raise ForbiddenAction(Video)
@@ -114,9 +112,7 @@ def _process_s3_upload(s3_key: str, size_bytes: int | None):
     """Look up the Video by s3_key, start TwelveLabs indexing if component is PENDING."""
     with observe_background_task("process_s3_upload"):
         with db():
-            video_record: Video | None = (
-                Video.query(session=db.session).filter(Video.s3_key == s3_key).one_or_none()
-            )
+            video_record: Video | None = Video.query(session=db.session).filter(Video.s3_key == s3_key).one_or_none()
             if not video_record:
                 logger.warning("S3 webhook: no Video found for s3_key=%s", s3_key)
                 return
@@ -153,10 +149,7 @@ def _process_s3_upload(s3_key: str, size_bytes: int | None):
 
 
 @video.post("/webhook/twelvelabs")
-async def twelvelabs_webhook(
-    request: Request, 
-    background_tasks: BackgroundTasks
-):
+async def twelvelabs_webhook(request: Request, background_tasks: BackgroundTasks):
     raw_body = await request.body()
     raw_body = verify_twelvelabs_signature(raw_body, request.headers.get("TL-Signature"))
     payload = json.loads(raw_body)

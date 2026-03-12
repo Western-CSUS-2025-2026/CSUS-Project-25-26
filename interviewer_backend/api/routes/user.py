@@ -12,10 +12,10 @@ from api.schemas.models import (
     AuthRefreshResponse,
     LogoutRequest,
     MyUserGet,
+    RefreshRequest,
     RegistrationInitiate,
     RegistrationVerify,
     RegistrationVerifyCode,
-    RefreshRequest,
     UserLogin,
 )
 from api.settings import get_settings
@@ -24,8 +24,8 @@ from api.utils.jwt_auth import (
     create_access_token,
     generate_refresh_token,
     get_access_token_expires_in,
-    get_refresh_token_expires_in,
     get_refresh_token_expire_date,
+    get_refresh_token_expires_in,
     hash_refresh_token,
 )
 from api.utils.security import Auth, AuthUser, CsrfProtect, generate_csrf_token
@@ -253,11 +253,7 @@ async def refresh(
         .with_for_update()
         .one_or_none()
     )
-    if (
-        not refresh_session
-        or refresh_session.revoked_at is not None
-        or refresh_session.expires_at <= now
-    ):
+    if not refresh_session or refresh_session.revoked_at is not None or refresh_session.expires_at <= now:
         raise AuthFailed("Not authorized")
 
     refresh_session.revoked_at = now
@@ -292,9 +288,7 @@ async def logout(
     if refresh_token_raw:
         token_hash = hash_refresh_token(refresh_token_raw)
         refresh_session: RefreshSession | None = (
-            RefreshSession.query(session=db.session)
-            .filter(RefreshSession.token_hash == token_hash)
-            .one_or_none()
+            RefreshSession.query(session=db.session).filter(RefreshSession.token_hash == token_hash).one_or_none()
         )
         if refresh_session and refresh_session.revoked_at is None:
             refresh_session.revoked_at = now

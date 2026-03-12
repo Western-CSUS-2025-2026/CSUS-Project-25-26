@@ -30,11 +30,11 @@ class Settings(BaseSettings):
     AUTH_COOKIE_SECURE: bool = False
     AUTH_COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
     ROOT_PATH: str = '/api'
-    CORS_ALLOW_ORIGINS: list[str] = ["https://jobless.live","https://api.jobless.live"]
+    CORS_ALLOW_ORIGINS: list[str] = ["https://jobless.live", "https://api.jobless.live"]
     CORS_ALLOW_ORIGIN_REGEX: str | None = None
     CORS_ALLOW_CREDENTIALS: bool = True
-    CORS_ALLOW_METHODS: list[str] = ["GET","POST","PUT","PATCH","DELETE","OPTIONS"]
-    CORS_ALLOW_HEADERS: list[str] = ["Authorization","Content-Type","X-CSRF-Token"]
+    CORS_ALLOW_METHODS: list[str] = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+    CORS_ALLOW_HEADERS: list[str] = ["Authorization", "Content-Type", "X-CSRF-Token"]
     SESSION_TIME_IN_DAYS: int = 7
     SESSION_TOUCH_INTERVAL_SECONDS: Annotated[int, Gt(0)] = 120
     MAX_ACTIVE_SESSIONS_PER_USER: Annotated[int, Gt(0)] = 256
