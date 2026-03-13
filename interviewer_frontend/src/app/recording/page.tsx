@@ -5,11 +5,18 @@ import TopBar from "./_components/recordingTopbar/topBar";
 import useSession from "@/lib/sessionLib/useSession";
 import Modal from "@/components/modal/modal";
 import RecordingSidebar from "./_components/recordingSidebar/recordingSidebar";
-import { useSearchParams } from "next/navigation";
+import CompletedModal from "./_components/completedModal/completedModal";
+import { useSearchParams, useRouter } from "next/navigation";
+
 
 function RecordingPage() {
   const params = useSearchParams();
   const session = useSession(Number(params.get("sessionId")) ?? -1);
+  const router = useRouter();
+
+  function returnToSessions() {
+    router.push("/sessions");
+  }
 
   return (
     <div style={{ gap: "1em", display: "flex", flexDirection: "column" }}>
@@ -41,10 +48,10 @@ function RecordingPage() {
         {/* </Card> */}
       </div>
       {session.finishModalUp ? (
-        <Modal width="20em" height="20em">
-          <div>finished</div>
-          <div>{"Videos uploaded: " + session.videosUploadedCount}</div>
-        </Modal>
+        <CompletedModal
+          onClick={returnToSessions}
+          videosUploaded={session.videosUploadedCount}
+          />
       ) : undefined}
 
       {session.continueModalUp ? (
