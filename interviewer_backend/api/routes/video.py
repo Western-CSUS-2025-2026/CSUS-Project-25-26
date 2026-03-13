@@ -5,7 +5,7 @@ import aiohttp
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi_sqlalchemy import db
 
-from api.exceptions import ForbiddenAction, S3VerificationFailed
+from api.exceptions import ForbiddenAction, SNSVerificationFailed
 from api.metrics import observe_background_task, record_webhook_failure
 from api.models.db import Session, SessionComponent, SessionState, Video
 from api.schemas.base import StatusResponseModel
@@ -80,11 +80,19 @@ async def s3_webhook(request: Request, background_tasks: BackgroundTasks):
     payload = json.loads(body)
 
     message_type = request.headers.get("x-amz-sns-message-type", "")
+    logger.info(
+        "S3 webhook: message_type=%s, SignatureVersion=%s, SigningCertURL=%s, payload_keys=%s",
+        message_type,
+        payload.get("SignatureVersion"),
+        payload.get("SigningCertURL"),
+        list(payload.keys()),
+    )
 
     try:
         verify_sns_signature(payload)
-    except S3VerificationFailed as e:
-        raise S3VerificationFailed(f"Invalid S3 signature: {str(e)}")
+    except SNSVerificationFailed as e:
+        logger.exception("SNS verification failed: %s", e.msg)
+        raise
 
     # Auto-confirm SNS subscription
     if message_type == "SubscriptionConfirmation":
