@@ -36,8 +36,15 @@ def build_signature_string(payload: dict) -> str:
         # SubscriptionConfirmation / UnsubscribeConfirmation
         fields = ["Message", "MessageId", "SubscribeURL", "Timestamp", "Token", "TopicArn", "Type"]
 
-    parts = [f"{field}\n{payload[field]}" for field in fields if field in payload]
-    result = "\n".join(parts)
+    # Build string: "Key\nValue\n" per field (trailing newline per boto3#2508 / production gists).
+    parts = []
+    for field in fields:
+        if field in payload:
+            val = payload[field]
+            if not isinstance(val, str):
+                val = str(val)
+            parts.append(f"{field}\n{val}\n")
+    result = "".join(parts)
     # DEBUG: log length + preview (Message can be huge; avoid full dump)
     preview = result[:200] + "..." if len(result) > 200 else result
     logger.info("SNS string-to-sign len=%d preview=%r", len(result), preview)
