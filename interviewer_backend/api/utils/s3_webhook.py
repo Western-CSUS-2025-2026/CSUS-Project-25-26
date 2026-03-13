@@ -1,8 +1,7 @@
 import base64
-import logging
 import urllib.request
 from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.x509 import load_pem_x509_certificate
 from functools import lru_cache
@@ -10,8 +9,6 @@ from functools import lru_cache
 from urllib.parse import urlparse
 
 from api.exceptions import SNSVerificationFailed
-
-logger = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=128)
@@ -44,11 +41,7 @@ def build_signature_string(payload: dict) -> str:
             if not isinstance(val, str):
                 val = str(val)
             parts.append(f"{field}\n{val}\n")
-    result = "".join(parts)
-    # DEBUG: log length + preview (Message can be huge; avoid full dump)
-    preview = result[:200] + "..." if len(result) > 200 else result
-    logger.info("SNS string-to-sign len=%d preview=%r", len(result), preview)
-    return result
+    return "".join(parts)
 
 
 def verify_sns_signature(payload: dict) -> None:
@@ -69,10 +62,4 @@ def verify_sns_signature(payload: dict) -> None:
     try:
         public_key.verify(signature, message, padding.PKCS1v15(), hash_algo)
     except InvalidSignature as e:
-        logger.warning(
-            "SNS signature verification failed: SignatureVersion=%s cert_url=%s msg_len=%d",
-            payload.get("SignatureVersion"),
-            payload.get("SigningCertURL"),
-            len(message),
-        )
-        raise SNSVerificationFailed(f"Invalid SNS signature: {e!s}") from e
+        raise SNSVerificationFailed(f"Invalid SNS signature: {e!s}")

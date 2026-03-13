@@ -80,19 +80,8 @@ async def s3_webhook(request: Request, background_tasks: BackgroundTasks):
     payload = json.loads(body)
 
     message_type = request.headers.get("x-amz-sns-message-type", "")
-    logger.info(
-        "S3 webhook: message_type=%s, SignatureVersion=%s, SigningCertURL=%s, payload_keys=%s",
-        message_type,
-        payload.get("SignatureVersion"),
-        payload.get("SigningCertURL"),
-        list(payload.keys()),
-    )
 
-    try:
-        verify_sns_signature(payload)
-    except SNSVerificationFailed as e:
-        logger.exception("SNS verification failed: %s", e.msg)
-        raise
+    verify_sns_signature(payload)
 
     # Auto-confirm SNS subscription
     if message_type == "SubscriptionConfirmation":
