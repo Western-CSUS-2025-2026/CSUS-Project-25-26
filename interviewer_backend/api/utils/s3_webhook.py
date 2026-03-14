@@ -44,11 +44,18 @@ def build_signature_string(payload: dict) -> str:
     return "".join(parts)
 
 
-def verify_sns_signature(payload: dict) -> None:
+def verify_sns_signature(payload: dict, expected_topic_arn: str | None) -> None:
     """
     Verify SNS message signature.
+    expected_topic_arn is required; if None, raises immediately.
     Raises SNSVerificationFailed if invalid; caller should return 403.
     """
+    if expected_topic_arn is None:
+        raise SNSVerificationFailed("TOPIC_ARN must be configured")
+
+    topic_arn = payload.get("TopicArn")
+    if topic_arn != expected_topic_arn:
+        raise SNSVerificationFailed(f"Unexpected TopicArn")
 
     cert_pem = fetch_cert(payload["SigningCertURL"])
     cert = load_pem_x509_certificate(cert_pem)

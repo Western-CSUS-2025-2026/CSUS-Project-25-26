@@ -5,6 +5,7 @@ import aiohttp
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi_sqlalchemy import db
 
+from api.settings import get_settings
 from api.exceptions import ForbiddenAction, SNSVerificationFailed
 from api.metrics import observe_background_task, record_webhook_failure
 from api.models.db import Session, SessionComponent, SessionState, Video
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 video = APIRouter(prefix="/video", tags=["Video"])
 analyzer = VideoAnalysis()
-
+settings = get_settings()
 
 @video.get("/{session_component_id}/upload-url", response_model=PresignedURLResponse)
 async def get_upload_url(
@@ -81,7 +82,7 @@ async def s3_webhook(request: Request, background_tasks: BackgroundTasks):
 
     message_type = request.headers.get("x-amz-sns-message-type", "")
 
-    verify_sns_signature(payload)
+    verify_sns_signature(payload, settings.TOPIC_ARN)
 
     # Auto-confirm SNS subscription
     if message_type == "SubscriptionConfirmation":
