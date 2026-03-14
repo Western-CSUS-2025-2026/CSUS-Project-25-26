@@ -1,0 +1,5 @@
+.DS_Store
+.claude/
+interviewer_backend/.cursor/
+interviewer_backend/dump.sql
+interviewer_backend/interview.txt
