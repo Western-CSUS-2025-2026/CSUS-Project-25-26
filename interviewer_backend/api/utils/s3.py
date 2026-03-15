@@ -45,7 +45,4 @@ def generate_read_url(s3_key: str) -> str:
 
 def delete_object(s3_key: str) -> None:
     client = get_s3_client()
-    client.delete_object(
-        Bucket=settings.S3_BUCKET_NAME,
-        Key=s3_key
-    )
+    client.delete_object(Bucket=settings.S3_BUCKET_NAME, Key=s3_key)

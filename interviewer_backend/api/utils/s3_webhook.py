@@ -1,12 +1,12 @@
 import base64
 import urllib.request
+from functools import lru_cache
+from urllib.parse import urlparse
+
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.x509 import load_pem_x509_certificate
-from functools import lru_cache
-
-from urllib.parse import urlparse
 
 from api.exceptions import SNSVerificationFailed
 

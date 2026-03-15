@@ -12,9 +12,9 @@ from api.exceptions import (
     ObjectNotFound,
     RateLimitExceeded,
     RegistrationIncomplete,
+    SNSVerificationFailed,
     TooManyEmailRequests,
     WebhookVerificationFailed,
-    SNSVerificationFailed,
 )
 from api.schemas.base import StatusResponseModel
 

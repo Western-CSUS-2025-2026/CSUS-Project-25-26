@@ -5,23 +5,25 @@ import aiohttp
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi_sqlalchemy import db
 
-from api.settings import get_settings
-from api.exceptions import ForbiddenAction, SNSVerificationFailed
+from api.exceptions import ForbiddenAction
 from api.metrics import observe_background_task, record_webhook_failure
 from api.models.db import Session, SessionComponent, SessionState, Video
 from api.schemas.base import StatusResponseModel
 from api.schemas.models import PresignedURLResponse
+from api.settings import get_settings
 from api.utils.s3 import generate_read_url, generate_s3_key, generate_upload_url
+from api.utils.s3_webhook import verify_sns_signature
 from api.utils.security import Auth, AuthUser
 from api.utils.twelveLabs import VideoAnalysis
 from api.utils.twelvelabs_webhook import verify_twelvelabs_signature
-from api.utils.s3_webhook import verify_sns_signature
+
 
 logger = logging.getLogger(__name__)
 
 video = APIRouter(prefix="/video", tags=["Video"])
 analyzer = VideoAnalysis()
 settings = get_settings()
+
 
 @video.get("/{session_component_id}/upload-url", response_model=PresignedURLResponse)
 async def get_upload_url(
