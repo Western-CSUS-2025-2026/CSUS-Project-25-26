@@ -142,6 +142,10 @@ class SessionCreateResponse(Base):
     session_id: int
 
 
+class SessionDeleteResponse(Base):
+    status: str
+
+
 class SessionCreateRequest(Base):
     template_id: int
 
