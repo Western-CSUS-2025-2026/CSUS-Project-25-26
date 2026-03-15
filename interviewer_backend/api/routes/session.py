@@ -6,12 +6,14 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, Query
 from fastapi_sqlalchemy import db
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 
 from api.exceptions import ObjectNotFound, RateLimitExceeded
-from api.models.db import Question, Session, SessionComponent, SessionState, Template
-from api.schemas.models import SessionCreateRequest, SessionCreateResponse, SessionGet, SessionsList
+from api.models.db import Question, Session, SessionComponent, SessionState, Template, Video
+from api.schemas.models import SessionCreateRequest, SessionCreateResponse, SessionGet, SessionsList, SessionDeleteResponse
 from api.settings import get_settings
 from api.utils.security import Auth, AuthUser, CsrfProtect
+from api.utils.s3 import delete_object
 from api.utils.session_query import get_session_options, parse_include, serialize_session
 
 
@@ -126,6 +128,46 @@ async def get_user_sessions(
     )
 
     return SessionsList(sessions=[serialize_session(s, valid_requested) for s in sessions])
+
+
+@session.post("/{session_id}/delete", response_model=SessionDeleteResponse)
+async def delete_session(
+    session_id: int,
+    current_user: AuthUser = Depends(Auth()),
+) -> SessionDeleteResponse:
+
+    # Load session with components and videos (for s3_keys); must belong to current user
+    session_obj: Optional[Session] = (
+        Session.query(session=db.session)
+        .options(joinedload(Session.session_components).joinedload(SessionComponent.video))
+        .filter(Session.id == session_id)
+        .filter(Session.user_id == current_user.user_id)
+        .one_or_none()
+    )
+    if not session_obj:
+        raise ObjectNotFound(Session, session_id)
+
+    # Collect s3_keys from all videos in this session
+    s3_keys = [
+        sc.video.s3_key
+        for sc in session_obj.session_components
+        if sc.video is not None and sc.video.s3_key
+    ]
+
+    # Delete from S3 first; any failure raises and we do not touch the DB
+    for s3_key in s3_keys:
+        delete_object(s3_key)
+
+    # DB transaction: delete session (cascade removes SessionComponents, Video, Grade, Feedback)
+    try:
+        db.session.delete(session_obj)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
+
+    return SessionDeleteResponse(status="deleted")
+
 
 
 @session.get("/{session_id}", response_model=SessionGet, response_model_exclude_none=True)
