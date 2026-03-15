@@ -12,6 +12,7 @@ from api.exceptions import (
     ObjectNotFound,
     RateLimitExceeded,
     RegistrationIncomplete,
+    SessionDeleteFailed,
     TooManyEmailRequests,
     WebhookVerificationFailed,
     SNSVerificationFailed,
@@ -115,4 +116,12 @@ async def sns_verification_failed_handler(req: starlette.requests.Request, exc: 
     return JSONResponse(
         content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
         status_code=403,
+    )
+
+
+@app.exception_handler(SessionDeleteFailed)
+async def session_delete_failed_handler(req: starlette.requests.Request, exc: SessionDeleteFailed):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=500,
     )

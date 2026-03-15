@@ -8,7 +8,7 @@ from fastapi_sqlalchemy import db
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
-from api.exceptions import ObjectNotFound, RateLimitExceeded
+from api.exceptions import ObjectNotFound, RateLimitExceeded, SessionDeleteFailed
 from api.models.db import Question, Session, SessionComponent, SessionState, Template, Video
 from api.schemas.models import SessionCreateRequest, SessionCreateResponse, SessionGet, SessionsList, SessionDeleteResponse
 from api.settings import get_settings
@@ -162,7 +162,7 @@ async def delete_session(
         db.session.commit()
     except Exception:
         db.session.rollback()
-        raise
+        raise SessionDeleteFailed()
 
     return SessionDeleteResponse(status="deleted")
 
