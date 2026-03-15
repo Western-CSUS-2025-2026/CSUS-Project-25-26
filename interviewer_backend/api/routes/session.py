@@ -130,13 +130,14 @@ async def get_user_sessions(
     return SessionsList(sessions=[serialize_session(s, valid_requested) for s in sessions])
 
 
-@session.post("/{session_id}/delete", response_model=SessionDeleteResponse)
+@session.delete("/{session_id}", response_model=SessionDeleteResponse)
 async def delete_session(
     session_id: int,
+    _: None = Depends(CsrfProtect()),
     current_user: AuthUser = Depends(Auth()),
 ) -> SessionDeleteResponse:
 
-    # Load session with components and videos (for s3_keys); must belong to current user
+    # Load session with components and videos (for s3_keys)
     session_obj: Optional[Session] = (
         Session.query(session=db.session)
         .options(joinedload(Session.session_components).joinedload(SessionComponent.video))
@@ -147,18 +148,15 @@ async def delete_session(
     if not session_obj:
         raise ObjectNotFound(Session, session_id)
 
-    # Collect s3_keys from all videos in this session
     s3_keys = [
         sc.video.s3_key
         for sc in session_obj.session_components
         if sc.video is not None and sc.video.s3_key
     ]
 
-    # Delete from S3 first; any failure raises and we do not touch the DB
     for s3_key in s3_keys:
         delete_object(s3_key)
 
-    # DB transaction: delete session (cascade removes SessionComponents, Video, Grade, Feedback)
     try:
         db.session.delete(session_obj)
         db.session.commit()
@@ -167,7 +165,6 @@ async def delete_session(
         raise
 
     return SessionDeleteResponse(status="deleted")
-
 
 
 @session.get("/{session_id}", response_model=SessionGet, response_model_exclude_none=True)
