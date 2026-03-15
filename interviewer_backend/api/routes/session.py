@@ -20,7 +20,6 @@ from api.schemas.models import (
 from api.settings import get_settings
 from api.utils.s3 import delete_object
 from api.utils.security import Auth, AuthUser, CsrfProtect
-from api.utils.s3 import delete_object
 from api.utils.session_query import get_session_options, parse_include, serialize_session
 
 
