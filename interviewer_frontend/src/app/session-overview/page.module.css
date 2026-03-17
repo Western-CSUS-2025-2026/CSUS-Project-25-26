@@ -1,0 +1,21 @@
+.row {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  margin-bottom: 12px;
+}
+
+.videoPlaceholder {
+  width: 400px;
+  height: 300px;
+  background: #eaeaea;
+  border-radius: 12px;
+}
