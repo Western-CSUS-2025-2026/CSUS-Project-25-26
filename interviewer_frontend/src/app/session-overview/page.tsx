@@ -2,7 +2,11 @@ import styles from "./page.module.css";
 import Summary from "./summary";
 import Video from "./video";
 import Transcript from "./transcript";
-import { defaultSession } from "@/types/session"; // adjust path if needed
+import { defaultSession } from "@/types/session"; 
+import Skills from "./skills";
+import Feedback from "./feedback";
+import GradeGauge from "./gradeGauge";
+
 
 export default function SessionOverview() {
   return (
@@ -13,6 +17,12 @@ export default function SessionOverview() {
         <div className={styles.column}>
           <h1 className={styles.title}>Summary</h1>
           <Summary />
+          <h1 className={styles.title}>Skills Breakdown</h1>
+          <Skills />
+          <Feedback />
+          <h1 className={styles.title}>What's Your Greatest Strength?</h1>
+          <GradeGauge />
+          <Feedback />
         </div>
 
         {/* RIGHT COLUMN */}

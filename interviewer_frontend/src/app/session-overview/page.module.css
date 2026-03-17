@@ -1,21 +1,26 @@
 .row {
   display: flex;
-  gap: 40px;
+  gap: 2.8em;
   align-items: flex-start;
 }
 
 .column {
   display: flex;
   flex-direction: column;
+  gap: 1.7em;
 }
 
 .title {
-  margin-bottom: 12px;
+  margin:0;
 }
 
 .videoPlaceholder {
-  width: 400px;
-  height: 300px;
+  width: 27.8em;
+  height: 20.8em;
   background: #eaeaea;
-  border-radius: 12px;
+  border-radius: 0.8em;
+}
+
+.feedbackSpacing {
+  margin-top: 0.8em;
 }
