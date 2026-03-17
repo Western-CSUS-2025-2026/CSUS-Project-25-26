@@ -122,7 +122,7 @@ jobs:
             --log-opt max-size=10m \
             --log-opt max-file=5 \
             --env DB_DSN='${{ secrets.DB_DSN }}' \
-            --env EMAIL='${{ vars.EMAIL }}' \
+            --env EMAIL='${{ vars.EMAIL || '' }}' \
             --env EMAIL_PASS='${{ secrets.EMAIL_PASS }}' \
             --env TWELVE_LABS_API_KEYS='${{ secrets.TWELVE_LABS_API_KEYS }}' \
             --env TWELVE_LABS_WEBHOOK_SECRET='${{ secrets.TWELVE_LABS_WEBHOOK_SECRET }}' \
