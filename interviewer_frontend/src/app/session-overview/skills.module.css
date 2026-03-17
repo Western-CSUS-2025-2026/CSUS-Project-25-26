@@ -1,0 +1,43 @@
+
+.skillsBreakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+
+  gap: 1.1em;
+
+  width: 59em;
+  height: 15.75em;
+}
+
+.skillItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.42em;
+}
+
+.description {
+  margin-top:0;
+  margin-bottom: 1em;   
+}
+
+.title {
+  margin: 0;
+
+}
+
+/* bar container */
+.barBackground {
+  width: 100%;
+  height: 1em;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+/* actual fill */
+.barFill {
+  height: 100%;
+  background: #cb9fe6;
+  border-radius: 99px;
+}

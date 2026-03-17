@@ -1,5 +1,5 @@
 .row {
-  width: 879px;
+  width: 61em;
   display: flex;
   justify-content: space-between;
 }
@@ -10,8 +10,8 @@
 }
 
 .questionsCard{
-    width: 490px;
-    height: 177px;
+    width: 34em;
+    height: 12.3em;
 }
 
 .questionsCard h1{
@@ -21,7 +21,7 @@
 
 
 .questionSub{
-    margin-bottom: 25px;
+    margin-bottom: 1.74em;
     margin-top: 0;
 }
 
@@ -35,8 +35,8 @@
 }
 
 .plusButton {
-  width: 40px;
-  height: 40px;
+  width: 2.8em;
+  height: 2.8em;
   border-radius: 50%;
   background: #cb9fe6;
   border: none;
@@ -48,8 +48,8 @@
 }
 
 .gradeCard{
-    width: 294px;
-    height: 177px;
+    width: 20.4em;
+    height: 12.3em;
 }
 
 .gradeCard h1{
@@ -60,7 +60,7 @@
 
 
 .gradeSub{
-    margin-bottom: 25px;
+    margin-bottom: 1.74em;
     margin-top: 0;
     margin-bottom: 1em;
     color: var(--accent-secondary-text);
