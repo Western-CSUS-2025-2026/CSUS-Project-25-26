@@ -83,7 +83,7 @@ class Settings(BaseSettings):
 
     model_config = ConfigDict(case_sensitive=True, env_file=".env", extra="ignore")
 
-    @field_validator("AUTH_COOKIE_DOMAIN", "CORS_ALLOW_ORIGIN_REGEX")
+    @field_validator("AUTH_COOKIE_DOMAIN", "CORS_ALLOW_ORIGIN_REGEX", "EMAIL")
     @classmethod
     def empty_string_to_none(cls, value: str | None) -> str | None:
         if value == "":
