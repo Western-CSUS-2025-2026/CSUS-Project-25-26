@@ -1,34 +1,36 @@
 .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
-    padding: 2rem;
-    width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .title {
-    margin: 0;
-    text-align: center;
+  margin: 0;
+  text-align: center;
 }
 
 .message {
-    margin: 0;
-    text-align: center;
+  margin: 0;
+  text-align: center;
 }
 
 .okayButton {
-    width: 100%;
-    padding: 0.75rem 2rem;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    background-color: var(--accent);
-    color: var(--accent-primary-text);
-    border: none;
-    cursor: pointer;
-    margin-top: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  background-color: var(--accent);
+  color: var(--accent-primary-text);
+  border: none;
+  cursor: pointer;
+  margin-top: 0.5rem;
 }
 
 .okayButton:hover {
-    opacity: 0.8;
+  opacity: 0.8;
 }
+
