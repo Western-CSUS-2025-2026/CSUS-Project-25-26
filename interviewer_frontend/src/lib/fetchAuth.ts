@@ -1,0 +1,42 @@
+"use server";
+
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
+export async function fetchAPIAuthorized(
+  path: string,
+  options: RequestInit,
+): Promise<{ success: false; status: number } | { success: true; body: any }> {
+  const url = process.env.API_URL;
+
+  const user_cookies = await cookies();
+
+  const token = user_cookies.get("session_token");
+
+  if (url == undefined) {
+    throw Error("ENV is not defined, API_URL must be defined as the api url");
+  }
+
+  const headers = new Headers(options.headers);
+  if (token?.value) {
+    headers.set("Authorization", `Bearer ${token.value}`);
+  }
+
+  const res = await fetch(url + path, {
+    ...options,
+    headers,
+  });
+
+  if (!res.ok) {
+    console.log("Bad Auth Request");
+    console.log(options);
+    console.log(res);
+    console.log(await res.json());
+    if (res.status == 401) {
+      redirect("/accounts");
+    }
+    return { success: false, status: res.status };
+  }
+  const body = await res.json();
+  return { success: true, body: body };
+}
