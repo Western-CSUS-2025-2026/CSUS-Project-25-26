@@ -1,6 +1,5 @@
 import { defaultTemplate } from "@/types/template";
 import { RawSession, SimpleSession } from "@/types/simpleSession";
-import { defaultGrading } from "@/types/session";
 import { fetchAPIAuthorized } from "./fetchAuth";
 
 /** Fetches a users past sessions
@@ -26,7 +25,6 @@ export async function getPastSessions(): Promise<SimpleSession[]> {
       const map = s.session_components.map((comp) => {
         return comp.state == "PENDING";
       });
-      console.log(map);
       if (map.includes(true)) {
         return {
           title: "Session #" + s.id,
@@ -46,8 +44,6 @@ export async function getPastSessions(): Promise<SimpleSession[]> {
       template: defaultTemplate,
     };
   });
-
-  console.log(body);
 
   return sessions;
 }

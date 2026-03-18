@@ -1,38 +1,36 @@
-// import { fetchAPIAuthorized } from "../fetchAuth";
+"use server";
+import { fetchAPIAuthorized } from "../fetchAuth";
 
 type Response = "Ok" | "Error";
 export async function sendRecording(
   session_comp: number,
-  chunks: Blob[],
+  chunk: Blob,
 ): Promise<Response> {
-  const combineBlob = new Blob(chunks, { type: "video/webm" });
+  const combineBlob = chunk;
 
-  const formData = new FormData();
-
-  console.log("Len: " + chunks.length);
-  formData.append("video", combineBlob, "video.webm");
-  console.log(formData.get("video"));
-
-  const res = await fetch(`/api/video/${session_comp}`, {
-    method: "POST",
-    body: formData,
+  const res = await fetchAPIAuthorized(`video/${session_comp}/upload-url`, {
+    method: "GET",
   });
-  console.log("Video res");
 
-  console.log(res);
-
-  if (!res.ok) {
-    console.log("Failed to upload video");
-    console.log(await res.json());
-    console.log(res.headers);
+  if (!res.success) {
+    console.log(res);
     return "Error";
   }
 
-  const body: { success: boolean; body: string } = await res.json();
+  console.log("Size: " + combineBlob.size);
+  const video_res = await fetch(res.body.url, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "video/mp4",
+    },
+    body: combineBlob,
+  });
 
-  if (!body.success) {
+  if (!video_res.ok) {
+    console.log(video_res);
     return "Error";
   }
+  console.log("Completed Video upload");
 
   // get the signed url
   //

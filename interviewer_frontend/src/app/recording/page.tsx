@@ -6,10 +6,12 @@ import useSession from "@/lib/sessionLib/useSession";
 import Modal from "@/components/modal/modal";
 import RecordingSidebar from "./_components/recordingSidebar/recordingSidebar";
 import CompletedModal from "./_components/completedModal/completedModal";
-import { useSearchParams, useRouter } from "next/navigation";
 
+import { useRouter, useSearchParams } from "next/navigation";
+import QuestionCompletedModal from "./_components/questionCompletedModal/QuestionCompletedModal";
 
 function RecordingPage() {
+  const router = useRouter();
   const params = useSearchParams();
   const session = useSession(Number(params.get("sessionId")) ?? -1);
   const router = useRouter();
@@ -17,6 +19,10 @@ function RecordingPage() {
   function returnToSessions() {
     router.push("/sessions");
   }
+
+  const returnToSessions = () => {
+    router.push("/sessions");
+  };
 
   return (
     <div style={{ gap: "1em", display: "flex", flexDirection: "column" }}>
@@ -39,13 +45,6 @@ function RecordingPage() {
           onEnd={() => {}}
           time={session.timerDisplay}
         ></RecordingSidebar>
-        {/* <Card> */}
-        {/*   <button onClick={session.startSession} style={{ color: "black" }}> */}
-        {/*     Start Recording */}
-        {/*   </button> */}
-        {/*   <div style={{ color: "green" }}>{session.state}</div> */}
-        {/*   <div style={{ color: "green" }}>{session.timerDisplay}</div> */}
-        {/* </Card> */}
       </div>
       {session.finishModalUp ? (
         <CompletedModal
@@ -55,10 +54,10 @@ function RecordingPage() {
       ) : undefined}
 
       {session.continueModalUp ? (
-        <Modal width="20em" height="20em" onDismiss={session.startNextQuestion}>
-          <div>Completed question</div>
-          <button onClick={session.startNextQuestion}>continue</button>
-        </Modal>
+        <QuestionCompletedModal
+          nextQuestion={session.currentQuestionNumber + 1}
+          onNext={session.startNextQuestion}
+        ></QuestionCompletedModal>
       ) : undefined}
     </div>
   );
