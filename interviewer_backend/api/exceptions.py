@@ -82,3 +82,10 @@ class WebhookVerificationFailed(APIError):
 class SNSVerificationFailed(APIError):
     def __init__(self, error_msg: str = "Invalid SNS signature"):
         super().__init__(error_msg)
+
+
+class SessionDeleteFailed(APIError):
+    """Raised when deleting a session (DB or related ops) fails."""
+
+    def __init__(self, error_msg: str = "Failed to delete session"):
+        super().__init__(error_msg)
