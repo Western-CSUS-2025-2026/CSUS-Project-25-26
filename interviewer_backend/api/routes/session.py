@@ -142,7 +142,6 @@ async def delete_session(
     _: None = Depends(CsrfProtect()),
     current_user: AuthUser = Depends(Auth()),
 ) -> SessionDeleteResponse:
-
     # Load session with components and videos (for s3_keys)
     session_obj: Optional[Session] = (
         Session.query(session=db.session)
