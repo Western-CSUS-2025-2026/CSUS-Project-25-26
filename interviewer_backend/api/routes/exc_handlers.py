@@ -13,9 +13,9 @@ from api.exceptions import (
     RateLimitExceeded,
     RegistrationIncomplete,
     SessionDeleteFailed,
+    SNSVerificationFailed,
     TooManyEmailRequests,
     WebhookVerificationFailed,
-    SNSVerificationFailed,
 )
 from api.schemas.base import StatusResponseModel
 

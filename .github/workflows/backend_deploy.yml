@@ -148,6 +148,7 @@ jobs:
             --env AWS_ACCESS_KEY_ID='${{ secrets.AWS_ACCESS_KEY_ID }}' \
             --env AWS_REGION='${{ vars.AWS_REGION }}' \
             --env S3_BUCKET_NAME='${{ vars.S3_BUCKET_NAME }}' \
+            --env TOPIC_ARN='${{ vars.TOPIC_ARN }}' \
             --env VIDEO_UPLOAD_LIMIT_ENABLED='${{ vars.VIDEO_UPLOAD_LIMIT_ENABLED }}' \
             --env VIDEO_UPLOAD_LIMIT_MONTHLY='${{ vars.VIDEO_UPLOAD_LIMIT_MONTHLY }}' \
             --env VIDEO_UPLOAD_LIMIT='${{ vars.VIDEO_UPLOAD_LIMIT }}' \
