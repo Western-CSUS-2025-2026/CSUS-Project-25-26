@@ -8,6 +8,9 @@ interface RecordingSidebarProps {
   timeEnded: boolean;
   onStart: () => void;
   onEnd: () => void;
+  hasStarted: boolean;
+  prepPhaseDuration: number;
+  recordingPhaseDuration: number;
 }
 
 export default function RecordingSidebar(props: RecordingSidebarProps) {
@@ -15,9 +18,9 @@ export default function RecordingSidebar(props: RecordingSidebarProps) {
   const stage = props.stage;
   let totalTime: number;
   if (stage == "Recording") {
-    totalTime = 7;
+    totalTime = props.recordingPhaseDuration / 1000;
   } else {
-    totalTime = 5;
+    totalTime = props.prepPhaseDuration / 1000;
   }
   let timeRemaining = totalTime - props.time;
   if (props.timeEnded == true) {
@@ -80,10 +83,17 @@ export default function RecordingSidebar(props: RecordingSidebarProps) {
         </div>
 
         <div className={styles.footer}>
-          {!timeEnded && stage === "Preparing" && (
+          {!timeEnded && stage === "Preparing" && !props.hasStarted && (
             <button className={styles.primaryButton} onClick={props.onStart}>
               Start
             </button>
+          )}
+          {!timeEnded && props.hasStarted && stage == "Preparing" && (
+            <>
+              <button className={styles.primaryButton} style={{ opacity: 0.5 }}>
+                Preparing
+              </button>
+            </>
           )}
 
           {!timeEnded && stage === "Recording" && (

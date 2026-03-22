@@ -27,11 +27,13 @@ interface UseSessionReturn {
   continueModalUp: boolean;
   finishModalUp: boolean;
   startNextQuestion: () => void;
+  prepPhaseDurtion: number;
+  recordingPhaseDuration: number;
 }
 
 function useSession(sessionId: number): UseSessionReturn {
-  const prepPhaseDurtion = 5000;
-  const recordingPhaseDuration = 7000;
+  const prepPhaseDurtion = 10000;
+  const recordingPhaseDuration = 30000;
   const recording = useRecording();
   const [questionList, setQuestionList] = useState<Question[]>([]);
   const [questionNum, setQuestionNum] = useState(0);
@@ -168,6 +170,8 @@ function useSession(sessionId: number): UseSessionReturn {
     isRecording: recording.capturing,
     toggleRecording: toggleRecording,
     startSession: startSession,
+    prepPhaseDurtion: prepPhaseDurtion,
+    recordingPhaseDuration: recordingPhaseDuration,
   };
 }
 export default useSession;
