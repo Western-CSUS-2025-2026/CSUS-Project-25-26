@@ -14,15 +14,10 @@ function RecordingPage() {
   const router = useRouter();
   const params = useSearchParams();
   const session = useSession(Number(params.get("sessionId")) ?? -1);
-  const router = useRouter();
 
   function returnToSessions() {
     router.push("/sessions");
   }
-
-  const returnToSessions = () => {
-    router.push("/sessions");
-  };
 
   return (
     <div style={{ gap: "1em", display: "flex", flexDirection: "column" }}>
@@ -50,7 +45,7 @@ function RecordingPage() {
         <CompletedModal
           onClick={returnToSessions}
           videosUploaded={session.videosUploadedCount}
-          />
+        />
       ) : undefined}
 
       {session.continueModalUp ? (
