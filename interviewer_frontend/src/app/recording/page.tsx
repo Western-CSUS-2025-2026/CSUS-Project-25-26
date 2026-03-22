@@ -3,7 +3,6 @@ import styles from "./page.module.css";
 import WebcamCard from "./_components/webcam/webcamCard";
 import TopBar from "./_components/recordingTopbar/topBar";
 import useSession from "@/lib/sessionLib/useSession";
-import Modal from "@/components/modal/modal";
 import RecordingSidebar from "./_components/recordingSidebar/recordingSidebar";
 import CompletedModal from "./_components/completedModal/completedModal";
 
@@ -14,11 +13,6 @@ function RecordingPage() {
   const router = useRouter();
   const params = useSearchParams();
   const session = useSession(Number(params.get("sessionId")) ?? -1);
-  const router = useRouter();
-
-  function returnToSessions() {
-    router.push("/sessions");
-  }
 
   const returnToSessions = () => {
     router.push("/sessions");
@@ -40,17 +34,20 @@ function RecordingPage() {
         <WebcamCard webRef={session.webcam}></WebcamCard>
         <RecordingSidebar
           timeEnded={session.continueModalUp || session.finishModalUp}
+          hasStarted={session.hasStarted}
           stage={session.state}
           onStart={session.startSession}
           onEnd={() => {}}
           time={session.timerDisplay}
+          prepPhaseDuration={session.prepPhaseDurtion}
+          recordingPhaseDuration={session.recordingPhaseDuration}
         ></RecordingSidebar>
       </div>
       {session.finishModalUp ? (
         <CompletedModal
           onClick={returnToSessions}
           videosUploaded={session.videosUploadedCount}
-          />
+        />
       ) : undefined}
 
       {session.continueModalUp ? (
