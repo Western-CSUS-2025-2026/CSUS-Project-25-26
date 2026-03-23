@@ -12,8 +12,8 @@ from api.exceptions import (
     ObjectNotFound,
     RateLimitExceeded,
     RegistrationIncomplete,
-    SNSVerificationFailed,
     SessionDeleteFailed,
+    SNSVerificationFailed,
     TooManyEmailRequests,
     WebhookVerificationFailed,
 )

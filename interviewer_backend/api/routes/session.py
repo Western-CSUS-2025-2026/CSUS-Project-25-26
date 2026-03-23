@@ -9,8 +9,19 @@ from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 from api.exceptions import ObjectNotFound, RateLimitExceeded, SessionDeleteFailed
+<<<<<<< HEAD
 from api.models.db import Question, Session, SessionComponent, SessionState, Template, Video
 from api.schemas.models import SessionCreateRequest, SessionCreateResponse, SessionGet, SessionsList, SessionDeleteResponse
+=======
+from api.models.db import Question, Session, SessionComponent, SessionState, Template
+from api.schemas.models import (
+    SessionCreateRequest,
+    SessionCreateResponse,
+    SessionDeleteResponse,
+    SessionGet,
+    SessionsList,
+)
+>>>>>>> 093527581a3957e9e487b649a052292592574e89
 from api.settings import get_settings
 from api.utils.s3 import delete_object
 from api.utils.security import Auth, AuthUser, CsrfProtect
@@ -136,7 +147,6 @@ async def delete_session(
     _: None = Depends(CsrfProtect()),
     current_user: AuthUser = Depends(Auth()),
 ) -> SessionDeleteResponse:
-
     # Load session with components and videos (for s3_keys)
     session_obj: Optional[Session] = (
         Session.query(session=db.session)
@@ -148,11 +158,7 @@ async def delete_session(
     if not session_obj:
         raise ObjectNotFound(Session, session_id)
 
-    s3_keys = [
-        sc.video.s3_key
-        for sc in session_obj.session_components
-        if sc.video is not None and sc.video.s3_key
-    ]
+    s3_keys = [sc.video.s3_key for sc in session_obj.session_components if sc.video is not None and sc.video.s3_key]
 
     for s3_key in s3_keys:
         delete_object(s3_key)
