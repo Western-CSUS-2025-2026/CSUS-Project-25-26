@@ -40,6 +40,10 @@ async def get_upload_url(
     if session_component.state != SessionState.PENDING:
         raise ForbiddenAction(SessionComponent)
 
+    video_record = Video.query(session=db.session).filter(Video.session_component_id==session_component_id).one_or_none()
+    if video_record and session_component.state == SessionState.PENDING:
+        raise ForbiddenAction(Video)
+
     s3_key = generate_s3_key(session_component_id)
     url = generate_upload_url(s3_key)
 
