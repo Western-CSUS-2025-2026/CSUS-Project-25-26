@@ -9,10 +9,6 @@ from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 from api.exceptions import ObjectNotFound, RateLimitExceeded, SessionDeleteFailed
-<<<<<<< HEAD
-from api.models.db import Question, Session, SessionComponent, SessionState, Template, Video
-from api.schemas.models import SessionCreateRequest, SessionCreateResponse, SessionGet, SessionsList, SessionDeleteResponse
-=======
 from api.models.db import Question, Session, SessionComponent, SessionState, Template
 from api.schemas.models import (
     SessionCreateRequest,
@@ -21,7 +17,6 @@ from api.schemas.models import (
     SessionGet,
     SessionsList,
 )
->>>>>>> 093527581a3957e9e487b649a052292592574e89
 from api.settings import get_settings
 from api.utils.s3 import delete_object
 from api.utils.security import Auth, AuthUser, CsrfProtect

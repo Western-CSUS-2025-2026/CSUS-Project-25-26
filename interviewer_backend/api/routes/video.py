@@ -40,14 +40,20 @@ async def get_upload_url(
     if session_component.state != SessionState.PENDING:
         raise ForbiddenAction(SessionComponent)
 
-    video_record = Video.query(session=db.session).filter(Video.session_component_id==session_component_id).one_or_none()
-    if video_record and session_component.state == SessionState.PENDING:
-        raise ForbiddenAction(Video)
+    video_record = (
+        Video.query(session=db.session)
+        .filter(Video.session_component_id == session_component_id)
+        .one_or_none()
+    )
+
+    # Reuse same s3_key while PENDING
+    if video_record and video_record.s3_key:
+        url = generate_upload_url(video_record.s3_key)
+        return PresignedURLResponse(url=url, s3_key=video_record.s3_key)
 
     s3_key = generate_s3_key(session_component_id)
     url = generate_upload_url(s3_key)
 
-    # Create Video record so the S3 webhook can look it up by s3_key
     Video.create(
         session=db.session,
         session_component_id=session_component_id,
