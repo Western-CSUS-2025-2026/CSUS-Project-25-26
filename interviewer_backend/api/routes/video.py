@@ -41,9 +41,7 @@ async def get_upload_url(
         raise ForbiddenAction(SessionComponent)
 
     video_record = (
-        Video.query(session=db.session)
-        .filter(Video.session_component_id == session_component_id)
-        .one_or_none()
+        Video.query(session=db.session).filter(Video.session_component_id == session_component_id).one_or_none()
     )
 
     # Reuse same s3_key while PENDING
