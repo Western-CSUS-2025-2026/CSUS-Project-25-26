@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 export async function fetchAPIAuthorized(
   path: string,
   options: RequestInit,
-): Promise<{ success: false } | { success: true; body: any }> {
+): Promise<{ success: false; status: number } | { success: true; body: any }> {
   const url = process.env.API_URL;
 
   const user_cookies = await cookies();
@@ -32,7 +32,10 @@ export async function fetchAPIAuthorized(
     console.log(options);
     console.log(res);
     console.log(await res.json());
-    redirect("/accounts");
+    if (res.status == 401) {
+      redirect("/accounts");
+    }
+    return { success: false, status: res.status };
   }
   const body = await res.json();
   return { success: true, body: body };
