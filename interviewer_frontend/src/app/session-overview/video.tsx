@@ -2,10 +2,9 @@ import styles from "./video.module.css";
 
 type VideoProps = {
   url: string;
-  question: string;
 };
 
-export default function Video({ url, question }: VideoProps) {
+export default function Video({ url }: VideoProps) {
   return (
     <div className={styles.videoCard}>
       <video className={styles.video} controls>

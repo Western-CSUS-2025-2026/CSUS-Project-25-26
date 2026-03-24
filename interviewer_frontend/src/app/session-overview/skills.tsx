@@ -1,13 +1,15 @@
 import styles from "./skills.module.css";
 import Card from "@/components/card/card";
-import { defaultGrading} from "@/types/session";
+import { Session } from "@/types/session";
 
-export default function Skills() {
+export default function Skills({ session }: { session: Session }) {
+  const grading = session.overallGrade;
+
   return (
     <Card>
       <div className={styles.skillsCard}>
         <div className={styles.skillsBreakdown}>
-          {defaultGrading.scores.map((s, index) => (
+          {grading.scores.map((s, index) => (
             <div key={index} className={styles.skillItem}>
               
               <h2 className={styles.title}>{s.title}</h2>
