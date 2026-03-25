@@ -1,0 +1,96 @@
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 2em;
+}
+
+.gaugeWrapper {
+  transform: scale(2);
+  transform-origin: center;
+  width: 15.2em;
+  height: 15.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.gaugeCenter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.gradeCard {
+  width: 23.6em;
+  height: 22.2em;
+  display: flex;
+  flex-direction: column;
+}
+
+.gradeCard h1 {
+  margin-bottom: 0;
+  margin-top: 0;
+  color: var(--accent-primary-text);
+}
+
+.gradeSub {
+  margin-bottom: 1.7em;
+  margin-top: 0;
+  margin-bottom: 1em;
+  color: var(--accent-secondary-text);
+}
+
+.barCard {
+  height: 22.2em;
+  display: flex;
+  flex-direction: column;
+}
+
+.skillBarsRow {
+  padding-left: 3em;
+  padding-right: 3em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5em;
+  margin-top: 1em;
+  height: 100%;
+}
+
+.skillBarItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  width: 3.5em;
+  min-height: 9em;
+}
+
+.verticalBar {
+  width: 3.5em;
+  height: 13.2em;
+  border-radius: 99em;
+  background: var(--border);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.barFill {
+  width: 100%;
+  background: #cb9fe6;
+  border-radius: 0px 0px 0 0;
+  transition: height 0.25s ease;
+}
+
+.skillLabel {
+  margin: 0;
+  font-size: 1em;
+  text-align: center;
+  width: 100%;
+
+  line-height: 1.2;
+  height: 2.2em;
+}

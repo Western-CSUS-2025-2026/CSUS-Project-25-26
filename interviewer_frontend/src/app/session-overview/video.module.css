@@ -1,0 +1,19 @@
+.videoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8em;
+}
+
+
+.video {
+  width: 40em;
+  height: 26em;
+  background: black; 
+  border-radius: 0.8em;
+  object-fit: cover;
+}
+
+.question {
+  margin: 0;
+  font-size: 1em;
+}

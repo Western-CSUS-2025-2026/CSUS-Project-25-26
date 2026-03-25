@@ -1,0 +1,12 @@
+.title{
+    margin: 0;
+}
+.description{
+    margin-top: 0.2em;
+    margin-bottom: 1em;
+}
+
+.feedbackPoint{
+    font-size: 1.1em;
+    font-weight: 400;
+}
