@@ -1,0 +1,32 @@
+.card {
+  width: 100%;
+  height: 7em;
+  background-color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 0.75em;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--primary-text);
+  transition: transform 0.2s ease;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--h3-font-size);
+  font-weight: 600;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.subtitle {
+  margin: 0em;
+  font-size: var(--p-font-size);
+  color: var(--secondary-text);
+  min-width: 0;
+  flex-shrink: 0;
+  margin-top: 0.2em;
+}

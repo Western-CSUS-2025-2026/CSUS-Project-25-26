@@ -1,0 +1,25 @@
+.container {
+  display: grid;
+  grid-template-areas: "area";
+  align-items: center;
+}
+.text {
+  grid-area: area;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: row;
+  padding: 1px;
+}
+.loading {
+  grid-area: area;
+  width: 100%;
+  height: 100%;
+  background-color: var(--border);
+  color: var(--border);
+  border-radius: 1em;
+}
+.loadingPlaceholder {
+  color: var(--border);
+  margin: 0;
+}

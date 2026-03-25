@@ -1,0 +1,143 @@
+.boxTitle {
+  margin-bottom: 0.25em;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.recordingRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.left {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 0.5em;
+}
+
+.circleButton {
+  width: 3.236em;
+  height: 3.236em;
+  border-radius: 9999em;
+  margin-left: 1em;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 600;
+  background-color: #984a4a;
+  overflow: visible;
+
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.circle:active {
+  transform: scale(0.96);
+}
+
+/* Pause: two tiny pills */
+.pause {
+  display: flex;
+  gap: 0.175em;
+}
+
+.pause span {
+  width: 0.25em;
+  height: 0.9em;
+  background-color: white;
+  border-radius: 9999em;
+}
+
+/* Play: small triangle */
+.play {
+  width: 0;
+  height: 0;
+  border-top: 0.6em solid transparent;
+  border-bottom: 0.6em solid transparent;
+  border-left: 0.8em solid white;
+  transform: translateX(0.1em);
+}
+
+.timeText {
+  color: var(--primary-text);
+  margin: 0;
+}
+
+.recordingIndicator {
+  height: 1.46em;
+
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+
+  background-color: var(--border);
+
+  /* animation*/
+  overflow: hidden;
+  white-space: nowrap;
+
+  width: 0;
+  margin-right: 0;
+
+  opacity: 0;
+  transform: translateX(-0.6em);
+
+  transition:
+    width 220ms ease,
+    margin-right 220ms ease,
+    opacity 180ms ease,
+    transform 220ms ease;
+}
+
+/* when recording is ON */
+.recordingOn {
+  width: 3.4em;
+  margin-right: 1em; /* replace old flex gap */
+
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.recordingOff {
+  width: 0;
+  margin-right: 0;
+
+  opacity: 0;
+  transform: translateX(-0.6em);
+}
+
+.recordingDot {
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 9999em;
+
+  display: flex;
+  background-color: #984a4a;
+}
+
+.recText {
+  color: var(--secondary-text);
+  font-size: 0.69em;
+  font-weight: 600;
+}
+
+.waveform {
+  width: 11em;
+  height: 1.41em;
+  border-radius: 0.35em;
+  overflow: hidden;
+
+  /* controls for JS */
+  --wave-color: var(--secondary-text);
+  --bar-thickness: 0.1em; /* set to 0.10em or 0.20em */
+  --bar-gap: 0.2em; /* optional */
+}
