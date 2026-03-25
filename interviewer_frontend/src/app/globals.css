@@ -101,4 +101,5 @@ span {
   padding: 1.3em;
   background-color: var(--foreground);
   border: 1px solid var(--border);
+  box-sizing: border-box;
 }

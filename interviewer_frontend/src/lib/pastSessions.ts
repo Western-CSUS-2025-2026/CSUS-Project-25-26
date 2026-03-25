@@ -1,6 +1,7 @@
 import { defaultTemplate } from "@/types/template";
-import { RawSession, SimpleSession } from "@/types/simpleSession";
+import { SimpleSession } from "@/types/simpleSession";
 import { fetchAPIAuthorized } from "./fetchAuth";
+import { StagingSession } from "@/types/session";
 
 /** Fetches a users past sessions
  */
@@ -18,12 +19,12 @@ export async function getPastSessions(): Promise<SimpleSession[]> {
     return [];
   }
 
-  const body: { sessions: RawSession[] } = res.body;
+  const body: { sessions: StagingSession[] } = res.body;
 
   const sessions: SimpleSession[] = body.sessions.map((s) => {
     if (s.session_components != undefined) {
       const map = s.session_components.map((comp) => {
-        return comp.state == "PENDING";
+        return comp.state == "PENDING" || comp.state == "INDEXING";
       });
       if (map.includes(true)) {
         return {
