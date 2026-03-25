@@ -28,4 +28,3 @@ async function SessionString(props: { id: string }) {
 }
 
 export default SessionOverview;
-

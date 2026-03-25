@@ -5,7 +5,7 @@ interface GaugeProps {
 }
 
 /* Convert numeric score to letter grade */
-function convertToLetterGrade(score: number): string {
+export function convertToLetterGrade(score: number): string {
   if (score >= 0.9333) return "A+";
   if (score >= 0.8667) return "A";
   if (score >= 0.8) return "A-";
