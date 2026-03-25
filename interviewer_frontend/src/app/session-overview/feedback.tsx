@@ -1,33 +1,23 @@
 import styles from "./feedback.module.css";
 import Card from "@/components/card/card";
-import { Session } from "@/types/session";
+import { Feedback as FeedbackType } from "@/types/session";
+interface FeedbackProps {
+  feedback: FeedbackType;
+}
 
-export default function Feedback({ session }: { session: Session }) {
-  const feedback = session.overallGrade.feedback ?? [];
-
+export default function Feedback(props: FeedbackProps) {
   return (
-    <Card>
+    <Card verticalMargin="2em" fillWidth>
       <div className={styles.feedbackCard}>
         <h2 className={styles.title}>Feedback</h2>
 
-        {feedback.map((f, index) => {
-          const tips = Array.isArray(f.feedback)
-            ? f.feedback
-            : f.feedback
-            ? [f.feedback]
-            : [];
+        <div>
+          <h3>{props.feedback.point}</h3>
 
-          return (
-            <div key={index}>
-              <h3>{f.point}</h3>
-
-              {tips.map((tip, i) => (
-                <p key={i}>{tip}</p>
-              ))}
-            </div>
-          );
-        })}
+          <p>{props.feedback.feedback}</p>
+        </div>
       </div>
     </Card>
   );
 }
+

@@ -22,23 +22,33 @@ export default function SessionOverviewContent({
         <h1 className={styles.title}>Skills Breakdown</h1>
         <Skills session={session} />
 
-        <h1 className={styles.title}>Feedback</h1>
-        <Feedback session={session} />
+        <h1 className={styles.title}>Transcript</h1>
+        <Transcript text={session.transcript} />
 
-        <h1 className={styles.title}>
-          What's Your Greatest Strength?
-        </h1>
-        <GradeGauge session={session} />
+        {Array.from({ length: session.videos.length }, (_, index) => index).map(
+          (i) => {
+            return (
+              <div key={i} style={{ width: "100%" }}>
+                <h1 className={styles.title} style={{ marginBottom: "0.67em" }}>
+                  {session.grades[i].question}
+                </h1>
+                <GradeGauge grade={session.grades[i]} />
+                <Feedback feedback={session.grades[i].feedback} />
+              </div>
+            );
+          },
+        )}
       </div>
 
       {/* RIGHT COLUMN */}
-      <div className={styles.column}>
-        <h1 className={styles.title}>Video</h1>
-        <Video url={session.videos[0]?.url ?? ""} />
-
-        <h1 className={styles.title}>Transcript</h1>
-        <Transcript text={session.transcript} />
-      </div>
+      {/* <div className={styles.column}> */}
+      {/*   <h1 className={styles.title}>Video</h1> */}
+      {/*   <Video url={session.videos[0]?.url ?? ""} /> */}
+      {/**/}
+      {/*   <h1 className={styles.title}>Transcript</h1> */}
+      {/*   <Transcript text={session.transcript} /> */}
+      {/* </div> */}
     </div>
   );
 }
+

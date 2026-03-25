@@ -4,7 +4,7 @@ import { getSessionNew } from "@/lib/getNewSession";
 import SessionOverviewContent from "@/app/session-overview/SessionOverviewContent";
 
 async function SessionOverview({ params }: { params: { id: string } }) {
-  const { id } = params;
+  const { id } = await params;
 
   return (
     <div className={styles.container}>
@@ -28,3 +28,4 @@ async function SessionString(props: { id: string }) {
 }
 
 export default SessionOverview;
+

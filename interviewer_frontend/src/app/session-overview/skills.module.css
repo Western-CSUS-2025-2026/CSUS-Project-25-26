@@ -1,4 +1,3 @@
-
 .skillsBreakdown {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -6,8 +5,13 @@
 
   gap: 1.1em;
 
-  width: 59em;
   height: 15.75em;
+  width: 100%;
+}
+.skillsCard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .skillItem {
@@ -17,13 +21,12 @@
 }
 
 .description {
-  margin-top:0;
-  margin-bottom: 1em;   
+  margin-top: 0;
+  margin-bottom: 1em;
 }
 
 .title {
   margin: 0;
-
 }
 
 /* bar container */
@@ -41,3 +44,4 @@
   background: #cb9fe6;
   border-radius: 99px;
 }
+

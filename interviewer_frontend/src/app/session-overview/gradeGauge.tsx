@@ -1,11 +1,12 @@
 import Card from "@/components/card/card";
 import styles from "./gradeGauge.module.css";
 import Gauge from "@/components/gauge/gauge";
-import { Session } from "@/types/session";
+import { Grading, Session } from "@/types/session";
 
-export default function GradeGauge({ session }: { session: Session }) {
-  const grading = session.overallGrade;
-
+interface GradeGaugeProps {
+  grade: Grading;
+}
+export default function GradeGauge(props: GradeGaugeProps) {
   return (
     <div className={styles.row}>
       <div className="gradeCardOverride">
@@ -24,25 +25,23 @@ export default function GradeGauge({ session }: { session: Session }) {
         <Card>
           <div className={styles.gradeCard}>
             <h1>Grade</h1>
-            <p className={styles.gradeSub}>
-              An associated letter grade
-            </p>
+            <p className={styles.gradeSub}>An associated letter grade</p>
 
             <div className={styles.gaugeWrapper}>
               {/* ✅ FIXED */}
-              <Gauge score={grading.overallGrade} />
+              <Gauge score={props.grade.overallGrade} />
             </div>
           </div>
         </Card>
       </div>
 
-      <Card>
+      <Card fillWidth>
         <div className={styles.barCard}>
-          <h1>Skills Breakdown</h1>
+          <h1 style={{ margin: "0em" }}>Skills Breakdown</h1>
 
           <div className={styles.skillBarsRow}>
             {/* ✅ FIXED */}
-            {grading.scores.map((s, index) => (
+            {props.grade.scores.map((s, index) => (
               <div className={styles.skillBarItem} key={index}>
                 <div className={styles.verticalBar}>
                   <div
@@ -54,9 +53,9 @@ export default function GradeGauge({ session }: { session: Session }) {
               </div>
             ))}
           </div>
-
         </div>
       </Card>
     </div>
   );
 }
+

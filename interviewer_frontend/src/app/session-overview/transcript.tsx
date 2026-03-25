@@ -7,10 +7,11 @@ type TranscriptProps = {
 
 export default function Transcript({ text }: TranscriptProps) {
   return (
-    <Card>
+    <Card fillWidth>
       <div className={styles.transcriptBox}>
         <p>{text}</p>
       </div>
     </Card>
   );
 }
+
