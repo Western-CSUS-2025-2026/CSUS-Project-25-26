@@ -11,7 +11,7 @@ from .session import session as session_router
 from .template import template as template_router
 from .user import user as user_router
 from .video import video as video_router
-
+from .roles import router as roles_router
 
 
 settings: Settings = get_settings()
@@ -42,6 +42,7 @@ app.include_router(video_router)
 app.include_router(session_router)
 app.include_router(template_router)
 app.include_router(question_router)
+app.include_router(roles_router)
 
 if settings.METRICS_ENABLED:
     Instrumentator(excluded_handlers=['/metrics']).instrument(app).expose(

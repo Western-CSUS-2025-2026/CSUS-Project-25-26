@@ -3,15 +3,15 @@ import random
 from datetime import datetime, timezone
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, Form, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi_sqlalchemy import db
 
 from api.exceptions import ObjectNotFound
 from api.models.db import Question, Session, SessionComponent, SessionState, Template, UserSession
 from api.schemas.models import SessionCreateRequest, SessionCreateResponse, SessionGet, SessionsList
 from api.settings import get_settings
-from api.utils.security import Auth
 from api.utils.session_query import get_session_options, parse_include, serialize_session
+from api.dependencies.auth import require_roles
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ session: APIRouter = APIRouter(prefix="/sessions", tags=["Sessions"])
 @session.post("", status_code=201, response_model=SessionCreateResponse)
 async def create_session(
     payload: SessionCreateRequest,
-    user_session: UserSession = Depends(Auth()),
+    user_session: UserSession = Depends(require_roles(["admin", "interviewer"])),
 ) -> SessionCreateResponse:
     # 1. Load template's questions (fail early if template empty or missing)
     template_id = payload.template_id
@@ -58,7 +58,7 @@ async def create_session(
 
 @session.get("", response_model=SessionsList, response_model_exclude_none=True)
 async def get_user_sessions(
-    user_session: UserSession = Depends(Auth()),
+    user_session: UserSession = Depends(require_roles(["admin", "interviewer"])),
     limit: int = Query(default=10, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     include: Annotated[list[str], Query()] = [],
@@ -86,7 +86,7 @@ async def get_user_sessions(
 @session.get("/{session_id}", response_model=SessionGet, response_model_exclude_none=True)
 async def get_session(
     session_id: int,
-    user_session: UserSession = Depends(Auth()),
+    user_session: UserSession = Depends(require_roles(["admin", "interviewer"])),
     include: Annotated[list[str], Query()] = [],
 ) -> SessionGet:
     """

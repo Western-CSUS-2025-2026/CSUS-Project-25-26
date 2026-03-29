@@ -6,8 +6,8 @@ from api.metrics import record_webhook_failure
 from api.models.db import Session, SessionComponent, SessionState, UserSession
 from api.schemas.base import StatusResponseModel
 from api.schemas.models import TwelveLabsWebhookRequest
-from api.utils.security import Auth
 from api.utils.twelveLabs import VideoAnalysis
+from api.dependencies.auth import require_roles
 
 
 video = APIRouter(prefix="/video", tags=["Video"])
@@ -18,7 +18,7 @@ analyzer = VideoAnalysis()
 async def upload_video(
     session_component_id: int,
     video: UploadFile = File(...),
-    user_session: UserSession = Depends(Auth()),
+    user_session: UserSession = Depends(require_roles(["admin", "interviewer"])),
 ):
     """Upload video for a session component. Uploads to TL and sets component state to indexing."""
     session_component = SessionComponent.get(session_component_id, session=db.session)

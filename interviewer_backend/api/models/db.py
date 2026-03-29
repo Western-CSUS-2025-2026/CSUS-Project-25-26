@@ -7,9 +7,9 @@ import logging
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import JSONB
 
 from api.utils.user_session import calc_session_expire_date
+from api.models.role import UserRole
 
 from .base import BaseDbModel
 
@@ -40,6 +40,9 @@ class User(BaseDbModel):
         back_populates="user",
         uselist=False,
         cascade="all, delete",
+    )
+    user_roles: Mapped[list["UserRole"]] = relationship(
+        "UserRole", foreign_keys="UserRole.user_id", back_populates="user", cascade="all, delete"
     )
 
 
@@ -150,6 +153,7 @@ class Video(BaseDbModel):
 
 class SessionState(enum.Enum):
     """SessionComponent state; DB enum 'componentstate' (uppercase, same as sessionstate)."""
+
     PENDING = "PENDING"
     INDEXING = "INDEXING"
     ANALYZING = "ANALYZING"

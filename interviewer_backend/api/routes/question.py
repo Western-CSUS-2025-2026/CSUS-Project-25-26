@@ -6,7 +6,7 @@ from fastapi_sqlalchemy import db
 from api.exceptions import ObjectNotFound
 from api.models.db import Question, Template, UserSession
 from api.schemas.models import QuestionCreate, QuestionGet, StatusResponse
-from api.utils.security import Auth
+from api.dependencies.auth import require_roles
 
 
 question = APIRouter(prefix="/questions", tags=["Questions"])
@@ -15,7 +15,7 @@ question = APIRouter(prefix="/questions", tags=["Questions"])
 @question.post("", response_model=QuestionGet)
 def create_question(
     payload: QuestionCreate,
-    _: UserSession = Depends(Auth()),
+    _: UserSession = Depends(require_roles(["admin", "interviewer"])),
 ) -> QuestionGet:
     db_template: Optional[Template] = Template.query(session=db.session).get(payload.template_id)
 
@@ -32,7 +32,7 @@ def create_question(
 @question.get("/template/{template_id}", response_model=list[QuestionGet])
 def get_questions_for_template(
     template_id: int,
-    _: UserSession = Depends(Auth()),
+    _: UserSession = Depends(require_roles(["admin", "interviewer"])),
 ) -> List[QuestionGet]:
     db_template: Optional[Template] = Template.query(session=db.session).get(template_id)
 
@@ -45,7 +45,9 @@ def get_questions_for_template(
 
 
 @question.delete("/{question_id}")
-def delete_question(question_id: int, _: UserSession = Depends(Auth())) -> StatusResponse:
+def delete_question(
+    question_id: int, _: UserSession = Depends(require_roles(["admin", "interviewer"]))
+) -> StatusResponse:
     db_question: Optional[Question] = Question.query(session=db.session).get(question_id)
 
     if not db_question:

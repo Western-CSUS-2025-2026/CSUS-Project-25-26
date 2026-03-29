@@ -18,9 +18,9 @@ from api.schemas.models import (
 )
 from api.settings import get_settings
 from api.utils.enc import hash_password, validate_password
-from api.utils.security import Auth
 from api.utils.smtp import SendEmailMessage
 from api.utils.token import random_int, random_string
+from api.dependencies.auth import require_roles
 
 
 settings = get_settings()
@@ -129,7 +129,7 @@ async def login(user_data: UserLogin) -> UserSessionGet:
 
 
 @user.get("", response_model=MyUserGet)
-async def me(user_session: UserSession = Depends(Auth())) -> MyUserGet:
+async def me(user_session: UserSession = Depends(require_roles(["admin", "interviewer"]))) -> MyUserGet:
     return MyUserGet(
         id=user_session.user_id,
         email=user_session.user.email,
@@ -139,7 +139,7 @@ async def me(user_session: UserSession = Depends(Auth())) -> MyUserGet:
 
 
 @user.get("/sessions", response_model=UserSessionsGet)
-async def get_sessions(user_session: UserSession = Depends(Auth())) -> UserSessionsGet:
+async def get_sessions(user_session: UserSession = Depends(require_roles(["admin", "interviewer"]))) -> UserSessionsGet:
     response = UserSessionsGet(sessions=[])
     for session in user_session.user.user_sessions:
         response.sessions.append(
@@ -153,7 +153,9 @@ async def get_sessions(user_session: UserSession = Depends(Auth())) -> UserSessi
 
 
 @user.delete("", response_model=StatusResponseModel)
-async def delete_user(user_session: UserSession = Depends(Auth())) -> StatusResponseModel:
+async def delete_user(
+    user_session: UserSession = Depends(require_roles(["admin", "interviewer"]))
+) -> StatusResponseModel:
     User.delete(session=db.session, id=user_session.user_id)
     db.session.commit()
     return StatusResponseModel(status="Success", message="User deleted")
