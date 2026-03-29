@@ -1,5 +1,5 @@
 import datetime
-from typing import Annotated, List, Optional
+from typing import Annotated, List
 
 from annotated_types import MaxLen
 from pydantic import Field, field_validator
@@ -99,9 +99,16 @@ class VideoUploadResponse(Base):
     state: str
 
 
+class TwelveLabsWebhookBody(Base):
+    id: str
+    status: str
+
+
 class TwelveLabsWebhookRequest(Base):
-    indexed_asset_id: Optional[str] = None
-    state: Optional[str] = None
+    id: str
+    created_at: str
+    type: str
+    data: TwelveLabsWebhookBody
 
 
 class FeedbackModel(Base):
@@ -129,21 +136,11 @@ class VideoAnalysisStateResponse(Base):
 
 
 class SessionCreateResponse(Base):
-    """Response after creating a session."""
     session_id: int
 
 
-class SessionComponentCreateRequest(Base):
-    """Request to add a question/component to a session."""
-    question: str
-
-
-class SessionComponentCreateResponse(Base):
-    """Response after creating a session component."""
-    session_component_id: int
-    session_id: int
-    question: str
-    question_id: int
+class SessionCreateRequest(Base):
+    template_id: int
 
 
 class FeedbackGet(Base):

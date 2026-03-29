@@ -1,4 +1,5 @@
 from typing import List, Optional
+
 from fastapi import APIRouter, Depends
 from fastapi_sqlalchemy import db
 
@@ -6,6 +7,7 @@ from api.exceptions import ObjectNotFound
 from api.models.db import Question, Template, UserSession
 from api.schemas.models import QuestionCreate, QuestionGet, StatusResponse
 from api.utils.security import Auth
+
 
 question = APIRouter(prefix="/questions", tags=["Questions"])
 
@@ -37,20 +39,13 @@ def get_questions_for_template(
     if not db_template:
         raise ObjectNotFound(Template, template_id)
 
-    questions: List[Question] = (
-        Question.query(session=db.session)
-        .filter(Question.template_id == template_id)
-        .all()
-    )
+    questions: List[Question] = Question.query(session=db.session).filter(Question.template_id == template_id).all()
 
     return [QuestionGet.model_validate(q) for q in questions]
 
 
 @question.delete("/{question_id}")
-def delete_question(
-    question_id: int,
-    _: UserSession = Depends(Auth())
-) -> StatusResponse:
+def delete_question(question_id: int, _: UserSession = Depends(Auth())) -> StatusResponse:
     db_question: Optional[Question] = Question.query(session=db.session).get(question_id)
 
     if not db_question:

@@ -35,8 +35,11 @@ class User(BaseDbModel):
         "Session", foreign_keys="Session.user_id", cascade='all, delete'
     )
     twelve_labs_index: Mapped["TwelveLabsIndex"] = relationship(
-        "TwelveLabsIndex", foreign_keys="TwelveLabsIndex.user_id", back_populates="user", uselist=False, 
-        cascade="all, delete"
+        "TwelveLabsIndex",
+        foreign_keys="TwelveLabsIndex.user_id",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete",
     )
 
 

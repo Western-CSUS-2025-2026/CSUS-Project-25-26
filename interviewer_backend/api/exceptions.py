@@ -66,4 +66,8 @@ class FailToCreateTask(APIError):
 
 class FailToParseAnalysis(APIError):
     def __init__(self, error_msg: str = "Failed to to parse analysis"):
+<<<<<<< HEAD
         super().__init__(error_msg)
+=======
+        super().__init__(error_msg)
+>>>>>>> 12c2aed6fa615eac5edd87815ac6a9dff58d62f4

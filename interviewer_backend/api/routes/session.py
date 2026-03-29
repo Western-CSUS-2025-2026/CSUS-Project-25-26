@@ -1,16 +1,18 @@
 import logging
 import random
+from datetime import datetime, timezone
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Form, Query
 from fastapi_sqlalchemy import db
 
 from api.exceptions import ObjectNotFound
-from api.models.db import Session, UserSession, SessionState, Template, Question, SessionComponent
-from api.schemas.models import SessionGet, SessionsList, SessionCreateResponse, SessionComponentCreateResponse, SessionComponentCreateRequest
+from api.models.db import Question, Session, SessionComponent, SessionState, Template, UserSession
+from api.schemas.models import SessionCreateRequest, SessionCreateResponse, SessionGet, SessionsList
 from api.settings import get_settings
 from api.utils.security import Auth
-from api.utils.session_query import parse_include, get_session_options, serialize_session
+from api.utils.session_query import get_session_options, parse_include, serialize_session
+
 
 logger: logging.Logger = logging.getLogger(__name__)
 session: APIRouter = APIRouter(prefix="/sessions", tags=["Sessions"])
@@ -18,15 +20,12 @@ session: APIRouter = APIRouter(prefix="/sessions", tags=["Sessions"])
 
 @session.post("", status_code=201, response_model=SessionCreateResponse)
 async def create_session(
+    payload: SessionCreateRequest,
     user_session: UserSession = Depends(Auth()),
-    template_id: int = Form(...),
 ) -> SessionCreateResponse:
     # 1. Load template's questions (fail early if template empty or missing)
-    questions = (
-        Question.query(session=db.session)
-        .filter(Question.template_id == template_id)
-        .all()
-    )
+    template_id = payload.template_id
+    questions = Question.query(session=db.session).filter(Question.template_id == template_id).all()
     if not questions:
         raise ObjectNotFound(Template, template_id)
 
@@ -34,12 +33,13 @@ async def create_session(
     new_session = Session.create(
         session=db.session,
         user_id=user_session.user_id,
+        create_ts=datetime.now(tz=timezone.utc),
     )
     db.session.flush()
 
     settings = get_settings()
     count = min(settings.QUESTIONS_PER_SESSION, len(questions))
-    chosen = random.sample(questions, count) # pick 3 random questions no repeat
+    chosen = random.sample(questions, count)  # pick 3 random questions no repeat
     for question in chosen:
         SessionComponent.create(
             session=db.session,
@@ -107,4 +107,4 @@ async def get_session(
     if not session_obj:
         raise ObjectNotFound(Session, session_id)
 
-    return serialize_session(session_obj, valid_requested)  
+    return serialize_session(session_obj, valid_requested)
