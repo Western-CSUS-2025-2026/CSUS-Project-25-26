@@ -57,6 +57,7 @@ coverage.xml
 
 .DS_Store
 
+.vscode/
 
 # Django stuff:
 *.log
