@@ -2,11 +2,16 @@
 
 import styles from "./sidebar.module.css";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 
 function Sidebar() {
   const iconHeight = 12;
+  const router = useRouter();
+
+  const logOut = () => {
+    router.push("/accounts");
+  };
   return (
     <div className={styles.sidebar}>
       {/* User Profile Section */}
@@ -17,7 +22,7 @@ function Sidebar() {
 
       {/* Navigation Buttons */}
       <nav className={styles.navigation}>
-        <NavButton href="/" label="Home" icon="/icons/home.svg" />
+        <NavButton href="/home" label="Home" icon="/icons/home.svg" />
         <NavButton
           href="/sessions"
           label="Sessions"
@@ -41,7 +46,7 @@ function Sidebar() {
           />
           <span>Help</span>
         </button>
-        <button className={styles.logoutButton}>
+        <button className={styles.logoutButton} onClick={logOut}>
           <Image
             src="/icons/logout.svg"
             alt="Logout"
