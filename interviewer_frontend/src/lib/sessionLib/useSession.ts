@@ -7,6 +7,7 @@ import { Question } from "./getQuestions";
 import { sendRecording } from "./sendRecording";
 import { getSessionNew } from "../getNewSession";
 import fixWebmDuration from "fix-webm-duration";
+import { getSessionRecording } from "../getSessionRecording";
 
 export type SessionState = "Recording" | "Preparing";
 
@@ -55,7 +56,7 @@ function useSession(sessionId: number): UseSessionReturn {
   const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
-    getSessionNew(Number(sessionId)).then((s) => {
+    getSessionRecording(Number(sessionId)).then((s) => {
       if (s.success) {
         const questions: Question[] = s.session.session_components.map(
           (com) => {
@@ -108,12 +109,6 @@ function useSession(sessionId: number): UseSessionReturn {
     setState("Preparing");
     recording.endRecording((chunk) => {
       const fixed = chunk;
-      const video = document.createElement("video");
-      video.onloadedmetadata = () => {
-        console.log("Duration " + video.duration);
-      };
-
-      video.src = URL.createObjectURL(fixed);
 
       sendRecording(questionList[questionNum].component_id, fixed).then(
         (res) => {

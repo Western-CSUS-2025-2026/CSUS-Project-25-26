@@ -3,8 +3,8 @@ import type { SimpleSession } from "@/types/simpleSession";
 import styles from "./sessionCard.module.css";
 import Gauge from "../../../../../components/gauge/gauge";
 import LoadingSpinner from "@/components/loadingSpinner/loadingSpinner";
-import { redirect } from "next/navigation";
 import Link from "next/link";
+import XMark from "@/components/xmark/xmark";
 
 interface SessionCardProps {
   session: SimpleSession;
@@ -14,11 +14,41 @@ export default function SessionCard({ session }: SessionCardProps) {
   const stateText = () => {
     if (session.state == "COMPLETED") {
       return "Completed";
+    } else if (session.state == "INCOMPLETE") {
+      return "Incomplete";
     }
     return "Processing";
   };
-  const onRouteToInspect = () => {
-    redirect(`/session-inspect/${session.id}`);
+
+  const button = () => {
+    switch (session.state) {
+      case "PROCESSING": {
+        return (
+          <div className={styles.buttonBackground}>
+            {" "}
+            <p className={styles.buttonGenText}>Generating Report...</p>
+          </div>
+        );
+      }
+
+      case "INCOMPLETE": {
+        return (
+          <div className={styles.buttonBackground}>
+            <p className={styles.buttonGenText}>Incomplete</p>
+          </div>
+        );
+      }
+      case "COMPLETED": {
+        return (
+          <Link
+            href={`/session-inspect/${session.id}`}
+            className={styles.buttonBackground}
+          >
+            <p className={styles.buttonText}>View Full Report</p>
+          </Link>
+        );
+      }
+    }
   };
   return (
     <Card>
@@ -39,20 +69,15 @@ export default function SessionCard({ session }: SessionCardProps) {
             ) : (
               <p>&nbsp;</p>
             )}
+            {session.state === "INCOMPLETE" ? (
+              <p className={styles.proccessingText}>
+                All questions were not completed
+              </p>
+            ) : (
+              <p>&nbsp;</p>
+            )}
           </div>
-          {session.state === "PROCESSING" ? (
-            <div className={styles.buttonBackground}>
-              {" "}
-              <p className={styles.buttonGenText}>Generating Report...</p>
-            </div>
-          ) : (
-            <Link
-              href={`/session-inspect/${session.id}`}
-              className={styles.buttonBackground}
-            >
-              <p className={styles.buttonText}>View Full Report</p>
-            </Link>
-          )}
+          {button()}
         </div>
 
         {/* RIGHT COLUMN */}
@@ -75,6 +100,7 @@ export default function SessionCard({ session }: SessionCardProps) {
             <Gauge score={session.overallGrade} />
           )}
 
+          {session.state === "INCOMPLETE" && <XMark size="8em"></XMark>}
           {session.state === "PROCESSING" && <LoadingSpinner></LoadingSpinner>}
         </div>
       </div>

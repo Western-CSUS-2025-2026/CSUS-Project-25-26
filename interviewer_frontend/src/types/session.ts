@@ -1,5 +1,39 @@
 import { defaultTemplate, Template } from "./template";
 
+export interface StagingSession {
+  id: number;
+  user_id: number;
+  overall_grade: number;
+  create_ts: string;
+  session_components: {
+    id: number;
+    transcript: string;
+    state: string;
+    question_id: number;
+    question: {
+      question: string;
+      id: number;
+      template_id: number;
+    };
+    grade: {
+      id: number;
+      body_language_score: number;
+      speech_score: number;
+      material_score: number;
+      brevity_score: number;
+    };
+    feedback: {
+      id: number;
+      point: string;
+      ways_to_improve: string;
+    };
+    video: {
+      id: number;
+      s3_key: string;
+    };
+  }[];
+}
+
 // A completed session that has been processed and contains all the data
 export interface Session {
   title: string;
@@ -15,7 +49,7 @@ export interface Session {
 // a video of the session
 interface SessionVideo {
   url: string;
-  question: string;
+  id: string;
 }
 
 // the grading scheme
@@ -25,7 +59,7 @@ export interface Grading {
   overallGrade: number;
   // scores for the individual categories
   scores: Score[];
-  feedback: Feedback[];
+  feedback: Feedback;
 }
 // a single score for an individual category
 interface Score {
@@ -34,11 +68,11 @@ interface Score {
   score: number;
 }
 // the feedback
-interface Feedback {
+export interface Feedback {
   // the skill or thing that they need work on
   point: string;
   // a list of ways to improve apon the point
-  feedback: string[];
+  feedback: string;
 }
 export const defaultGrading: Grading = {
   question: "What is your greatest strength?",
@@ -68,17 +102,11 @@ export const defaultGrading: Grading = {
   feedback: [
     {
       point: "Speaking too fast",
-      feedback: [
-        "Try articulating your words more to slow yourself down",
-        "Try taking longer breaks between sentances and words",
-      ],
+      feedback: "Try articulating your words more to slow yourself down",
     },
     {
       point: "Over usage of filler words",
-      feedback: [
-        "Take pauses instead of using the filler words",
-        "Think about the entire sentance before saying it to reduce the need for filler words",
-      ],
+      feedback: "Take pauses instead of using the filler words",
     },
   ],
 };
@@ -94,6 +122,7 @@ export const defaultSession: Session = {
     {
       url: "this is a test url",
       question: "What is your greatest weakness?",
+      id: "",
     },
   ],
   transcript:

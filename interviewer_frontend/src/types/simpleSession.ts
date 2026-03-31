@@ -1,4 +1,3 @@
-import { defaultGrading, Grading } from "./session";
 import { defaultTemplate, Template } from "./template";
 
 export type RawSession = {
@@ -35,7 +34,11 @@ export type RawSession = {
   }[];
 };
 
-export type SimpleSession = ProcessingSession | CompletedSession;
+export type SimpleSession =
+  | ProcessingSession
+  | CompletedSession
+  | IncompletedSession;
+
 // a processing Session that does not contain any data
 export interface ProcessingSession {
   title: string;
@@ -50,6 +53,14 @@ export interface CompletedSession {
   template: Template;
   createTime: string;
   overallGrade: number;
+  id: string;
+}
+export interface IncompletedSession {
+  title: string;
+  state: "INCOMPLETE";
+  template: Template;
+
+  createTime: string;
   id: string;
 }
 
