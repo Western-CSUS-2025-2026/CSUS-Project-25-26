@@ -25,3 +25,16 @@ jobs:
         run: npm run lint
       - name: Run Build
         run: npm run build
+      - name: Prettier Precheck
+        run: |
+          set +e
+          npm run format-precheck 
+          exit_code=$?
+
+          if [ $exit_code -eq 2 ]; then
+            exit 2
+          elif [ $exit_code -eq 1 ]; then
+            exit 0
+          fi
+
+          exit 0
