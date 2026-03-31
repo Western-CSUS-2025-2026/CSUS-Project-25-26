@@ -99,16 +99,10 @@ export const defaultGrading: Grading = {
       score: 0.2,
     },
   ],
-  feedback: [
-    {
-      point: "Speaking too fast",
-      feedback: "Try articulating your words more to slow yourself down",
-    },
-    {
-      point: "Over usage of filler words",
-      feedback: "Take pauses instead of using the filler words",
-    },
-  ],
+  feedback: {
+    point: "Speaking too fast",
+    feedback: "Try articulating your words more to slow yourself down",
+  },
 };
 
 export const defaultSession: Session = {
@@ -121,7 +115,6 @@ export const defaultSession: Session = {
   videos: [
     {
       url: "this is a test url",
-      question: "What is your greatest weakness?",
       id: "",
     },
   ],

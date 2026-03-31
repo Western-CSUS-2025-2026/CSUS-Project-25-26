@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: ["main"]
 jobs:
+  defaults:
+    run:
+      working-directory: interviewer_frontend
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -19,3 +22,5 @@ jobs:
         run: npm ci
       - name: Run linter
         run: npm run lint
+      - name: Run Build
+        run: npm run build
