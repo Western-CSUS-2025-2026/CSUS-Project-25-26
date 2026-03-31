@@ -2,6 +2,7 @@ interface CardProps {
   height?: string;
   width?: string;
   margin?: string;
+  verticalMargin?: string;
   children?: React.ReactNode;
   fillWidth?: boolean;
   fillHeight?: boolean;
@@ -17,9 +18,11 @@ function Card(props: CardProps) {
       <div
         className="cardStyle"
         style={{
-          height: props.fillHeight ? "calc(100% - 2em)" : props.height,
-          width: props.fillWidth ? "calc(100% - 2em)" : props.width,
+          height: props.fillHeight ? "100%" : props.height,
+          width: props.fillWidth ? "100%" : props.width,
           margin: props.margin,
+          marginTop: props.verticalMargin,
+          marginBottom: props.verticalMargin,
         }}
       >
         {props.children}

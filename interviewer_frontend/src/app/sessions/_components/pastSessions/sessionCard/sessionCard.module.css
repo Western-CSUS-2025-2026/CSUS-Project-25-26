@@ -4,6 +4,7 @@
   grid-template-columns: 1fr 1fr;
   justify-content: space-between;
   align-items: start;
+  height: 100%;
 }
 
 .statusBox {

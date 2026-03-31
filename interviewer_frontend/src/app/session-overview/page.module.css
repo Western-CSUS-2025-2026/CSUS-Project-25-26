@@ -1,0 +1,30 @@
+.row {
+  display: flex;
+  gap: 2.8em;
+  align-items: center;
+  width: 100%;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.7em;
+}
+
+.title {
+  margin-bottom: 0em;
+  width: 100%;
+}
+
+.videoPlaceholder {
+  width: 27.8em;
+  height: 20.8em;
+  background: #eaeaea;
+  border-radius: 0.8em;
+}
+
+.feedbackSpacing {
+  margin-top: 0.8em;
+}
+
