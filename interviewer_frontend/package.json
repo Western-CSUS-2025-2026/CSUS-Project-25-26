@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write ./src"
+    "format-precheck": "prettier --check ./src"
   },
   "dependencies": {
     "fix-webm-duration": "^1.0.6",

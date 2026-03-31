@@ -25,3 +25,5 @@ jobs:
         run: npm run lint
       - name: Run Build
         run: npm run build
+      - name: Prettier Precheck
+        run: npm run format-precheck
