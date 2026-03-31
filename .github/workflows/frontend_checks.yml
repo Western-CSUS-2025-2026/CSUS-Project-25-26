@@ -6,11 +6,12 @@ on:
   pull_request:
     branches: ["main"]
 jobs:
-  defaults:
-    run:
-      working-directory: interviewer_frontend
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: interviewer_frontend
+
     steps:
       - name: checkout repo
         uses: actions/checkout@v3
