@@ -56,6 +56,7 @@ function RecordingPage() {
         <CompletedModal
           onClick={returnToSessions}
           videosUploaded={session.videosUploadedCount}
+          totalVideos={session.totalQuestions}
         />
       ) : undefined}
 
