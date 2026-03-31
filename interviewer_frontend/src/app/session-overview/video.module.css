@@ -4,11 +4,10 @@
   gap: 0.8em;
 }
 
-
 .video {
   width: 40em;
   height: 26em;
-  background: black; 
+  background: black;
   border-radius: 0.8em;
   object-fit: cover;
 }

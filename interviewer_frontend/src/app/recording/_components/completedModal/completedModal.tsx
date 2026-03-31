@@ -24,4 +24,3 @@ export default function CompletedModal(props: CompletedModalProps) {
     </Modal>
   );
 }
-

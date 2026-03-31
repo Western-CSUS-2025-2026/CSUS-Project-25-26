@@ -17,24 +17,22 @@ export default function CreateAccountEmailCard({
   onNext,
   onBackToLogin,
 }: CreateAccountEmailCardProps) {
-  const [result, formAction, isPending] =
-    useActionState<GetVerificationEmailResponse | undefined, FormData>(
-      async (_prev, formData) => {
+  const [result, formAction, isPending] = useActionState<
+    GetVerificationEmailResponse | undefined,
+    FormData
+  >(async (_prev, formData) => {
+    const raw = formData.get("email");
+    const email = typeof raw === "string" ? raw.trim() : "";
 
-        const raw = formData.get("email");
-        const email = typeof raw === "string" ? raw.trim() : "";
+    const res = await getVerificationEmail(undefined, formData);
 
-        const res = await getVerificationEmail(undefined, formData);
+    if (res === "SUCCESS") {
+      onNext(email);
+      return res;
+    }
 
-        if (res === "SUCCESS") {
-          onNext(email);
-          return res;
-}
-
-        return res;
-      },
-      undefined
-    );
+    return res;
+  }, undefined);
 
   return (
     <>

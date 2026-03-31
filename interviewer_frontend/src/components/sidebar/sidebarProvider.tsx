@@ -6,7 +6,10 @@ interface SidebarProviderProps {
   showSidebar?: boolean;
 }
 
-function SidebarProvider({ children, showSidebar = true }: SidebarProviderProps) {
+function SidebarProvider({
+  children,
+  showSidebar = true,
+}: SidebarProviderProps) {
   return (
     <div className={styles.sidebarProvider}>
       {showSidebar && <Sidebar />}

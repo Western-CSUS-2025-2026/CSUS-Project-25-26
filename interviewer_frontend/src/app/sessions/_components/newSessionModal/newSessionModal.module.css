@@ -9,10 +9,9 @@
   z-index: 9999;
 }
 
-
 .modal {
   width: min(520px, 92vw);
-  height: 560px; 
+  height: 560px;
   background: #242424;
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -47,13 +46,11 @@
   align-items: center;
 }
 
-
 .content {
   flex: 1;
-  min-height: 0; 
+  min-height: 0;
   overflow-y: auto;
 }
-
 
 .searchRow {
   display: flex;
@@ -135,7 +132,6 @@
   place-items: center;
 }
 
-
 .h1 {
   font-size: 30px;
   margin: 6px 0 8px 0;
@@ -172,7 +168,6 @@
   line-height: 1.2;
 }
 
-
 .startBtn {
   margin-top: 230px;
   width: 90%;
@@ -196,7 +191,6 @@
   text-align: left;
 }
 
-
 .startBtn:hover {
   transform: scale(1.02);
 }
@@ -204,9 +198,6 @@
 .startBtn {
   transition: transform 0.2s ease;
 }
-
-
-
 
 .startPlus {
   width: 28px;
@@ -219,12 +210,10 @@
   flex-shrink: 0;
 }
 
-
 .content {
-  scrollbar-width: thin;                
-  scrollbar-color: #3a3a3a transparent;  
+  scrollbar-width: thin;
+  scrollbar-color: #3a3a3a transparent;
 }
-
 
 .content::-webkit-scrollbar {
   width: 8px;

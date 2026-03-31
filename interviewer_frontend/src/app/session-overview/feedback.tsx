@@ -20,4 +20,3 @@ export default function Feedback(props: FeedbackProps) {
     </Card>
   );
 }
-

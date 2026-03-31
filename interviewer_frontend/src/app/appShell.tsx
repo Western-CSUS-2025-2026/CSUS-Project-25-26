@@ -13,5 +13,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     pathname === "/accounts" ||
     pathname.startsWith("/accounts/");
 
-  return <SidebarProvider showSidebar={!hideSidebar}>{children}</SidebarProvider>;
+  return (
+    <SidebarProvider showSidebar={!hideSidebar}>{children}</SidebarProvider>
+  );
 }

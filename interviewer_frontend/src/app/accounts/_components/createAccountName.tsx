@@ -9,7 +9,10 @@ interface CreateAccountCardProps {
   onNext: (firstName: string, lastName: string) => void;
 }
 
-export default function CreateAccountCard({ onBack, onNext }: CreateAccountCardProps) {
+export default function CreateAccountCard({
+  onBack,
+  onNext,
+}: CreateAccountCardProps) {
   const [error, setError] = useState<string | null>(null);
 
   return (

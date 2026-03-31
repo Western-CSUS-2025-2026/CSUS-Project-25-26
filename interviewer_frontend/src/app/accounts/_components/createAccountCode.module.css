@@ -1,21 +1,20 @@
-.sendingText{
-    font-size: 0.8em;
-    text-align: center;
+.sendingText {
+  font-size: 0.8em;
+  text-align: center;
 }
 
-.email{
-    
-    color: var(--accent);
+.email {
+  color: var(--accent);
 }
 
-.codeText{
-    font-size: 0.8em;
-    margin-top: 2.9em;
+.codeText {
+  font-size: 0.8em;
+  margin-top: 2.9em;
 }
 
 .codeRow {
   display: flex;
-  gap: 0.8rem;        /* space between boxes */
+  gap: 0.8rem; /* space between boxes */
   justify-content: center; /* optional */
 }
 
@@ -34,7 +33,7 @@
   padding: 0;
   margin: 0;
 
-  color: #F1F1F1;
+  color: #f1f1f1;
 
   outline: none;
 
@@ -44,11 +43,10 @@
   text-align: center;
 }
 
-
-.digit{
-    font-size: 3em;
-    margin: 0;
-    padding: 0;
+.digit {
+  font-size: 3em;
+  margin: 0;
+  padding: 0;
 }
 
 .ResendText {
@@ -60,8 +58,7 @@
   border: none;
   padding: 0;
 
-  font-family: inherit; 
+  font-family: inherit;
 
   cursor: pointer;
 }
-

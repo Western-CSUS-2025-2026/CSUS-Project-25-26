@@ -9,21 +9,19 @@
   justify-content: space-between;
 }
 
-.questionsCard{
-    width: 38em;
-    height: 12.3em;
-
+.questionsCard {
+  width: 38em;
+  height: 12.3em;
 }
 
-.questionsCard h1{
-    margin-bottom: 0;
-    margin-top:0;
+.questionsCard h1 {
+  margin-bottom: 0;
+  margin-top: 0;
 }
 
-
-.questionSub{
-    margin-bottom: 1.74em;
-    margin-top: 0;
+.questionSub {
+  margin-bottom: 1.74em;
+  margin-top: 0;
 }
 
 .button {
@@ -48,29 +46,27 @@
   cursor: pointer;
 }
 
-.gradeCard{
-    width: 22em;
-    height: 12.3em;
+.gradeCard {
+  width: 22em;
+  height: 12.3em;
 }
 
-.gradeCard h1{
-    margin-bottom: 0;
-    margin-top:0;
-    color: var(--accent-primary-text);
+.gradeCard h1 {
+  margin-bottom: 0;
+  margin-top: 0;
+  color: var(--accent-primary-text);
 }
 
-
-.gradeSub{
-    margin-bottom: 1.74em;
-    margin-top: 0;
-    margin-bottom: 1em;
-    color: var(--accent-secondary-text);
+.gradeSub {
+  margin-bottom: 1.74em;
+  margin-top: 0;
+  margin-bottom: 1em;
+  color: var(--accent-secondary-text);
 }
 
-.letterGrade{
-    color: var(--accent-secondary-text);
-    font-size: 5.5em;
-    font-weight: 700;
-    text-align: center;
-
+.letterGrade {
+  color: var(--accent-secondary-text);
+  font-size: 5.5em;
+  font-weight: 700;
+  text-align: center;
 }

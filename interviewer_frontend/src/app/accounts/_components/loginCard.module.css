@@ -5,54 +5,52 @@
 }
 
 .sizeBox {
-    height: 27.8em;
-    width: 27.8em;
+  height: 27.8em;
+  width: 27.8em;
 }
 
 .coloumn {
   display: flex;
   flex-direction: column;
-  align-items: center; 
+  align-items: center;
 }
 
 .line {
   width: 23.7em;
   height: 1px;
   background-color: var(--border);
-
 }
 
-.header{
-    align-items: flex-start;
-    margin-left: 0.5em;
-    margin-top: 0em;
-    font-size: 2.5em;
-    font-weight: 600;
+.header {
+  align-items: flex-start;
+  margin-left: 0.5em;
+  margin-top: 0em;
+  font-size: 2.5em;
+  font-weight: 600;
 }
 
-
-.infoBox{
-    align-items: flex-start;
+.infoBox {
+  align-items: flex-start;
 }
 
-.infoBox p{
-    margin-bottom: 0.2em;
-    margin-top: 1.5em;
+.infoBox p {
+  margin-bottom: 0.2em;
+  margin-top: 1.5em;
 }
 
 .textBox {
-    width: 22em;
-    height: 2.36em;
-    border-radius: 0.6944em;
+  width: 22em;
+  height: 2.36em;
+  border-radius: 0.6944em;
 
-    border: 0.05em solid var(--highlight);
-    background-color: var(--border);
+  border: 0.05em solid var(--highlight);
+  background-color: var(--border);
 
-    padding: 0 0.75em;       
-    font-size: 1rem;
-    color: #F1F1F1;
+  padding: 0 0.75em;
+  font-size: 1rem;
+  color: #f1f1f1;
 
-    outline: none;          
+  outline: none;
 }
 
 /* stop chrome auto styling */
@@ -61,10 +59,9 @@
 .textBox:-webkit-autofill:focus,
 .textBox:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 1000px var(--border) inset;
-  -webkit-text-fill-color: #F1F1F1;
+  -webkit-text-fill-color: #f1f1f1;
   transition: background-color 9999s ease-in-out 0s;
 }
-
 
 .loginButton {
   width: 23.2em;
@@ -81,8 +78,8 @@
   color: var(--border);
   font-weight: 600;
 
-  border: none;          
-  cursor: pointer;      
+  border: none;
+  cursor: pointer;
 }
 
 .loginButton:hover {
@@ -97,7 +94,6 @@
   outline: 2px solid var(--highlight);
   outline-offset: 2px;
 }
-
 
 .linkText {
   display: flex;
@@ -119,7 +115,6 @@
 
   cursor: pointer;
 }
-
 
 .linkButton {
   background: none;
@@ -146,7 +141,6 @@
   height: 5.5em;
 }
 
-
 .loginWrapper {
   position: relative;
   display: inline-block;
@@ -154,13 +148,10 @@
 
 .errorText {
   position: absolute;
-  top: 100%;      
+  top: 100%;
   left: 0;
   width: 100%;
 
   font-size: 0.65em;
   color: var(--secondary-text);
 }
-
-
-

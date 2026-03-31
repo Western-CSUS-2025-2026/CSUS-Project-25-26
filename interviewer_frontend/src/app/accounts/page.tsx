@@ -25,7 +25,9 @@ export default function AccountsPage() {
 
   return (
     <div>
-      {mode === "login" && <LoginCard onSignUp={() => setMode("signup-email")} />}
+      {mode === "login" && (
+        <LoginCard onSignUp={() => setMode("signup-email")} />
+      )}
 
       {mode === "signup-email" && (
         <CreateAccountEmailCard

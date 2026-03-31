@@ -1,16 +1,15 @@
 .stageBox,
 .stageBoxActive {
-  width: 10.4167em;        
-  height: 3.236em;    
+  width: 10.4167em;
+  height: 3.236em;
   border-radius: 0.6944em;
 
-  display: flex;                 /* ← required */
-  align-items: center;           /* vertical center */
-  justify-content: center;       /* horizontal center */
+  display: flex; /* ← required */
+  align-items: center; /* vertical center */
+  justify-content: center; /* horizontal center */
 
   opacity: 1;
   background-color: var(--foreground);
-  
 }
 
 .stageBoxActive {
@@ -32,9 +31,9 @@
   align-items: center;
   justify-content: space-evenly;
   width: 100%;
-  gap:0.7176em;
+  gap: 0.7176em;
 }
 
 .boxTitle {
-  margin-bottom: 0.25em; 
+  margin-bottom: 0.25em;
 }

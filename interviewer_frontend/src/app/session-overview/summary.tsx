@@ -7,14 +7,17 @@ import { Session } from "@/types/session";
 export default function Summary({ session }: { session: Session }) {
   return (
     <div className={styles.row}>
-
       {/* QUESTIONS CARD */}
       <Card>
         <div className={styles.questionsCard}>
           <div className={styles.row2}>
             <h1 className={styles.questionTitle}>Questions</h1>
 
-            <button type="button" aria-label="Add" className={styles.plusButton}>
+            <button
+              type="button"
+              aria-label="Add"
+              className={styles.plusButton}
+            >
               <InvertedPlusIcon
                 foreground="#202020"
                 background="#cb9fe6"
@@ -48,9 +51,7 @@ export default function Summary({ session }: { session: Session }) {
         <Card>
           <div className={styles.gradeCard}>
             <h1>Grade</h1>
-            <p className={styles.gradeSub}>
-              An associated letter grade
-            </p>
+            <p className={styles.gradeSub}>An associated letter grade</p>
 
             <h1 className={styles.letterGrade}>
               {convertToLetterGrade(session.overallGrade.overallGrade)}
@@ -58,7 +59,6 @@ export default function Summary({ session }: { session: Session }) {
           </div>
         </Card>
       </div>
-
     </div>
   );
 }

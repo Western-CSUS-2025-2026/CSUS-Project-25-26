@@ -38,7 +38,7 @@ export default function CreateAccountPassword({
     return { has8, hasNumber, hasSymbol };
   }, [password]);
 
-  //clickable when it meets the 3 requirements 
+  //clickable when it meets the 3 requirements
   const canProceed = checks.has8 && checks.hasNumber && checks.hasSymbol;
 
   const [result, formAction, isPending] = useActionState<

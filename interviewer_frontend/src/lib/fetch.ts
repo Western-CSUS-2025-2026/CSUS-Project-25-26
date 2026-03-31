@@ -11,6 +11,5 @@ export function fetchAPI(
   const fullUrl =
     base.replace(/\/$/, "") + "/" + path.toString().replace(/^\//, "");
 
-
   return fetch(fullUrl, options);
 }
