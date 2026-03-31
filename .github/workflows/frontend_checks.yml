@@ -27,6 +27,7 @@ jobs:
         run: npm run build
       - name: Prettier Precheck
         run: |
+          set +e
           npm run format-precheck 
           exit_code=$?
 
