@@ -129,9 +129,9 @@ export default function CreateAccountCode({
                 <div className={styles.line}></div>
 
                 <p className={codeStyles.sendingText}>
-                  We've sent a 6-digit code to{" "}
-                  <span className={codeStyles.email}>{email}</span>. Please enter
-                  it below.
+                  {"We've sent a 6-digit code to "}
+                  <span className={codeStyles.email}>{email}</span>. Please
+                  enter it below.
                 </p>
 
                 <form action={formAction} noValidate>
@@ -162,16 +162,19 @@ export default function CreateAccountCode({
                     <button
                       className={styles.loginButton}
                       type="submit"
-                      disabled={isPending || !isComplete} 
+                      disabled={isPending || !isComplete}
                     >
                       {isPending ? "Verifying..." : "Next"}
                     </button>
 
                     {result && result !== "SUCCESS" && (
                       <div className={styles.errorText} role="status">
-                        {result === "INVALID_FORM" && "Enter the full 6-digit code."}
-                        {result === "INVALID_CODE" && "That code is incorrect or expired."}
-                        {result === "NETWORK_ERROR" && "Network error. Try again."}
+                        {result === "INVALID_FORM" &&
+                          "Enter the full 6-digit code."}
+                        {result === "INVALID_CODE" &&
+                          "That code is incorrect or expired."}
+                        {result === "NETWORK_ERROR" &&
+                          "Network error. Try again."}
                       </div>
                     )}
                   </div>
@@ -201,3 +204,4 @@ export default function CreateAccountCode({
     </>
   );
 }
+

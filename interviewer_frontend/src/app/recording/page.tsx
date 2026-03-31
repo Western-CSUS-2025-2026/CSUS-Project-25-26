@@ -8,6 +8,15 @@ import CompletedModal from "./_components/completedModal/completedModal";
 
 import { useRouter, useSearchParams } from "next/navigation";
 import QuestionCompletedModal from "./_components/questionCompletedModal/QuestionCompletedModal";
+import { Suspense } from "react";
+
+function RecordingPageOuter() {
+  return (
+    <Suspense>
+      <RecordingPage></RecordingPage>
+    </Suspense>
+  );
+}
 
 function RecordingPage() {
   const router = useRouter();
@@ -60,4 +69,4 @@ function RecordingPage() {
   );
 }
 
-export default RecordingPage;
+export default RecordingPageOuter;

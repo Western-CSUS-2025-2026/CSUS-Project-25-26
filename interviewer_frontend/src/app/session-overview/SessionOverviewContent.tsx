@@ -1,6 +1,5 @@
 import styles from "./page.module.css";
 import Summary from "./summary";
-import Video from "./video";
 import Transcript from "./transcript";
 import Skills from "./skills";
 import Feedback from "./feedback";

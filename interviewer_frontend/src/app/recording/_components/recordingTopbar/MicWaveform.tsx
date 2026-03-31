@@ -1,13 +1,16 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type MicWaveformProps = {
   enabled: boolean;
   smoothing?: number; // 0..1
 };
 
-export default function MicWaveform({ enabled, smoothing = 0.85 }: MicWaveformProps) {
+export default function MicWaveform({
+  enabled,
+  smoothing = 0.85,
+}: MicWaveformProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -98,7 +101,9 @@ export default function MicWaveform({ enabled, smoothing = 0.85 }: MicWaveformPr
     });
     streamRef.current = stream;
 
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioCtx =
+      new // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window.AudioContext || (window as any).webkitAudioContext)();
     audioCtxRef.current = audioCtx;
 
     const analyser = audioCtx.createAnalyser();
@@ -175,7 +180,7 @@ export default function MicWaveform({ enabled, smoothing = 0.85 }: MicWaveformPr
       const minBin = Math.floor((minFreq / nyquist) * (freqData.length - 1));
       const maxBin = Math.max(
         minBin + 1,
-        Math.floor((maxFreq / nyquist) * (freqData.length - 1))
+        Math.floor((maxFreq / nyquist) * (freqData.length - 1)),
       );
 
       const usableBins = maxBin - minBin + 1;
@@ -192,7 +197,7 @@ export default function MicWaveform({ enabled, smoothing = 0.85 }: MicWaveformPr
         let sum = 0;
         for (let b = startBin; b < endBin; b++) sum += freqData[b];
 
-        let level = (sum / Math.max(1, endBin - startBin)) / 255;
+        let level = sum / Math.max(1, endBin - startBin) / 255;
 
         level = level < gate ? 0 : (level - gate) / (1 - gate);
         level = Math.pow(level, 0.55);
@@ -247,7 +252,7 @@ export default function MicWaveform({ enabled, smoothing = 0.85 }: MicWaveformPr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // run once
 
-  // Main toggle: enabled -> warmUp + draw, disabled -> pause 
+  // Main toggle: enabled -> warmUp + draw, disabled -> pause
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -257,11 +262,12 @@ export default function MicWaveform({ enabled, smoothing = 0.85 }: MicWaveformPr
         try {
           await warmUpAudio();
           startDrawing();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           setPermissionError(
             e?.name === "NotAllowedError"
               ? "Mic permission denied."
-              : "Could not access microphone."
+              : "Could not access microphone.",
           );
           pauseDrawing();
         }
@@ -305,7 +311,9 @@ export default function MicWaveform({ enabled, smoothing = 0.85 }: MicWaveformPr
         aria-hidden="true"
       />
       {permissionError && (
-        <p style={{ fontSize: 12, opacity: 0.7, margin: 0 }}>{permissionError}</p>
+        <p style={{ fontSize: 12, opacity: 0.7, margin: 0 }}>
+          {permissionError}
+        </p>
       )}
     </>
   );
@@ -317,7 +325,7 @@ function roundRect(
   y: number,
   w: number,
   h: number,
-  r: number
+  r: number,
 ) {
   const radius = Math.max(0, Math.min(r, w / 2, h / 2));
   ctx.beginPath();
