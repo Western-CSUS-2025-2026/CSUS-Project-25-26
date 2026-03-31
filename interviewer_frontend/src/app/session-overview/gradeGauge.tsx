@@ -1,7 +1,7 @@
 import Card from "@/components/card/card";
 import styles from "./gradeGauge.module.css";
 import Gauge from "@/components/gauge/gauge";
-import { Grading, Session } from "@/types/session";
+import { Grading } from "@/types/session";
 
 interface GradeGaugeProps {
   grade: Grading;
@@ -58,4 +58,3 @@ export default function GradeGauge(props: GradeGaugeProps) {
     </div>
   );
 }
-

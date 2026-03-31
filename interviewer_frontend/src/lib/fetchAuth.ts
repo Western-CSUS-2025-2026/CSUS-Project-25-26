@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 export async function fetchAPIAuthorized(
   path: string,
   options: RequestInit,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<{ success: false; status: number } | { success: true; body: any }> {
   const url = process.env.API_URL;
 

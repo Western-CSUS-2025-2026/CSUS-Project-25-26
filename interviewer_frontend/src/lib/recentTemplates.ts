@@ -1,5 +1,4 @@
-import { defaultTemplate, Template } from "@/types/template";
-import { sleep } from "./sleep";
+import { Template } from "@/types/template";
 import { getTemplates } from "./getTemplates";
 
 export async function getRecentTemplates(): Promise<Template[]> {

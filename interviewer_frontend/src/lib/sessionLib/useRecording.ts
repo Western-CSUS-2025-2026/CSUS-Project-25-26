@@ -60,6 +60,7 @@ export function useRecording(): UseRecordingReturn {
   };
   const endRecording = (callback: (blob: Blob) => void) => {
     setEndTime(new Date());
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mediaRef.current!.onstop = (_e) => {
       const combine = new Blob(chunksRef.current, { type: "video/mp4" });
       callback(combine);

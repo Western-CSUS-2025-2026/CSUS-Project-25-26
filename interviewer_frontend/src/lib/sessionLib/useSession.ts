@@ -5,8 +5,6 @@ import Webcam from "react-webcam";
 import { useTimer } from "./useTimer";
 import { Question } from "./getQuestions";
 import { sendRecording } from "./sendRecording";
-import { getSessionNew } from "../getNewSession";
-import fixWebmDuration from "fix-webm-duration";
 import { getSessionRecording } from "../getSessionRecording";
 
 export type SessionState = "Recording" | "Preparing";
@@ -72,7 +70,7 @@ function useSession(sessionId: number): UseSessionReturn {
         setIsLoading(false);
       }
     });
-  }, []);
+  }, [sessionId]);
 
   const startSession = () => {
     setCurrentQuestion(questionList[0]);
@@ -101,6 +99,7 @@ function useSession(sessionId: number): UseSessionReturn {
 
     timer.start(true);
     recording.startRecording();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     timer.addCallback((_elap: number) => {
       endRecordingPhase();
     }, recordingPhaseDuration);
