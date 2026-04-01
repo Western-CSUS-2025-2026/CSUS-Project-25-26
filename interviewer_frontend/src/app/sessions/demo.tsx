@@ -1,9 +1,11 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import Modal from "@/components/modal/modal";
 import styles from "./demo.module.css";
 import { useRouter } from "next/navigation";
 import { createSession } from "@/lib/sessionLib/createSession";
+import dynamic from "next/dynamic";
 
 function DemoModal() {
   const ID = 10;
@@ -16,12 +18,12 @@ function DemoModal() {
     });
   };
 
-  return (
+  const modalContent = (
     <Modal width="500px" flexDirection="column" alignItems="center">
       <div className={styles.container}>
         {/* Header */}
         <div className={styles.header}>
-          <h1 className={styles.title}>Welcome to Interviewer Prep</h1>
+          <h1 className={styles.title}>Welcome to Jobless.live</h1>
           <p className={styles.subtitle}>
             Get started in 30 seconds with our interactive demo
           </p>
@@ -76,6 +78,12 @@ function DemoModal() {
       </div>
     </Modal>
   );
+
+  return createPortal(modalContent, document.body);
 }
+
+export const DemoModalNoSSR = dynamic(() => import("./demo"), {
+  ssr: false,
+});
 
 export default DemoModal;

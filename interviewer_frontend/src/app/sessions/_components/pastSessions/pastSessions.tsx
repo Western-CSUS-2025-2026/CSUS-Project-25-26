@@ -3,7 +3,7 @@ import styles from "./pastSessions.module.css";
 import SessionCard from "./sessionCard/sessionCard";
 import LoadingCard from "./loadingCard/loadingCard"; // Correct import for LoadingCard
 import { getPastSessions } from "@/lib/pastSessions";
-import DemoModal from "../../demo";
+import { DemoModalNoSSR } from "../../demo";
 
 export default function PastSessionsGrid() {
   return (
@@ -32,7 +32,7 @@ async function PastSessionsAsync() {
       {sessions.map((session, index) => {
         return <SessionCard key={index} session={session} />;
       })}
-      {sessions.length == 0 ? <DemoModal></DemoModal> : undefined}
+      {sessions.length == 0 ? <DemoModalNoSSR></DemoModalNoSSR> : undefined}
     </div>
   );
 }
