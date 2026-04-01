@@ -8,7 +8,7 @@ import { createSession } from "@/lib/sessionLib/createSession";
 import dynamic from "next/dynamic";
 
 function DemoModal() {
-  const ID = 1;
+  const ID = 2;
   const router = useRouter();
   const onClick = () => {
     createSession(Number(ID)).then((res) => {
