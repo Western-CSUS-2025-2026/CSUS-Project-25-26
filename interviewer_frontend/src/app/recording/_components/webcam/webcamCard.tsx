@@ -20,6 +20,8 @@ function WebcamCard({ webRef }: WebcamCardProps) {
   return (
     <Card>
       <Webcam
+        muted={true}
+        mirrored={true}
         audio={true}
         className={styles.webcam}
         ref={webRef}
