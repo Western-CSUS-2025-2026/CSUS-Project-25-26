@@ -4,7 +4,7 @@ import AppShell from "./appShell";
 import { SafariWarningNoSSR } from "@/components/safariWarning/safariWarning";
 
 export const metadata: Metadata = {
-  title: "Jobless.ai",
+  title: "Jobless.live",
   description: "Ai behavioural interview prep",
 };
 
