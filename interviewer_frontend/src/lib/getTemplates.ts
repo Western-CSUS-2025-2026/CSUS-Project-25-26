@@ -15,16 +15,22 @@ export async function getTemplates(): Promise<Template[]> {
     return [];
   }
 
-  const templates: { job_title: string; description: string; id: number }[] =
-    res.body;
+  const templates: {
+    job_title: string;
+    description: string;
+    id: number;
+    is_hidden: boolean;
+  }[] = res.body;
 
-  const mapped: Template[] = templates.map((t) => {
-    return {
-      title: t.job_title,
-      description: t.description,
-      id: t.id.toString(),
-    };
-  });
+  const mapped: Template[] = templates
+    .filter((t) => !t.is_hidden)
+    .map((t) => {
+      return {
+        title: t.job_title,
+        description: t.description,
+        id: t.id.toString(),
+      };
+    });
 
   return mapped;
 }
