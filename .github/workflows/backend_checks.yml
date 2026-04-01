@@ -2,9 +2,7 @@ name: Backend lint check
 
 on:
   pull_request:
-    paths:
-      - "backend/**"
-      - ".github/workflows/**"
+    branches: ["main"]
 
 
 jobs:
