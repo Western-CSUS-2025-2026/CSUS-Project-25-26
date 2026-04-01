@@ -5,5 +5,5 @@ export async function getRecentTemplates(): Promise<Template[]> {
   // will have a network request eventually
   const temps = await getTemplates();
 
-  return [temps[0], temps[1]];
+  return temps.slice(0, 2);
 }
