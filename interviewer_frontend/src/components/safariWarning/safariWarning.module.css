@@ -1,0 +1,22 @@
+.container {
+  text-align: center;
+  padding: 20px;
+}
+
+.title {
+  margin: 0 0 16px 0;
+  color: var(--primary-text);
+  font-size: 18px;
+}
+
+.message {
+  margin: 0 0 16px 0;
+  color: var(--secondary-text);
+  font-size: 14px;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--secondary-text);
+  font-size: 12px;
+}

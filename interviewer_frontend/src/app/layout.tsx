@@ -1,18 +1,8 @@
 import type { Metadata } from "next";
-// import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AppShell from "./appShell";
+import { SafariWarningNoSSR } from "@/components/safariWarning/safariWarning";
 
-// const geistSans = Geist({
-//   variable: "--font-geist-sans",
-//   subsets: ["latin"],
-// });
-//
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });
-//
 export const metadata: Metadata = {
   title: "Jobless.ai",
   description: "Ai behavioural interview prep",
@@ -27,6 +17,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AppShell>{children}</AppShell>
+        <SafariWarningNoSSR></SafariWarningNoSSR>
       </body>
     </html>
   );
