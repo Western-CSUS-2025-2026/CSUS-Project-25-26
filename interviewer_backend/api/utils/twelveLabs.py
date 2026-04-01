@@ -14,7 +14,9 @@ from api.metrics import observe_background_task, record_external_api_failure, re
 from api.models.db import Feedback, Grade, Session, SessionComponent, SessionState, TwelveLabsIndex
 from api.settings import Settings, get_settings
 
+
 _INTERVIEW_PROMPT = (Path(__file__).parent.parent / "prompts" / "interview_prompt.txt").read_text()
+
 
 class VideoAnalysis:
     """
