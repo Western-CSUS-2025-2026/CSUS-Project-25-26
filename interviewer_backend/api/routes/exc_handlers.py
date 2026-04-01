@@ -9,6 +9,7 @@ from api.exceptions import (
     FailToParseAnalysis,
     ForbiddenAction,
     IndexCreatingFail,
+    ObjectInUse,
     ObjectNotFound,
     RateLimitExceeded,
     RegistrationIncomplete,
@@ -29,6 +30,11 @@ async def not_found_handler(req: starlette.requests.Request, exc: ObjectNotFound
 
 @app.exception_handler(AlreadyExists)
 async def already_exists_handler(req: starlette.requests.Request, exc: AlreadyExists):
+    return JSONResponse(content=StatusResponseModel(status="Error", message=exc.msg).model_dump(), status_code=409)
+
+
+@app.exception_handler(ObjectInUse)
+async def object_in_use_handler(req: starlette.requests.Request, exc: ObjectInUse):
     return JSONResponse(content=StatusResponseModel(status="Error", message=exc.msg).model_dump(), status_code=409)
 
 

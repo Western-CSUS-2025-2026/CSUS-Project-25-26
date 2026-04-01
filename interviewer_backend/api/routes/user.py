@@ -171,31 +171,40 @@ async def registration_verify_code(verification_token: int, email: str) -> Statu
     RegistrationVerifyCode(email=email, verification_token=verification_token)
     user: User | None = User.query(session=db.session).filter(User.email == email).one_or_none()
     if not user:
+        db.session.rollback()
         raise AuthFailed("Incorrect or expired verification token")
     if (
         user.create_ts < datetime.now(tz=timezone.utc) - timedelta(minutes=settings.VERIFICATION_TOKEN_TTL)
         or user.verification_token != verification_token
     ):
+        db.session.rollback()
         raise AuthFailed("Incorrect or expired verification token")
 
-    return StatusResponseModel(status="Success", message="Email verified")
+    response = StatusResponseModel(status="Success", message="Email verified")
+    db.session.rollback()
+    return response
 
 
 @user.put("/registration/verify", response_model=StatusResponseModel)
 async def registration_verify(user_data: RegistrationVerify) -> StatusResponseModel:
+    salt = random_string()
+    password_hash = hash_password(user_data.password, salt)
+
     user: User = User.query(session=db.session).filter(User.email == user_data.email).one_or_none()
     if not user:
+        db.session.rollback()
         raise ObjectNotFound(User, user_data.email)
     if user.password_hash:
+        db.session.rollback()
         raise AlreadyExists(User, user.id)
     if (
         user.create_ts < datetime.now(tz=timezone.utc) - timedelta(minutes=settings.VERIFICATION_TOKEN_TTL)
         or user.verification_token != user_data.verification_token
     ):
+        db.session.rollback()
         raise AuthFailed("Incorrect or expired verification token")
-    salt = random_string()
 
-    user.password_hash = hash_password(user_data.password, salt)
+    user.password_hash = password_hash
     user.salt = salt
     user.first_name = user_data.first_name
     user.last_name = user_data.last_name
@@ -208,15 +217,24 @@ async def registration_verify(user_data: RegistrationVerify) -> StatusResponseMo
 async def login(user_data: UserLogin, response: Response) -> AuthLoginResponse:
     user: User | None = User.query(session=db.session).filter(User.email == user_data.email).one_or_none()
     if user is None:
+        db.session.rollback()
         raise AuthFailed("Incorrect login or password")
-    if not user.password_hash:
+
+    user_id = user.id
+    password_hash = user.password_hash
+    salt = user.salt
+
+    # Close the read transaction before expensive password verification.
+    db.session.rollback()
+
+    if not password_hash:
         raise RegistrationIncomplete()
-    if not validate_password(user_data.password, user.password_hash, user.salt):
+    if not validate_password(user_data.password, password_hash, salt):
         raise AuthFailed("Incorrect login or password")
 
     now = datetime.now(tz=timezone.utc)
-    access_token = create_access_token(user.id, now=now)
-    refresh_token, refresh_expires_at = _issue_refresh_session(user.id, now)
+    access_token = create_access_token(user_id, now=now)
+    refresh_token, refresh_expires_at = _issue_refresh_session(user_id, now)
     _set_auth_cookies(
         response,
         access_token=access_token,
@@ -225,7 +243,7 @@ async def login(user_data: UserLogin, response: Response) -> AuthLoginResponse:
     )
     db.session.commit()
     return AuthLoginResponse(
-        user_id=user.id,
+        user_id=user_id,
         access_token=access_token,
         token_type="Bearer",
         expires_in=get_access_token_expires_in(),
@@ -254,6 +272,7 @@ async def refresh(
         .one_or_none()
     )
     if not refresh_session or refresh_session.revoked_at is not None or refresh_session.expires_at <= now:
+        db.session.rollback()
         raise AuthFailed("Not authorized")
 
     refresh_session.revoked_at = now
@@ -293,6 +312,10 @@ async def logout(
         if refresh_session and refresh_session.revoked_at is None:
             refresh_session.revoked_at = now
             db.session.commit()
+        else:
+            db.session.rollback()
+    else:
+        db.session.rollback()
     _clear_auth_cookies(response)
     return StatusResponseModel(status="Success", message="Logged out")
 
@@ -301,13 +324,16 @@ async def logout(
 async def me(current_user: AuthUser = Depends(Auth())) -> MyUserGet:
     user_obj: User | None = User.query(session=db.session).filter(User.id == current_user.user_id).one_or_none()
     if not user_obj:
+        db.session.rollback()
         raise AuthFailed("Not authorized")
-    return MyUserGet(
+    response = MyUserGet(
         id=user_obj.id,
         email=user_obj.email,
         first_name=user_obj.first_name,
         last_name=user_obj.last_name,
     )
+    db.session.rollback()
+    return response
 
 
 @user.delete("", response_model=StatusResponseModel)

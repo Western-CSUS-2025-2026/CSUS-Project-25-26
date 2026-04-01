@@ -6,7 +6,6 @@ __all__ = [
     "Base",
     "BaseDbModel",
     "User",
-    "UserSession",
     "RefreshSession",
     "UserMessageDelay",
     "Template",

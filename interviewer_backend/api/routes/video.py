@@ -35,9 +35,11 @@ async def get_upload_url(
     session = session_component.session
 
     if session.user_id != current_user.user_id:
+        db.session.rollback()
         raise ForbiddenAction(Session)
 
     if session_component.state != SessionState.PENDING:
+        db.session.rollback()
         raise ForbiddenAction(SessionComponent)
 
     video_record = (
@@ -46,18 +48,27 @@ async def get_upload_url(
 
     # Reuse same s3_key while PENDING
     if video_record and video_record.s3_key:
-        url = generate_upload_url(video_record.s3_key)
-        return PresignedURLResponse(url=url, s3_key=video_record.s3_key)
+        existing_s3_key = video_record.s3_key
+        db.session.rollback()
+        url = generate_upload_url(existing_s3_key)
+        return PresignedURLResponse(url=url, s3_key=existing_s3_key)
+
+    # End the read transaction before creating URLs and writing a new row.
+    db.session.rollback()
 
     s3_key = generate_s3_key(session_component_id)
     url = generate_upload_url(s3_key)
 
-    Video.create(
-        session=db.session,
-        session_component_id=session_component_id,
-        s3_key=s3_key,
-    )
-    db.session.commit()
+    try:
+        Video.create(
+            session=db.session,
+            session_component_id=session_component_id,
+            s3_key=s3_key,
+        )
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
 
     return PresignedURLResponse(url=url, s3_key=s3_key)
 
@@ -72,16 +83,20 @@ async def get_watch_url(
     session = session_component.session
 
     if session.user_id != current_user.user_id:
+        db.session.rollback()
         raise ForbiddenAction(Session)
 
     video_record = (
         Video.query(session=db.session).filter(Video.session_component_id == session_component_id).one_or_none()
     )
     if not video_record or not video_record.s3_key:
+        db.session.rollback()
         raise ForbiddenAction(Video)
 
-    url = generate_read_url(video_record.s3_key)
-    return PresignedURLResponse(url=url, s3_key=video_record.s3_key)
+    s3_key = video_record.s3_key
+    db.session.rollback()
+    url = generate_read_url(s3_key)
+    return PresignedURLResponse(url=url, s3_key=s3_key)
 
 
 @video.post("/webhook/s3")
