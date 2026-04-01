@@ -3,11 +3,15 @@ from __future__ import annotations
 import datetime
 import enum
 import logging
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import BaseDbModel
+
+if TYPE_CHECKING:
+    from api.models.role import UserRole
 
 
 logger = logging.getLogger(__name__)
@@ -37,6 +41,12 @@ class User(BaseDbModel):
     refresh_sessions: Mapped[list["RefreshSession"]] = relationship(
         "RefreshSession",
         foreign_keys="RefreshSession.user_id",
+        back_populates="user",
+        cascade="all, delete",
+    )
+    user_roles: Mapped[list["UserRole"]] = relationship(
+        "UserRole",
+        foreign_keys="UserRole.user_id",
         back_populates="user",
         cascade="all, delete",
     )

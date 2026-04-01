@@ -1,7 +1,7 @@
 """session template link
 
 Revision ID: 7c6f2e1a9d4b
-Revises: 33522e742cc1
+Revises: a3f8c1d92e47
 Create Date: 2026-04-01 00:00:00.000000
 
 """
@@ -12,7 +12,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = '7c6f2e1a9d4b'
-down_revision = '33522e742cc1'
+down_revision = 'a3f8c1d92e47'
 branch_labels = None
 depends_on = None
 

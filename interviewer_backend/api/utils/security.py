@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from secrets import compare_digest, token_hex
 
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -13,35 +14,12 @@ from api.utils.jwt_auth import decode_access_token
 UNSAFE_HTTP_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 
 
-class AuthUser:
-    user_id: int
-
-    def __init__(self, user_id: int):
-        self.user_id = user_id
-
-
 @dataclass(frozen=True)
 class JwtAuthUser:
-    """Identity and roles from a validated JWT"""
+    """Identity and roles from a validated access JWT (no DB lookup)."""
 
     user_id: int
     roles: list[str]
-
-
-def mint_access_token(user_id: int, roles: list[str]) -> tuple[str, datetime.datetime]:
-    """Issue a signed JWT with embedded role names"""
-    now = datetime.datetime.now(tz=datetime.timezone.utc)
-    exp = now + datetime.timedelta(days=settings.SESSION_TIME_IN_DAYS)
-    payload = {
-        "sub": user_id,
-        "roles": roles,
-        "exp": exp,
-        "iat": now,
-    }
-    token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
-    if isinstance(token, bytes):
-        token = token.decode("utf-8")
-    return token, exp
 
 
 class Auth(SecurityBase):
@@ -61,7 +39,7 @@ class Auth(SecurityBase):
     async def __call__(
         self,
         request: Request,
-    ) -> AuthUser | None:
+    ) -> JwtAuthUser | None:
         token = request.cookies.get(self.settings.ACCESS_TOKEN_COOKIE_NAME)
         if not token:
             credentials: HTTPAuthorizationCredentials | None = await self._bearer(request)
@@ -70,20 +48,16 @@ class Auth(SecurityBase):
 
         if not token and self.allow_none:
             return None
-        if not raw:
-            self._except()
-        token = raw.strip()
-        if token.lower().startswith("bearer "):
-            token = token[7:].strip()
         if not token:
             self._except()
 
         try:
             payload = decode_access_token(token)
             user_id = int(payload["sub"])
+            roles = payload.get("roles") or []
         except (InvalidTokenError, KeyError, TypeError, ValueError):
             self._except()
-        return AuthUser(user_id=user_id)
+        return JwtAuthUser(user_id=user_id, roles=roles)
 
 
 def generate_csrf_token() -> str:

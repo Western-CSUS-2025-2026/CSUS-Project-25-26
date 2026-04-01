@@ -1,7 +1,7 @@
 """Role system
 
 Revision ID: a3f8c1d92e47
-Revises: 825037547798
+Revises: 33522e742cc1
 Create Date: 2026-03-29 12:00:00.000000
 """
 
@@ -10,7 +10,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = 'a3f8c1d92e47'
-down_revision = '825037547798'
+down_revision = '33522e742cc1'
 branch_labels = None
 depends_on = None
 

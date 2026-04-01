@@ -6,6 +6,7 @@ from fastapi_sqlalchemy import db
 
 from api.exceptions import AlreadyExists, AuthFailed, ObjectNotFound, RegistrationIncomplete
 from api.models.db import RefreshSession, User
+from api.models.role import Role, UserRole
 from api.schemas.base import StatusResponseModel
 from api.schemas.models import (
     AuthLoginResponse,
@@ -28,7 +29,7 @@ from api.utils.jwt_auth import (
     get_refresh_token_expires_in,
     hash_refresh_token,
 )
-from api.utils.security import Auth, AuthUser, CsrfProtect, generate_csrf_token
+from api.utils.security import Auth, CsrfProtect, JwtAuthUser, generate_csrf_token
 from api.utils.smtp import SendEmailMessage
 from api.utils.token import random_int, random_string
 
@@ -116,6 +117,16 @@ def _clear_auth_cookies(response: Response) -> None:
         path=settings.AUTH_COOKIE_PATH,
         domain=settings.AUTH_COOKIE_DOMAIN,
     )
+
+
+def _fetch_user_role_names(user_id: int) -> list[str]:
+    rows = (
+        db.session.query(Role.name)
+        .join(UserRole, UserRole.role_id == Role.id)
+        .filter(UserRole.user_id == user_id)
+        .all()
+    )
+    return [row.name for row in rows]
 
 
 def _get_refresh_token(payload: RefreshRequest | LogoutRequest | None, request: Request) -> str | None:
@@ -233,7 +244,8 @@ async def login(user_data: UserLogin, response: Response) -> AuthLoginResponse:
         raise AuthFailed("Incorrect login or password")
 
     now = datetime.now(tz=timezone.utc)
-    access_token = create_access_token(user_id, now=now)
+    role_names = _fetch_user_role_names(user_id)
+    access_token = create_access_token(user_id, now=now, roles=role_names)
     refresh_token, refresh_expires_at = _issue_refresh_session(user_id, now)
     _set_auth_cookies(
         response,
@@ -276,7 +288,8 @@ async def refresh(
         raise AuthFailed("Not authorized")
 
     refresh_session.revoked_at = now
-    access_token = create_access_token(refresh_session.user_id, now=now)
+    role_names = _fetch_user_role_names(refresh_session.user_id)
+    access_token = create_access_token(refresh_session.user_id, now=now, roles=role_names)
     refresh_token, refresh_expires_at = _issue_refresh_session(refresh_session.user_id, now)
     _set_auth_cookies(
         response,
@@ -321,7 +334,7 @@ async def logout(
 
 
 @user.get("", response_model=MyUserGet)
-async def me(current_user: AuthUser = Depends(Auth())) -> MyUserGet:
+async def me(current_user: JwtAuthUser = Depends(Auth())) -> MyUserGet:
     user_obj: User | None = User.query(session=db.session).filter(User.id == current_user.user_id).one_or_none()
     if not user_obj:
         db.session.rollback()
@@ -339,7 +352,7 @@ async def me(current_user: AuthUser = Depends(Auth())) -> MyUserGet:
 @user.delete("", response_model=StatusResponseModel)
 async def delete_user(
     _: None = Depends(CsrfProtect()),
-    current_user: AuthUser = Depends(Auth()),
+    current_user: JwtAuthUser = Depends(Auth()),
 ) -> StatusResponseModel:
     User.delete(session=db.session, id=current_user.user_id)
     db.session.commit()

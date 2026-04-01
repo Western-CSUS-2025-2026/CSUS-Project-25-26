@@ -13,15 +13,22 @@ from api.settings import get_settings
 settings = get_settings()
 
 
-def create_access_token(user_id: int, now: datetime.datetime | None = None) -> str:
+def create_access_token(
+    user_id: int,
+    now: datetime.datetime | None = None,
+    *,
+    roles: list[str] | None = None,
+) -> str:
     issued_at = now or datetime.datetime.now(tz=datetime.timezone.utc)
     expire_at = issued_at + datetime.timedelta(minutes=settings.ACCESS_TOKEN_TTL_MINUTES)
+    role_list = [] if roles is None else list(roles)
     payload = {
         "sub": str(user_id),
         "type": "access",
         "jti": uuid.uuid4().hex,
         "iat": int(issued_at.timestamp()),
         "exp": int(expire_at.timestamp()),
+        "roles": role_list,
     }
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
@@ -37,6 +44,13 @@ def decode_access_token(token: str) -> dict[str, Any]:
         int(sub)
     except (TypeError, ValueError) as exc:
         raise jwt.InvalidTokenError("Invalid subject") from exc
+    raw_roles = payload.get("roles")
+    if raw_roles is None:
+        payload["roles"] = []
+    elif not isinstance(raw_roles, list):
+        raise jwt.InvalidTokenError("Invalid roles claim")
+    else:
+        payload["roles"] = [str(r) for r in raw_roles]
     return payload
 
 
