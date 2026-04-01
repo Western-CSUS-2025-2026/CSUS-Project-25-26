@@ -25,6 +25,7 @@ function Sidebar() {
         <NavButton href="/home" label="Home" icon="/icons/home.svg" />
         <NavButton
           href="/sessions"
+          altNames={["/recording"]}
           label="Sessions"
           icon="/icons/sessions.svg"
         />
@@ -70,13 +71,15 @@ function NavButton({
   href,
   label,
   icon,
+  altNames,
 }: {
   href: string;
   label: string;
   icon: string;
+  altNames?: string[];
 }) {
   const pathname = usePathname();
-  const isActive = pathname === href;
+  const isActive = pathname === href || altNames?.includes(pathname);
 
   return (
     <Link

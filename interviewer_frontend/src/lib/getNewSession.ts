@@ -1,12 +1,11 @@
 import { Grading, Session, StagingSession } from "@/types/session";
 import { fetchAPIAuthorized } from "./fetchAuth";
-import { defaultTemplate } from "@/types/template";
 
 export async function getSessionNew(
   id: number,
 ): Promise<{ success: false } | { success: true; session: Session }> {
   const res = await fetchAPIAuthorized(
-    `sessions/${id}?include=grades&include=questions&include=feedback&include=videos`,
+    `sessions/${id}?include=grades&include=questions&include=feedback&include=videos&include=template`,
     { method: "GET" },
   );
 
@@ -123,7 +122,11 @@ export async function getSessionNew(
 
   const session: Session = {
     title: staging.id.toString(),
-    template: defaultTemplate,
+    template: {
+      title: staging.template.job_title,
+      description: staging.template.description,
+      id: staging.template.id.toString(),
+    },
     overallGrade: overallGrade,
     transcript: staging.session_components
       .map((t) => {

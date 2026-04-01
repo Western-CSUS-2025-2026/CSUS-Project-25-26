@@ -39,7 +39,14 @@ function RecordingPage() {
         stage={session.state}
         pauseRecording={session.toggleRecording}
       ></TopBar>
-      <div style={{ display: "flex", flexDirection: "row", gap: "1em" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: "1em",
+          height: "70vh",
+        }}
+      >
         <WebcamCard webRef={session.webcam}></WebcamCard>
         <RecordingSidebar
           timeEnded={session.continueModalUp || session.finishModalUp}

@@ -5,6 +5,12 @@ export interface StagingSession {
   user_id: number;
   overall_grade: number;
   create_ts: string;
+  template: {
+    job_title: string;
+    description: string;
+    is_hidden: boolean;
+    id: number;
+  };
   session_components: {
     id: number;
     transcript: string;
