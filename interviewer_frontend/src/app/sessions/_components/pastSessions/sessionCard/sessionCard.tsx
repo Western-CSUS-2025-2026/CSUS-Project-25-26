@@ -58,7 +58,9 @@ export default function SessionCard({ session }: SessionCardProps) {
           <div className={styles.SessionBox}>
             <h2>{session.title}</h2>
             <p>{session.template.title}</p>
-            <p>{session.template.id}</p>
+            <p style={{ fontSize: "0.7em", paddingTop: "0.3em" }}>
+              {"Template #" + session.template.id}
+            </p>
           </div>
 
           <div className={styles.proccessingText}>

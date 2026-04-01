@@ -1,0 +1,162 @@
+.container {
+  width: 100%;
+  padding-left: 2em;
+  padding-right: 2em;
+  padding-top: 1em;
+  padding-bottom: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Header */
+.header {
+  text-align: center;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: var(--primary-text);
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--secondary-text);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Features Section */
+.featuresSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary-text);
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.8;
+}
+
+.featuresList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.featureItem {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+
+.featureIcon {
+  font-size: 20px;
+  min-width: 24px;
+  display: grid;
+  place-items: center;
+}
+
+.featureName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary-text);
+  margin: 0;
+}
+
+.featureDesc {
+  font-size: 12px;
+  color: var(--secondary-text);
+  margin: 2px 0 0 0;
+}
+
+/* Demo Card */
+.demoCard {
+  background: rgba(255, 255, 255, 0.04) 0%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.cardBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--secondary-text);
+  margin-bottom: 8px;
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-text);
+  margin: 0 0 6px 0;
+}
+
+.cardDescription {
+  font-size: 13px;
+  color: var(--secondary-text);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* CTA Button */
+.startButton {
+  background: var(--accent);
+  color: var(--accent-primary-text);
+  border: none;
+  border-radius: 999px;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.startButton:active {
+  transform: translateY(0);
+}
+
+.arrow {
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.startButton:hover .arrow {
+  transform: translateX(4px);
+}
+
+/* Footer Hint */
+.hint {
+  font-size: 12px;
+  color: var(--secondary-text);
+  text-align: center;
+  margin: 0;
+  opacity: 0.8;
+}

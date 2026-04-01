@@ -3,6 +3,7 @@ import styles from "./pastSessions.module.css";
 import SessionCard from "./sessionCard/sessionCard";
 import LoadingCard from "./loadingCard/loadingCard"; // Correct import for LoadingCard
 import { getPastSessions } from "@/lib/pastSessions";
+import { DemoModalNoSSR } from "../../demo";
 
 export default function PastSessionsGrid() {
   return (
@@ -25,11 +26,13 @@ export default function PastSessionsGrid() {
 
 async function PastSessionsAsync() {
   const sessions = await getPastSessions();
+
   return (
     <div className={styles.grid}>
       {sessions.map((session, index) => {
         return <SessionCard key={index} session={session} />;
       })}
+      {sessions.length == 0 ? <DemoModalNoSSR></DemoModalNoSSR> : undefined}
     </div>
   );
 }

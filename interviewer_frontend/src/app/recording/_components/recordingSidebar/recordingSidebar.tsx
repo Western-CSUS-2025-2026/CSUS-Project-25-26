@@ -84,7 +84,7 @@ export default function RecordingSidebar(props: RecordingSidebarProps) {
 
         <div className={styles.footer}>
           {!timeEnded && stage === "Preparing" && !props.hasStarted && (
-            <button className={styles.primaryButton} onClick={props.onStart}>
+            <button className={`${styles.primaryButton} ${styles.animated}`} onClick={props.onStart}>
               Start
             </button>
           )}

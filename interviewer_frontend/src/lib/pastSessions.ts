@@ -7,7 +7,7 @@ import { StagingSession } from "@/types/session";
  */
 export async function getPastSessions(): Promise<SimpleSession[]> {
   const res = await fetchAPIAuthorized(
-    "sessions?include=questions&include=grades&limit=20&offest=0",
+    "sessions?include=questions&include=grades&limit=20&offest=0&include=template",
     {
       method: "GET",
     },
@@ -29,7 +29,11 @@ export async function getPastSessions(): Promise<SimpleSession[]> {
       Date.now() - new Date(s.create_ts).getTime() > 120 * 1000
     ) {
       return {
-        template: defaultTemplate,
+        template: {
+          title: s.template.job_title,
+          description: s.template.description,
+          id: s.template.id.toString(),
+        },
         createTime: s.create_ts,
         state: "INCOMPLETE",
         title: "Session #" + s.id,
@@ -58,7 +62,11 @@ export async function getPastSessions(): Promise<SimpleSession[]> {
         createTime: s.create_ts,
         id: s.id.toString(),
         title: "Session #" + s.id,
-        template: defaultTemplate,
+        template: {
+          title: s.template.job_title,
+          description: s.template.description,
+          id: s.template.id.toString(),
+        },
       };
     }
 
@@ -67,7 +75,11 @@ export async function getPastSessions(): Promise<SimpleSession[]> {
       state: "PROCESSING",
       id: s.id.toString(),
       createTime: s.create_ts,
-      template: defaultTemplate,
+      template: {
+        title: s.template.job_title,
+        description: s.template.description,
+        id: s.template.id.toString(),
+      },
     };
   });
 

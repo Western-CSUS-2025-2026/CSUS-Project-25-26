@@ -29,7 +29,7 @@ export default function RecentTemplates() {
 
       {/* Right column — Recent Templates */}
       <div className={`${styles.innerContainer} ${styles.flex2}`}>
-        <h2>Recent Templates</h2>
+        <h2>Suggested Templates</h2>
 
         <Suspense fallback={<LoadingCards></LoadingCards>}>
           <RecentTemplatesContent />
