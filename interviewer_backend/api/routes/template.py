@@ -4,9 +4,10 @@ from fastapi import APIRouter, Depends
 from fastapi_sqlalchemy import db
 
 from api.exceptions import ObjectNotFound
-from api.models.db import Template, UserSession
+from api.models.db import Template
 from api.schemas.models import StatusResponse, TemplateCreate, TemplateGet, TemplateUpdate
 from api.dependencies.auth import require_roles
+from api.utils.security import JwtAuthUser
 
 
 template: APIRouter = APIRouter(prefix="/templates", tags=["Templates"])
@@ -15,7 +16,7 @@ template: APIRouter = APIRouter(prefix="/templates", tags=["Templates"])
 @template.post("", response_model=TemplateGet)
 def create_template(
     payload: TemplateCreate,
-    _: UserSession = Depends(require_roles(["admin", "interviewer"])),
+    _: JwtAuthUser = Depends(require_roles(["admin", "interviewer"])),
 ):
     new_template: Template = Template(**payload.model_dump())
     db.session.add(new_template)
@@ -25,14 +26,14 @@ def create_template(
 
 
 @template.get("", response_model=List[TemplateGet])
-def list_templates(_: UserSession = Depends(require_roles(["admin", "interviewer"]))) -> List[TemplateGet]:
+def list_templates(_: JwtAuthUser = Depends(require_roles(["admin", "interviewer"]))) -> List[TemplateGet]:
     templates: List[Template] = Template.query(session=db.session).all()
 
     return [TemplateGet.model_validate(t) for t in templates]
 
 
 @template.get("/{template_id}", response_model=TemplateGet)
-def get_template(template_id: int, _: UserSession = Depends(require_roles(["admin", "interviewer"]))):
+def get_template(template_id: int, _: JwtAuthUser = Depends(require_roles(["admin", "interviewer"]))):
     db_template: Optional[Template] = Template.query(session=db.session).get(template_id)
 
     if not db_template:
@@ -45,7 +46,7 @@ def get_template(template_id: int, _: UserSession = Depends(require_roles(["admi
 def update_template(
     template_id: int,
     payload: TemplateUpdate,
-    _: UserSession = Depends(require_roles(["admin", "interviewer"])),
+    _: JwtAuthUser = Depends(require_roles(["admin", "interviewer"])),
 ) -> TemplateGet:
     db_template: Optional[Template] = Template.query(session=db.session).get(template_id)
 
@@ -63,7 +64,7 @@ def update_template(
 
 @template.delete("/{template_id}")
 def delete_template(
-    template_id: int, _: UserSession = Depends(require_roles(["admin", "interviewer"]))
+    template_id: int, _: JwtAuthUser = Depends(require_roles(["admin", "interviewer"]))
 ) -> StatusResponse:
     db_template: Optional[Template] = Template.query(session=db.session).get(template_id)
 

@@ -5,7 +5,8 @@ from fastapi.params import Depends
 from fastapi_sqlalchemy import db
 
 from api.dependencies.auth import require_roles
-from api.models.db import User, UserSession
+from api.utils.security import JwtAuthUser
+from api.models.db import User
 from api.models.role import Role, UserRole
 from api.schemas.models import RoleAssignBulk, UserRolesGet
 
@@ -17,7 +18,7 @@ router: APIRouter = APIRouter(prefix="/users", tags=["Roles"])
 @router.get("/{user_id}/roles", response_model=UserRolesGet)
 async def get_user_roles(
     user_id: int,
-    _: UserSession = Depends(require_roles(["admin"])),
+    _: JwtAuthUser = Depends(require_roles(["admin"])),
 ) -> UserRolesGet:
     user = db.session.query(User).filter(User.id == user_id).first()
     if not user:
@@ -32,7 +33,7 @@ async def get_user_roles(
 async def assign_roles(
     user_id: int,
     body: RoleAssignBulk,
-    _: UserSession = Depends(require_roles(["admin"])),
+    _: JwtAuthUser = Depends(require_roles(["admin"])),
 ) -> UserRolesGet:
     user = db.session.query(User).filter(User.id == user_id).first()
     if not user:
@@ -67,7 +68,7 @@ async def assign_roles(
 async def remove_role(
     user_id: int,
     role_id: int,
-    _: UserSession = Depends(require_roles(["admin"])),
+    _: JwtAuthUser = Depends(require_roles(["admin"])),
 ) -> UserRolesGet:
     user = db.session.query(User).filter(User.id == user_id).first()
     if not user:

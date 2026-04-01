@@ -6,6 +6,7 @@ from fastapi_sqlalchemy import db
 
 from api.exceptions import AlreadyExists, AuthFailed, ObjectNotFound, RegistrationIncomplete
 from api.models.db import User, UserSession
+from api.models.role import Role, UserRole
 from api.schemas.base import StatusResponseModel
 from api.schemas.models import (
     MyUserGet,
@@ -18,6 +19,7 @@ from api.schemas.models import (
 )
 from api.settings import get_settings
 from api.utils.enc import hash_password, validate_password
+from api.utils.security import JwtAuthUser, mint_access_token
 from api.utils.smtp import SendEmailMessage
 from api.utils.token import random_int, random_string
 from api.dependencies.auth import require_roles
@@ -114,39 +116,46 @@ async def login(user_data: UserLogin) -> UserSessionGet:
         raise RegistrationIncomplete()
     if not validate_password(user_data.password, user.password_hash, user.salt):
         raise AuthFailed("Incorrect login or password")
-    user_session = UserSession.create(
-        session=db.session,
-        user_id=user.id,
-        token=random_string(settings.TOKEN_LENGTH),
-        create_ts=datetime.now(tz=timezone.utc),
+    role_rows = (
+        db.session.query(Role.name)
+        .join(UserRole, UserRole.role_id == Role.id)
+        .filter(UserRole.user_id == user.id)
+        .all()
     )
-    db.session.commit()
+    role_names = [row.name for row in role_rows]
+    token, expires = mint_access_token(user.id, role_names)
     return UserSessionGet(
-        user_id=user_session.user_id,
-        expires=user_session.expires,
-        token=user_session.token,
+        user_id=user.id,
+        expires=expires,
+        token=token,
     )
 
 
 @user.get("", response_model=MyUserGet)
-async def me(user_session: UserSession = Depends(require_roles(["admin", "interviewer"]))) -> MyUserGet:
+async def me(auth_user: JwtAuthUser = Depends(require_roles(["admin", "interviewer"]))) -> MyUserGet:
+    db_user: User | None = User.query(session=db.session).filter(User.id == auth_user.user_id).one_or_none()
+    if not db_user:
+        raise ObjectNotFound(User, auth_user.user_id)
     return MyUserGet(
-        id=user_session.user_id,
-        email=user_session.user.email,
-        first_name=user_session.user.first_name,
-        last_name=user_session.user.last_name,
+        id=db_user.id,
+        email=db_user.email,
+        first_name=db_user.first_name,
+        last_name=db_user.last_name,
     )
 
 
 @user.get("/sessions", response_model=UserSessionsGet)
-async def get_sessions(user_session: UserSession = Depends(require_roles(["admin", "interviewer"]))) -> UserSessionsGet:
+async def get_sessions(auth_user: JwtAuthUser = Depends(require_roles(["admin", "interviewer"]))) -> UserSessionsGet:
+    db_user: User | None = User.query(session=db.session).filter(User.id == auth_user.user_id).one_or_none()
+    if not db_user:
+        raise ObjectNotFound(User, auth_user.user_id)
     response = UserSessionsGet(sessions=[])
-    for session in user_session.user.user_sessions:
+    for legacy_session in db_user.user_sessions:
         response.sessions.append(
             UserSessionGet(
-                user_id=session.user_id,
-                expires=session.expires,
-                token=session.token,
+                user_id=legacy_session.user_id,
+                expires=legacy_session.expires,
+                token=legacy_session.token,
             )
         )
     return UserSessionsGet.model_validate(response)
@@ -154,8 +163,8 @@ async def get_sessions(user_session: UserSession = Depends(require_roles(["admin
 
 @user.delete("", response_model=StatusResponseModel)
 async def delete_user(
-    user_session: UserSession = Depends(require_roles(["admin", "interviewer"]))
+    auth_user: JwtAuthUser = Depends(require_roles(["admin", "interviewer"]))
 ) -> StatusResponseModel:
-    User.delete(session=db.session, id=user_session.user_id)
+    User.delete(session=db.session, id=auth_user.user_id)
     db.session.commit()
     return StatusResponseModel(status="Success", message="User deleted")

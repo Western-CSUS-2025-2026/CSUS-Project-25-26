@@ -3,11 +3,12 @@ from fastapi_sqlalchemy import db
 
 from api.exceptions import ForbiddenAction
 from api.metrics import record_webhook_failure
-from api.models.db import Session, SessionComponent, SessionState, UserSession
+from api.models.db import Session, SessionComponent, SessionState
 from api.schemas.base import StatusResponseModel
 from api.schemas.models import TwelveLabsWebhookRequest
 from api.utils.twelveLabs import VideoAnalysis
 from api.dependencies.auth import require_roles
+from api.utils.security import JwtAuthUser
 
 
 video = APIRouter(prefix="/video", tags=["Video"])
@@ -18,16 +19,16 @@ analyzer = VideoAnalysis()
 async def upload_video(
     session_component_id: int,
     video: UploadFile = File(...),
-    user_session: UserSession = Depends(require_roles(["admin", "interviewer"])),
+    auth_user: JwtAuthUser = Depends(require_roles(["admin", "interviewer"])),
 ):
     """Upload video for a session component. Uploads to TL and sets component state to indexing."""
     session_component = SessionComponent.get(session_component_id, session=db.session)
     session = session_component.session
 
-    if session.user_id != user_session.user_id:
+    if session.user_id != auth_user.user_id:
         raise ForbiddenAction(Session)
 
-    index_id = analyzer.get_or_create_index(user_session.user_id, session=db.session)
+    index_id = analyzer.get_or_create_index(auth_user.user_id, session=db.session)
     asset = analyzer.upload_asset(file=video)
     indexed_asset = analyzer.index_asset(index_id=index_id, asset_id=asset.id)
 

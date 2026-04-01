@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     CORS_ALLOW_METHODS: list[str] = ['*']
     CORS_ALLOW_HEADERS: list[str] = ['*']
     SESSION_TIME_IN_DAYS: int = 7
+    # Use a long secret in production (32+ bytes)
+    JWT_SECRET: str = "dev-only-secret-min-32-chars-long!!"
+    JWT_ALGORITHM: str = "HS256"
     MAX_NAME_LENGTH: int = 32
 
     EMAIL: str | None = None

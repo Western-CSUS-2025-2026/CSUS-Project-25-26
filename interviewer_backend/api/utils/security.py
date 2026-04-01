@@ -1,22 +1,45 @@
 import datetime
+from dataclasses import dataclass
 
+import jwt
 from fastapi.openapi.models import APIKey, APIKeyIn
 from fastapi.security.base import SecurityBase
-from fastapi_sqlalchemy import db
 from starlette.requests import Request
 
 from api.exceptions import AuthFailed
-from api.models.db import UserSession
 from api.settings import get_settings
-from api.utils.user_session import calc_session_expire_date
 
 
 settings = get_settings()
 
 
+@dataclass(frozen=True)
+class JwtAuthUser:
+    """Identity and roles from a validated JWT"""
+
+    user_id: int
+    roles: list[str]
+
+
+def mint_access_token(user_id: int, roles: list[str]) -> tuple[str, datetime.datetime]:
+    """Issue a signed JWT with embedded role names"""
+    now = datetime.datetime.now(tz=datetime.timezone.utc)
+    exp = now + datetime.timedelta(days=settings.SESSION_TIME_IN_DAYS)
+    payload = {
+        "sub": user_id,
+        "roles": roles,
+        "exp": exp,
+        "iat": now,
+    }
+    token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+    if isinstance(token, bytes):
+        token = token.decode("utf-8")
+    return token, exp
+
+
 class Auth(SecurityBase):
     model = APIKey.model_construct(in_=APIKeyIn.header, name="Authorization")
-    scheme_name = "token"
+    scheme_name = "bearer"
     allow_none: bool
 
     def __init__(self, allow_none=False) -> None:
@@ -29,20 +52,34 @@ class Auth(SecurityBase):
     async def __call__(
         self,
         request: Request,
-    ) -> UserSession | None:
-        token = request.headers.get("Authorization")
-        if not token and self.allow_none:
+    ) -> JwtAuthUser | None:
+        raw = request.headers.get("Authorization")
+        if not raw and self.allow_none:
             return None
+        if not raw:
+            self._except()
+        token = raw.strip()
+        if token.lower().startswith("bearer "):
+            token = token[7:].strip()
         if not token:
             self._except()
-        user_session: UserSession = (
-            UserSession.query(session=db.session).filter(UserSession.token == token).one_or_none()
-        )
-        if not user_session:
+        try:
+            payload = jwt.decode(
+                token,
+                settings.JWT_SECRET,
+                algorithms=[settings.JWT_ALGORITHM],
+            )
+        except jwt.PyJWTError:
             self._except()
-        user_session.last_activity = datetime.datetime.now(tz=datetime.timezone.utc)
-        if user_session.expired:
+        sub = payload.get("sub")
+        if sub is None:
             self._except()
-        user_session.expires = calc_session_expire_date()
-        db.session.commit()
-        return user_session
+        try:
+            user_id = int(sub)
+        except (TypeError, ValueError):
+            self._except()
+        raw_roles = payload.get("roles") or []
+        if not isinstance(raw_roles, list):
+            self._except()
+        roles = [str(r) for r in raw_roles]
+        return JwtAuthUser(user_id=user_id, roles=roles)
