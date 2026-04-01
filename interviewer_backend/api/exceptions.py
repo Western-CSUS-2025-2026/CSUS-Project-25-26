@@ -24,6 +24,16 @@ class AlreadyExists(APIError):
         )
 
 
+class ObjectInUse(APIError):
+    def __init__(self, obj: type, obj_id_or_name: int | str, referenced_by: type | None = None):
+        if referenced_by is None:
+            super().__init__(f"Object {obj.__name__} {obj_id_or_name=} is in use")
+            return
+        super().__init__(
+            f"Object {obj.__name__} {obj_id_or_name=} is referenced by {referenced_by.__name__}",
+        )
+
+
 class ForbiddenAction(APIError):
     def __init__(self, type: Type):
         super().__init__(f"Forbidden action with {type.__name__}")

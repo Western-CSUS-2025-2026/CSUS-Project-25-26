@@ -51,6 +51,7 @@ async def create_session(
                 day=1, hour=0, minute=0, second=0, microsecond=0
             )
             next_month_str = next_month.strftime("%Y-%m-%d")
+            db.session.rollback()
             raise RateLimitExceeded(error_msg=f"Monthly limit exceeded, please try again at {next_month_str}")
 
         recent_24h_count = (
@@ -74,19 +75,23 @@ async def create_session(
             if oldest_limited_ts:
                 expires_at = oldest_limited_ts + timedelta(hours=24)
                 expires_at_str = expires_at.strftime("%Y-%m-%d %H:%M:%S")
+                db.session.rollback()
                 raise RateLimitExceeded(error_msg=f"Rate limit exceeded, please try again at {expires_at_str}")
+            db.session.rollback()
             raise RateLimitExceeded(error_msg="Rate limit exceeded, please try again later")
 
     # 1. Load template's questions (fail early if template empty or missing)
     template_id = payload.template_id
     questions = Question.query(session=db.session).filter(Question.template_id == template_id).all()
     if not questions:
+        db.session.rollback()
         raise ObjectNotFound(Template, template_id)
 
     # 2. Create session (progress tracked on SessionComponent only)
     new_session = Session.create(
         session=db.session,
         user_id=current_user.user_id,
+        template_id=template_id,
         create_ts=datetime.now(tz=timezone.utc),
     )
     db.session.flush()
@@ -101,11 +106,11 @@ async def create_session(
             transcript=None,
             state=SessionState.PENDING,
         )
-
+    new_session_id = new_session.id
     db.session.commit()
 
     return SessionCreateResponse(
-        session_id=new_session.id,
+        session_id=new_session_id,
     )
 
 
@@ -118,7 +123,7 @@ async def get_user_sessions(
 ) -> SessionsList:
     """
     Get history of user sessions.
-    Possible include options: components, grades, feedback, videos, questions
+    Possible include options: template, components, grades, feedback, videos, questions
     """
     requested = parse_include(include)
     options, valid_requested = get_session_options(requested)
@@ -133,7 +138,9 @@ async def get_user_sessions(
         .all()
     )
 
-    return SessionsList(sessions=[serialize_session(s, valid_requested) for s in sessions])
+    response = SessionsList(sessions=[serialize_session(s, valid_requested) for s in sessions])
+    db.session.rollback()
+    return response
 
 
 @session.delete("/{session_id}", response_model=SessionDeleteResponse)
@@ -151,16 +158,34 @@ async def delete_session(
         .one_or_none()
     )
     if not session_obj:
+        db.session.rollback()
         raise ObjectNotFound(Session, session_id)
 
     s3_keys = [sc.video.s3_key for sc in session_obj.session_components if sc.video is not None and sc.video.s3_key]
+    target_session_id = session_obj.id
+
+    # Close the read transaction before external S3 calls.
+    db.session.rollback()
 
     for s3_key in s3_keys:
         delete_object(s3_key)
 
     try:
+        session_obj = (
+            Session.query(session=db.session)
+            .filter(Session.id == target_session_id)
+            .filter(Session.user_id == current_user.user_id)
+            .one_or_none()
+        )
+        if not session_obj:
+            db.session.rollback()
+            raise ObjectNotFound(Session, target_session_id)
+
         db.session.delete(session_obj)
         db.session.commit()
+    except ObjectNotFound:
+        db.session.rollback()
+        raise
     except Exception:
         db.session.rollback()
         raise SessionDeleteFailed()
@@ -176,7 +201,7 @@ async def get_session(
 ) -> SessionGet:
     """
     Get a single user session by ID.
-    Possible include options: components, grades, feedback, videos, questions
+    Possible include options: template, components, grades, feedback, videos, questions
     """
     requested = parse_include(include)
     options, valid_requested = get_session_options(requested)
@@ -190,6 +215,9 @@ async def get_session(
     )
 
     if not session_obj:
+        db.session.rollback()
         raise ObjectNotFound(Session, session_id)
 
-    return serialize_session(session_obj, valid_requested)
+    response = serialize_session(session_obj, valid_requested)
+    db.session.rollback()
+    return response

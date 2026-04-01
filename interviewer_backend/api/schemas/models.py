@@ -172,6 +172,7 @@ class VideoGet(Base):
 class TemplateBase(Base):
     job_title: str
     description: str | None = None
+    is_hidden: bool = False
 
 
 class TemplateCreate(TemplateBase):
@@ -181,6 +182,7 @@ class TemplateCreate(TemplateBase):
 class TemplateUpdate(Base):
     job_title: str | None = None
     description: str | None = None
+    is_hidden: bool | None = None
 
 
 class TemplateGet(TemplateBase):
@@ -228,6 +230,7 @@ class SessionGet(Base):
     user_id: int
     overall_grade: int | None
     create_ts: datetime.datetime
+    template: TemplateGet | None = None
     session_components: list[SessionComponentGet] | None = None
 
 
