@@ -13,7 +13,7 @@ from api.schemas.models import PresignedURLResponse
 from api.settings import get_settings
 from api.utils.s3 import generate_read_url, generate_s3_key, generate_upload_url
 from api.utils.s3_webhook import verify_sns_signature
-from api.utils.security import Auth, AuthUser
+from api.utils.security import Auth, JwtAuthUser
 from api.utils.twelveLabs import VideoAnalysis
 from api.utils.twelvelabs_webhook import verify_twelvelabs_signature
 
@@ -28,7 +28,7 @@ settings = get_settings()
 @video.get("/{session_component_id}/upload-url", response_model=PresignedURLResponse)
 async def get_upload_url(
     session_component_id: int,
-    current_user: AuthUser = Depends(Auth()),
+    current_user: JwtAuthUser = Depends(Auth()),
 ):
     """Get a presigned S3 URL to upload a video for a session component in PENDING state."""
     session_component = SessionComponent.get(session_component_id, session=db.session)
@@ -76,7 +76,7 @@ async def get_upload_url(
 @video.get("/{session_component_id}/watch-url", response_model=PresignedURLResponse)
 async def get_watch_url(
     session_component_id: int,
-    current_user: AuthUser = Depends(Auth()),
+    current_user: JwtAuthUser = Depends(Auth()),
 ):
     """Get a presigned S3 URL to watch a previously uploaded video."""
     session_component = SessionComponent.get(session_component_id, session=db.session)

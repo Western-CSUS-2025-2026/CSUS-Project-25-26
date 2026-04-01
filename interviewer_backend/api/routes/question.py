@@ -6,7 +6,7 @@ from fastapi_sqlalchemy import db
 from api.exceptions import ObjectInUse, ObjectNotFound
 from api.models.db import Question, SessionComponent, Template
 from api.schemas.models import QuestionCreate, QuestionGet, StatusResponse
-from api.utils.security import Auth, AuthUser, CsrfProtect
+from api.utils.security import Auth, CsrfProtect, JwtAuthUser
 
 
 question = APIRouter(prefix="/questions", tags=["Questions"])
@@ -16,7 +16,7 @@ question = APIRouter(prefix="/questions", tags=["Questions"])
 def create_question(
     payload: QuestionCreate,
     _csrf: None = Depends(CsrfProtect()),
-    _auth: AuthUser = Depends(Auth()),
+    _auth: JwtAuthUser = Depends(Auth()),
 ) -> QuestionGet:
     db_template: Optional[Template] = Template.query(session=db.session).get(payload.template_id)
 
@@ -40,7 +40,7 @@ def create_question(
 @question.get("/template/{template_id}", response_model=list[QuestionGet])
 def get_questions_for_template(
     template_id: int,
-    _: AuthUser = Depends(Auth()),
+    _: JwtAuthUser = Depends(Auth()),
 ) -> List[QuestionGet]:
     db_template: Optional[Template] = Template.query(session=db.session).get(template_id)
 
@@ -58,7 +58,7 @@ def get_questions_for_template(
 def delete_question(
     question_id: int,
     _csrf: None = Depends(CsrfProtect()),
-    _auth: AuthUser = Depends(Auth()),
+    _auth: JwtAuthUser = Depends(Auth()),
 ) -> StatusResponse:
     db_question: Optional[Question] = Question.query(session=db.session).get(question_id)
 

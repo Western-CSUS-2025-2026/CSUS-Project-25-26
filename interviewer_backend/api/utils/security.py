@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from secrets import compare_digest, token_hex
 
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -13,11 +14,12 @@ from api.utils.jwt_auth import decode_access_token
 UNSAFE_HTTP_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 
 
-class AuthUser:
-    user_id: int
+@dataclass(frozen=True)
+class JwtAuthUser:
+    """Identity and roles from a validated access JWT (no DB lookup)."""
 
-    def __init__(self, user_id: int):
-        self.user_id = user_id
+    user_id: int
+    roles: list[str]
 
 
 class Auth(SecurityBase):
@@ -37,7 +39,7 @@ class Auth(SecurityBase):
     async def __call__(
         self,
         request: Request,
-    ) -> AuthUser | None:
+    ) -> JwtAuthUser | None:
         token = request.cookies.get(self.settings.ACCESS_TOKEN_COOKIE_NAME)
         if not token:
             credentials: HTTPAuthorizationCredentials | None = await self._bearer(request)
@@ -52,9 +54,10 @@ class Auth(SecurityBase):
         try:
             payload = decode_access_token(token)
             user_id = int(payload["sub"])
+            roles = payload.get("roles") or []
         except (InvalidTokenError, KeyError, TypeError, ValueError):
             self._except()
-        return AuthUser(user_id=user_id)
+        return JwtAuthUser(user_id=user_id, roles=roles)
 
 
 def generate_csrf_token() -> str:
