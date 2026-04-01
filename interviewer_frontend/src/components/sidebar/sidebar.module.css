@@ -1,0 +1,125 @@
+.sidebar {
+  width: 22%;
+  min-width: 15em;
+  max-width: 20em;
+  height: 100%;
+  background-color: var(--foreground);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarProvider {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  width: 100vw;
+}
+.mainContent {
+  margin: 1em;
+  margin-left: 2em;
+  padding-right: 2em;
+  margin-right: 0em;
+  width: 100%;
+  max-height: 100%;
+  overflow-y: scroll;
+}
+
+/* User Profile Section */
+.userProfile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5em 0;
+  gap: 0.5em;
+}
+
+.avatar {
+  width: 3em;
+  height: 3em;
+  border-radius: 50%;
+  background-color: var(--accent);
+}
+
+.userName {
+  font-size: 0.9em;
+  color: var(--primary-text);
+}
+
+/* Navigation Section */
+.navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  padding: 0 1em;
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+  padding: 0.85em 1.1em;
+  border-radius: 0.5em;
+  text-decoration: none;
+  color: var(--secondary-text);
+  transition: background-color 0.2s;
+}
+
+.navButton:hover {
+  background-color: var(--border);
+}
+
+.navButton.active {
+  background-color: var(--accent);
+  color: var(--accent-primary-text);
+}
+
+/* Bottom Section */
+.bottomSection {
+  margin-top: auto;
+  padding: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.helpButton,
+.logoutButton {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  padding: 1em 1em;
+  border-radius: 0.75em;
+  background-color: var(--border);
+  border: none;
+  color: var(--secondary-text);
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 500;
+  text-align: left;
+  transition: background-color 0.2s;
+}
+.logoutText {
+  color: #cd6060;
+}
+
+.helpButton:hover,
+.logoutButton:hover {
+  background-color: rgba(203, 159, 230, 0.1);
+}
+
+.credit {
+  text-align: center;
+  font-size: 0.75em;
+  color: var(--secondary-text);
+  margin-top: 0.5em;
+}
+
+.navButton img {
+  opacity: 0.5;
+}
+
+.navButton.active img {
+  opacity: 1;
+  filter: brightness(0.3);
+}

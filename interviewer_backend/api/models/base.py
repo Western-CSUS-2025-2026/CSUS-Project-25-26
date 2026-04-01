@@ -90,7 +90,7 @@ class BaseDbModel(Base):
             else:
                 break
         else:
-            raise APIError("Internal Server Error", "Произошла ошибка, попробуйте позже")
+            raise APIError("Internal Server Error")
         try:
             yield session
         except Exception:

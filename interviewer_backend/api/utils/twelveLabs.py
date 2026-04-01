@@ -1,6 +1,7 @@
 import datetime
 import json
 import uuid
+from pathlib import Path
 
 from fastapi import UploadFile
 from fastapi_sqlalchemy import db
@@ -12,6 +13,9 @@ from api.exceptions import FailToConnectTwelveLabs, FailToCreateTask, FailToPars
 from api.metrics import observe_background_task, record_external_api_failure, record_webhook_failure
 from api.models.db import Feedback, Grade, Session, SessionComponent, SessionState, TwelveLabsIndex
 from api.settings import Settings, get_settings
+
+
+_INTERVIEW_PROMPT = (Path(__file__).parent.parent / "prompts" / "interview_prompt.txt").read_text()
 
 
 class VideoAnalysis:
@@ -206,34 +210,7 @@ class VideoAnalysis:
 
     def generate_interview_analysis(self, video_id: str, question: str):
         try:
-            prompt = f"""You are a senior technical interviewer and communication coach.
-
-The video contains an answer to an interview question.
-Analyze the candidate's response.
-
-QUESTION:
-{question}
-
-CRITICAL RULES (DO NOT VIOLATE):
-- Return ONE valid JSON object only — no markdown fences, no explanations, no extra text
-- The response must start with {{ and end with }}
-- Scores must be integers from 1 to 10
-- If a visible face is NOT present, all scores MUST be below 5
-- Feedback must be grounded in what the candidate actually said
-- Wrap the response in a "question_responses" array
-
-Return EXACTLY this JSON structure:
-{{"question_responses": [{{"question": "<the interview question>", "body_language_score": <1-10>, "speech_score": <1-10>, "brevity_score": <1-10>, "material_score": <1-10>, "feedback": {{"points": ["<problem 1>", "<problem 2>", "<problem 3>"], "ways_to_improve": ["<improvement 1>", "<improvement 2>", "<improvement 3>"]}}, "improved_answer": {{"version": "<one polished answer paragraph>"}}}}]}}
-
-SCORING GUIDE:
-- body_language_score: posture, gestures, eye contact, facial expressions
-- speech_score: clarity, pace, filler words, articulation
-- brevity_score: conciseness, staying on topic, not rambling
-- material_score: how well the candidate used relevant content/examples to answer the question
-
-feedback.points: EXACTLY 3 specific problems identified
-feedback.ways_to_improve: EXACTLY 3 actionable improvements addressing the problems
-improved_answer.version: ONE polished, natural, professional answer paragraph"""
+            prompt = _INTERVIEW_PROMPT.format(question=question)
 
             result = self.client.analyze(
                 video_id=video_id,

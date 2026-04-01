@@ -1,0 +1,18 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  width: 100%;
+}
+
+.loadingCardsContainer {
+  display: flex;
+  flex-direction: row;
+  gap: 1em;
+}
+.flex1 {
+  flex: 1;
+}
+.flex2 {
+  flex: 2;
+}

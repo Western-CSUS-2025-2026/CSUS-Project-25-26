@@ -9,12 +9,14 @@ from api.exceptions import (
     FailToParseAnalysis,
     ForbiddenAction,
     IndexCreatingFail,
+    ObjectInUse,
     ObjectNotFound,
+    RateLimitExceeded,
     RegistrationIncomplete,
+    SessionDeleteFailed,
+    SNSVerificationFailed,
     TooManyEmailRequests,
-    FailToConnectTwelveLabs,
-    IndexCreatingFail,
-    FailToCreateTask,
+    WebhookVerificationFailed,
 )
 from api.schemas.base import StatusResponseModel
 
@@ -28,6 +30,11 @@ async def not_found_handler(req: starlette.requests.Request, exc: ObjectNotFound
 
 @app.exception_handler(AlreadyExists)
 async def already_exists_handler(req: starlette.requests.Request, exc: AlreadyExists):
+    return JSONResponse(content=StatusResponseModel(status="Error", message=exc.msg).model_dump(), status_code=409)
+
+
+@app.exception_handler(ObjectInUse)
+async def object_in_use_handler(req: starlette.requests.Request, exc: ObjectInUse):
     return JSONResponse(content=StatusResponseModel(status="Error", message=exc.msg).model_dump(), status_code=409)
 
 
@@ -88,6 +95,38 @@ async def fail_to_create_task_handler(req: starlette.requests.Request, exc: Fail
 
 @app.exception_handler(FailToCreateTask)
 async def fail_to_parse_analysis_handler(req: starlette.requests.Request, exc: FailToParseAnalysis):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=500,
+    )
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exceeded_handler(req: starlette.requests.Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=429,
+    )
+
+
+@app.exception_handler(WebhookVerificationFailed)
+async def webhook_verification_failed_handler(req: starlette.requests.Request, exc: WebhookVerificationFailed):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=400,
+    )
+
+
+@app.exception_handler(SNSVerificationFailed)
+async def sns_verification_failed_handler(req: starlette.requests.Request, exc: SNSVerificationFailed):
+    return JSONResponse(
+        content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
+        status_code=403,
+    )
+
+
+@app.exception_handler(SessionDeleteFailed)
+async def session_delete_failed_handler(req: starlette.requests.Request, exc: SessionDeleteFailed):
     return JSONResponse(
         content=StatusResponseModel(status="Error", message=exc.msg).model_dump(),
         status_code=500,

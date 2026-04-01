@@ -24,6 +24,16 @@ class AlreadyExists(APIError):
         )
 
 
+class ObjectInUse(APIError):
+    def __init__(self, obj: type, obj_id_or_name: int | str, referenced_by: type | None = None):
+        if referenced_by is None:
+            super().__init__(f"Object {obj.__name__} {obj_id_or_name=} is in use")
+            return
+        super().__init__(
+            f"Object {obj.__name__} {obj_id_or_name=} is referenced by {referenced_by.__name__}",
+        )
+
+
 class ForbiddenAction(APIError):
     def __init__(self, type: Type):
         super().__init__(f"Forbidden action with {type.__name__}")
@@ -66,4 +76,26 @@ class FailToCreateTask(APIError):
 
 class FailToParseAnalysis(APIError):
     def __init__(self, error_msg: str = "Failed to to parse analysis"):
+        super().__init__(error_msg)
+
+
+class RateLimitExceeded(APIError):
+    def __init__(self, error_msg: str = "Rate limit exceeded"):
+        super().__init__(error_msg)
+
+
+class WebhookVerificationFailed(APIError):
+    def __init__(self, error_msg: str = "Invalid TL-Signature"):
+        super().__init__(error_msg)
+
+
+class SNSVerificationFailed(APIError):
+    def __init__(self, error_msg: str = "Invalid SNS signature"):
+        super().__init__(error_msg)
+
+
+class SessionDeleteFailed(APIError):
+    """Raised when deleting a session (DB or related ops) fails."""
+
+    def __init__(self, error_msg: str = "Failed to delete session"):
         super().__init__(error_msg)

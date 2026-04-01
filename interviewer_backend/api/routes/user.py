@@ -1,34 +1,130 @@
 import logging
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Request
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, Request, Response
 from fastapi_sqlalchemy import db
 
 from api.exceptions import AlreadyExists, AuthFailed, ObjectNotFound, RegistrationIncomplete
-from api.models.db import User, UserSession
-from api.models.role import Role, UserRole
+from api.models.db import RefreshSession, User
 from api.schemas.base import StatusResponseModel
 from api.schemas.models import (
+    AuthLoginResponse,
+    AuthRefreshResponse,
+    LogoutRequest,
     MyUserGet,
+    RefreshRequest,
     RegistrationInitiate,
     RegistrationVerify,
     RegistrationVerifyCode,
     UserLogin,
-    UserSessionGet,
-    UserSessionsGet,
 )
 from api.settings import get_settings
 from api.utils.enc import hash_password, validate_password
-from api.utils.security import JwtAuthUser, mint_access_token
+from api.utils.jwt_auth import (
+    create_access_token,
+    generate_refresh_token,
+    get_access_token_expires_in,
+    get_refresh_token_expire_date,
+    get_refresh_token_expires_in,
+    hash_refresh_token,
+)
+from api.utils.security import Auth, AuthUser, CsrfProtect, generate_csrf_token
 from api.utils.smtp import SendEmailMessage
 from api.utils.token import random_int, random_string
-from api.dependencies.auth import require_roles
 
 
 settings = get_settings()
 
 logger = logging.getLogger(__name__)
 user = APIRouter(prefix="/user", tags=["User"])
+
+
+def _issue_refresh_session(user_id: int, now: datetime) -> tuple[str, datetime]:
+    refresh_token = generate_refresh_token()
+    refresh_expires_at = get_refresh_token_expire_date(now)
+    RefreshSession.create(
+        session=db.session,
+        user_id=user_id,
+        token_hash=hash_refresh_token(refresh_token),
+        expires_at=refresh_expires_at,
+        create_ts=now,
+    )
+    return refresh_token, refresh_expires_at
+
+
+def _set_auth_cookies(
+    response: Response,
+    *,
+    access_token: str,
+    refresh_token: str,
+    refresh_expires_at: datetime,
+) -> None:
+    csrf_token = generate_csrf_token()
+    response.set_cookie(
+        key=settings.ACCESS_TOKEN_COOKIE_NAME,
+        value=access_token,
+        max_age=get_access_token_expires_in(),
+        httponly=True,
+        secure=settings.AUTH_COOKIE_SECURE,
+        samesite=settings.AUTH_COOKIE_SAMESITE,
+        path=settings.AUTH_COOKIE_PATH,
+        domain=settings.AUTH_COOKIE_DOMAIN,
+    )
+    response.set_cookie(
+        key=settings.REFRESH_TOKEN_COOKIE_NAME,
+        value=refresh_token,
+        max_age=get_refresh_token_expires_in(),
+        expires=refresh_expires_at,
+        httponly=True,
+        secure=settings.AUTH_COOKIE_SECURE,
+        samesite=settings.AUTH_COOKIE_SAMESITE,
+        path=settings.REFRESH_COOKIE_PATH,
+        domain=settings.AUTH_COOKIE_DOMAIN,
+    )
+    response.set_cookie(
+        key=settings.CSRF_COOKIE_NAME,
+        value=csrf_token,
+        max_age=get_refresh_token_expires_in(),
+        expires=refresh_expires_at,
+        httponly=False,
+        secure=settings.AUTH_COOKIE_SECURE,
+        samesite=settings.AUTH_COOKIE_SAMESITE,
+        path=settings.AUTH_COOKIE_PATH,
+        domain=settings.AUTH_COOKIE_DOMAIN,
+    )
+
+
+def _clear_auth_cookies(response: Response) -> None:
+    response.delete_cookie(
+        key=settings.ACCESS_TOKEN_COOKIE_NAME,
+        path=settings.AUTH_COOKIE_PATH,
+        domain=settings.AUTH_COOKIE_DOMAIN,
+    )
+    response.delete_cookie(
+        key=settings.REFRESH_TOKEN_COOKIE_NAME,
+        path=settings.REFRESH_COOKIE_PATH,
+        domain=settings.AUTH_COOKIE_DOMAIN,
+    )
+    if settings.REFRESH_COOKIE_PATH != settings.AUTH_COOKIE_PATH:
+        response.delete_cookie(
+            key=settings.REFRESH_TOKEN_COOKIE_NAME,
+            path=settings.AUTH_COOKIE_PATH,
+            domain=settings.AUTH_COOKIE_DOMAIN,
+        )
+    response.delete_cookie(
+        key=settings.CSRF_COOKIE_NAME,
+        path=settings.AUTH_COOKIE_PATH,
+        domain=settings.AUTH_COOKIE_DOMAIN,
+    )
+
+
+def _get_refresh_token(payload: RefreshRequest | LogoutRequest | None, request: Request) -> str | None:
+    if payload and payload.refresh_token:
+        return payload.refresh_token
+    token = request.cookies.get(settings.REFRESH_TOKEN_COOKIE_NAME)
+    if token:
+        return token
+    return None
 
 
 @user.post("/registration/initiate", response_model=StatusResponseModel)
@@ -54,9 +150,10 @@ async def registration_initiate(
                 create_ts=datetime.now(tz=timezone.utc),
             )
         if settings.EMAIL:
+            client_ip = request.client.host
             SendEmailMessage.send(
                 user_data.email,
-                request.client.host,
+                client_ip,
                 "EmailRegConfirm.html",
                 "Email Verification | WesternPrep",
                 txn,
@@ -74,31 +171,40 @@ async def registration_verify_code(verification_token: int, email: str) -> Statu
     RegistrationVerifyCode(email=email, verification_token=verification_token)
     user: User | None = User.query(session=db.session).filter(User.email == email).one_or_none()
     if not user:
+        db.session.rollback()
         raise AuthFailed("Incorrect or expired verification token")
     if (
         user.create_ts < datetime.now(tz=timezone.utc) - timedelta(minutes=settings.VERIFICATION_TOKEN_TTL)
         or user.verification_token != verification_token
     ):
+        db.session.rollback()
         raise AuthFailed("Incorrect or expired verification token")
 
-    return StatusResponseModel(status="Success", message="Email verified")
+    response = StatusResponseModel(status="Success", message="Email verified")
+    db.session.rollback()
+    return response
 
 
 @user.put("/registration/verify", response_model=StatusResponseModel)
 async def registration_verify(user_data: RegistrationVerify) -> StatusResponseModel:
+    salt = random_string()
+    password_hash = hash_password(user_data.password, salt)
+
     user: User = User.query(session=db.session).filter(User.email == user_data.email).one_or_none()
     if not user:
+        db.session.rollback()
         raise ObjectNotFound(User, user_data.email)
     if user.password_hash:
+        db.session.rollback()
         raise AlreadyExists(User, user.id)
     if (
         user.create_ts < datetime.now(tz=timezone.utc) - timedelta(minutes=settings.VERIFICATION_TOKEN_TTL)
         or user.verification_token != user_data.verification_token
     ):
+        db.session.rollback()
         raise AuthFailed("Incorrect or expired verification token")
-    salt = random_string()
 
-    user.password_hash = hash_password(user_data.password, salt)
+    user.password_hash = password_hash
     user.salt = salt
     user.first_name = user_data.first_name
     user.last_name = user_data.last_name
@@ -107,64 +213,134 @@ async def registration_verify(user_data: RegistrationVerify) -> StatusResponseMo
     return StatusResponseModel(status="Success", message="Registration complete")
 
 
-@user.post("/login", response_model=UserSessionGet)
-async def login(user_data: UserLogin) -> UserSessionGet:
+@user.post("/login", response_model=AuthLoginResponse)
+async def login(user_data: UserLogin, response: Response) -> AuthLoginResponse:
     user: User | None = User.query(session=db.session).filter(User.email == user_data.email).one_or_none()
     if user is None:
+        db.session.rollback()
         raise AuthFailed("Incorrect login or password")
-    if not user.password_hash:
+
+    user_id = user.id
+    password_hash = user.password_hash
+    salt = user.salt
+
+    # Close the read transaction before expensive password verification.
+    db.session.rollback()
+
+    if not password_hash:
         raise RegistrationIncomplete()
-    if not validate_password(user_data.password, user.password_hash, user.salt):
+    if not validate_password(user_data.password, password_hash, salt):
         raise AuthFailed("Incorrect login or password")
-    role_rows = (
-        db.session.query(Role.name)
-        .join(UserRole, UserRole.role_id == Role.id)
-        .filter(UserRole.user_id == user.id)
-        .all()
+
+    now = datetime.now(tz=timezone.utc)
+    access_token = create_access_token(user_id, now=now)
+    refresh_token, refresh_expires_at = _issue_refresh_session(user_id, now)
+    _set_auth_cookies(
+        response,
+        access_token=access_token,
+        refresh_token=refresh_token,
+        refresh_expires_at=refresh_expires_at,
     )
-    role_names = [row.name for row in role_rows]
-    token, expires = mint_access_token(user.id, role_names)
-    return UserSessionGet(
-        user_id=user.id,
-        expires=expires,
-        token=token,
+    db.session.commit()
+    return AuthLoginResponse(
+        user_id=user_id,
+        access_token=access_token,
+        token_type="Bearer",
+        expires_in=get_access_token_expires_in(),
+        refresh_token=refresh_token,
+        refresh_expires_at=refresh_expires_at,
     )
+
+
+@user.post("/refresh", response_model=AuthRefreshResponse)
+async def refresh(
+    request: Request,
+    response: Response,
+    payload: RefreshRequest | None = Body(default=None),
+    _: None = Depends(CsrfProtect()),
+) -> AuthRefreshResponse:
+    refresh_token_raw = _get_refresh_token(payload, request)
+    if not refresh_token_raw:
+        raise AuthFailed("Not authorized")
+
+    now = datetime.now(tz=timezone.utc)
+    token_hash = hash_refresh_token(refresh_token_raw)
+    refresh_session: RefreshSession | None = (
+        RefreshSession.query(session=db.session)
+        .filter(RefreshSession.token_hash == token_hash)
+        .with_for_update()
+        .one_or_none()
+    )
+    if not refresh_session or refresh_session.revoked_at is not None or refresh_session.expires_at <= now:
+        db.session.rollback()
+        raise AuthFailed("Not authorized")
+
+    refresh_session.revoked_at = now
+    access_token = create_access_token(refresh_session.user_id, now=now)
+    refresh_token, refresh_expires_at = _issue_refresh_session(refresh_session.user_id, now)
+    _set_auth_cookies(
+        response,
+        access_token=access_token,
+        refresh_token=refresh_token,
+        refresh_expires_at=refresh_expires_at,
+    )
+    db.session.commit()
+
+    return AuthRefreshResponse(
+        access_token=access_token,
+        token_type="Bearer",
+        expires_in=get_access_token_expires_in(),
+        refresh_token=refresh_token,
+        refresh_expires_at=refresh_expires_at,
+    )
+
+
+@user.post("/logout", response_model=StatusResponseModel)
+async def logout(
+    request: Request,
+    response: Response,
+    payload: LogoutRequest | None = Body(default=None),
+    _: None = Depends(CsrfProtect()),
+) -> StatusResponseModel:
+    now = datetime.now(tz=timezone.utc)
+    refresh_token_raw = _get_refresh_token(payload, request)
+    if refresh_token_raw:
+        token_hash = hash_refresh_token(refresh_token_raw)
+        refresh_session: RefreshSession | None = (
+            RefreshSession.query(session=db.session).filter(RefreshSession.token_hash == token_hash).one_or_none()
+        )
+        if refresh_session and refresh_session.revoked_at is None:
+            refresh_session.revoked_at = now
+            db.session.commit()
+        else:
+            db.session.rollback()
+    else:
+        db.session.rollback()
+    _clear_auth_cookies(response)
+    return StatusResponseModel(status="Success", message="Logged out")
 
 
 @user.get("", response_model=MyUserGet)
-async def me(auth_user: JwtAuthUser = Depends(require_roles(["admin", "interviewer"]))) -> MyUserGet:
-    db_user: User | None = User.query(session=db.session).filter(User.id == auth_user.user_id).one_or_none()
-    if not db_user:
-        raise ObjectNotFound(User, auth_user.user_id)
-    return MyUserGet(
-        id=db_user.id,
-        email=db_user.email,
-        first_name=db_user.first_name,
-        last_name=db_user.last_name,
+async def me(current_user: AuthUser = Depends(Auth())) -> MyUserGet:
+    user_obj: User | None = User.query(session=db.session).filter(User.id == current_user.user_id).one_or_none()
+    if not user_obj:
+        db.session.rollback()
+        raise AuthFailed("Not authorized")
+    response = MyUserGet(
+        id=user_obj.id,
+        email=user_obj.email,
+        first_name=user_obj.first_name,
+        last_name=user_obj.last_name,
     )
-
-
-@user.get("/sessions", response_model=UserSessionsGet)
-async def get_sessions(auth_user: JwtAuthUser = Depends(require_roles(["admin", "interviewer"]))) -> UserSessionsGet:
-    db_user: User | None = User.query(session=db.session).filter(User.id == auth_user.user_id).one_or_none()
-    if not db_user:
-        raise ObjectNotFound(User, auth_user.user_id)
-    response = UserSessionsGet(sessions=[])
-    for legacy_session in db_user.user_sessions:
-        response.sessions.append(
-            UserSessionGet(
-                user_id=legacy_session.user_id,
-                expires=legacy_session.expires,
-                token=legacy_session.token,
-            )
-        )
-    return UserSessionsGet.model_validate(response)
+    db.session.rollback()
+    return response
 
 
 @user.delete("", response_model=StatusResponseModel)
 async def delete_user(
-    auth_user: JwtAuthUser = Depends(require_roles(["admin", "interviewer"]))
+    _: None = Depends(CsrfProtect()),
+    current_user: AuthUser = Depends(Auth()),
 ) -> StatusResponseModel:
-    User.delete(session=db.session, id=auth_user.user_id)
+    User.delete(session=db.session, id=current_user.user_id)
     db.session.commit()
     return StatusResponseModel(status="Success", message="User deleted")

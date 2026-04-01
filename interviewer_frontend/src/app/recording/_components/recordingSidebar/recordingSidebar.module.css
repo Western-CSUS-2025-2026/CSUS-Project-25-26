@@ -1,0 +1,76 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.header {
+  text-align: center;
+  padding-top: 2rem;
+}
+
+.timerWrapper {
+  position: relative;
+}
+
+.svg {
+  transform: rotate(-90deg);
+}
+
+.timerCenter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.time {
+  font-size: 3.5rem;
+  font-weight: bold;
+}
+
+.remaining {
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+
+.footer {
+  width: 100%;
+  padding-bottom: 2rem;
+}
+
+.primaryButton {
+  width: 100%;
+  padding: 1rem 2rem;
+  border-radius: 0.5rem;
+  font-size: 1.25rem;
+  background-color: var(--accent);
+  color: var(--accent-primary-text);
+  border: none;
+  cursor: pointer;
+}
+
+.endButton {
+  width: 100%;
+  padding: 1rem 2rem;
+  border-radius: 0.5rem;
+  font-size: 1.25rem;
+  background-color: #f99191;
+  color: var(--primary-text);
+  border: none;
+  cursor: pointer;
+}
+
+.warning {
+  text-align: center;
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+}
+
+.endedText {
+  text-align: center;
+  font-size: 1rem;
+}

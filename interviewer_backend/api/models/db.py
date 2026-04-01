@@ -4,12 +4,8 @@ import datetime
 import enum
 import logging
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from api.utils.user_session import calc_session_expire_date
-from api.models.role import UserRole
 
 from .base import BaseDbModel
 
@@ -28,9 +24,6 @@ class User(BaseDbModel):
     create_ts: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc), nullable=False
     )
-    user_sessions: Mapped[list[UserSession]] = relationship(
-        "UserSession", foreign_keys="UserSession.user_id", back_populates="user", cascade='all, delete'
-    )
     interview_sessions: Mapped[list["Session"]] = relationship(
         "Session", foreign_keys="Session.user_id", cascade='all, delete'
     )
@@ -41,32 +34,29 @@ class User(BaseDbModel):
         uselist=False,
         cascade="all, delete",
     )
-    user_roles: Mapped[list["UserRole"]] = relationship(
-        "UserRole", foreign_keys="UserRole.user_id", back_populates="user", cascade="all, delete"
+    refresh_sessions: Mapped[list["RefreshSession"]] = relationship(
+        "RefreshSession",
+        foreign_keys="RefreshSession.user_id",
+        back_populates="user",
+        cascade="all, delete",
     )
 
 
-class UserSession(BaseDbModel):
+class RefreshSession(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"))
-    expires: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=calc_session_expire_date)
-    token: Mapped[str] = mapped_column(String, unique=True)
-    last_activity: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc)
-    )
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
+    token_hash: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    expires_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    revoked_at: Mapped[datetime.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     create_ts: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc)
+        DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc), nullable=False
     )
     user: Mapped[User] = relationship(
         "User",
         foreign_keys=[user_id],
-        back_populates="user_sessions",
-        primaryjoin="UserSession.user_id==User.id",
+        back_populates="refresh_sessions",
+        primaryjoin="RefreshSession.user_id==User.id",
     )
-
-    @hybrid_property
-    def expired(self) -> bool:
-        return self.expires <= datetime.datetime.now(tz=datetime.timezone.utc)
 
 
 class UserMessageDelay(BaseDbModel):
@@ -82,8 +72,12 @@ class Template(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     job_title: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
+    is_hidden: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     questions: Mapped[list["Question"]] = relationship(
         "Question", foreign_keys="Question.template_id", back_populates="template", cascade="all, delete"
+    )
+    sessions: Mapped[list["Session"]] = relationship(
+        "Session", foreign_keys="Session.template_id", back_populates="template"
     )
 
 
@@ -201,6 +195,7 @@ class SessionComponent(BaseDbModel):
 class Session(BaseDbModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
+    template_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("template.id"), nullable=True)
     overall_grade: Mapped[int] = mapped_column(Integer, nullable=True)
     create_ts: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.datetime.now(tz=datetime.timezone.utc), nullable=False
@@ -213,6 +208,12 @@ class Session(BaseDbModel):
         foreign_keys=[user_id],
         back_populates="interview_sessions",
         primaryjoin="Session.user_id==User.id",
+    )
+    template: Mapped[Template | None] = relationship(
+        "Template",
+        foreign_keys=[template_id],
+        back_populates="sessions",
+        primaryjoin="Session.template_id==Template.id",
     )
 
 

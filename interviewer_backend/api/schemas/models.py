@@ -2,7 +2,7 @@ import datetime
 from typing import Annotated, List
 
 from annotated_types import MaxLen
-from pydantic import Field, field_validator
+from pydantic import field_validator
 
 from api.schemas.base import Base
 from api.settings import get_settings
@@ -68,14 +68,24 @@ class UserLogin(Base):
     password: str
 
 
-class UserSessionGet(Base):
+class RefreshRequest(Base):
+    refresh_token: str
+
+
+class LogoutRequest(Base):
+    refresh_token: str
+
+
+class AuthRefreshResponse(Base):
+    access_token: str
+    token_type: str
+    expires_in: int
+    refresh_token: str
+    refresh_expires_at: datetime.datetime
+
+
+class AuthLoginResponse(AuthRefreshResponse):
     user_id: int
-    expires: datetime.datetime
-    token: str
-
-
-class UserSessionsGet(Base):
-    sessions: list[UserSessionGet]
 
 
 class MyUserGet(Base):
@@ -90,6 +100,11 @@ class UserGet(Base):
     username: str
 
 
+class PresignedURLResponse(Base):
+    url: str
+    s3_key: str
+
+
 class VideoUploadResponse(Base):
     asset_id: str
     indexed_asset_id: str
@@ -97,18 +112,6 @@ class VideoUploadResponse(Base):
     session_component_id: int
     question: str
     state: str
-
-
-class TwelveLabsWebhookBody(Base):
-    id: str
-    status: str
-
-
-class TwelveLabsWebhookRequest(Base):
-    id: str
-    created_at: str
-    type: str
-    data: TwelveLabsWebhookBody
 
 
 class FeedbackModel(Base):
@@ -139,6 +142,10 @@ class SessionCreateResponse(Base):
     session_id: int
 
 
+class SessionDeleteResponse(Base):
+    status: str
+
+
 class SessionCreateRequest(Base):
     template_id: int
 
@@ -165,6 +172,7 @@ class VideoGet(Base):
 class TemplateBase(Base):
     job_title: str
     description: str | None = None
+    is_hidden: bool = False
 
 
 class TemplateCreate(TemplateBase):
@@ -174,6 +182,7 @@ class TemplateCreate(TemplateBase):
 class TemplateUpdate(Base):
     job_title: str | None = None
     description: str | None = None
+    is_hidden: bool | None = None
 
 
 class TemplateGet(TemplateBase):
@@ -221,35 +230,9 @@ class SessionGet(Base):
     user_id: int
     overall_grade: int | None
     create_ts: datetime.datetime
+    template: TemplateGet | None = None
     session_components: list[SessionComponentGet] | None = None
 
 
 class SessionsList(Base):
     sessions: list[SessionGet]
-
-
-class RoleGet(Base):
-    id: int
-    name: str
-    description: str | None = None
-
-
-class UserRoleGet(Base):
-    id: int
-    user_id: int
-    role_id: int
-    assigned_at: datetime.datetime
-    role: RoleGet
-
-
-class UserRolesGet(Base):
-    user_id: int
-    roles: list[RoleGet]
-
-
-class RoleAssign(Base):
-    role_id: int
-
-
-class RoleAssignBulk(Base):
-    role_ids: list[int]

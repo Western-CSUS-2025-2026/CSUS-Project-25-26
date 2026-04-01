@@ -1,5 +1,7 @@
 alembic
 aiohttp
+boto3
+cryptography
 fastapi
 fastapi-sqlalchemy
 prometheus-fastapi-instrumentator

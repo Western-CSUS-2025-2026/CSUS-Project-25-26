@@ -1,0 +1,63 @@
+.boxTitle {
+  margin-bottom: 0.25em;
+}
+
+.questionNum {
+  color: white;
+}
+
+.questionNumCurrent {
+  color: var(--accent-primary-text);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 1em;
+  width: 100%;
+}
+
+.circle {
+  width: 3.236em;
+  height: 3.236em;
+  border-radius: 9999em;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 600;
+
+  background-color: var(--border);
+  overflow: visible;
+}
+
+.circleCurrent {
+  width: 3.236em;
+  height: 3.236em;
+  border-radius: 9999em;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 600;
+  color: var(--foreground);
+
+  background-color: var(--accent);
+  overflow: visible;
+}
+
+.circleDone {
+  width: 3.236em;
+  height: 3.236em;
+  border-radius: 9999em;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: var(--accent-secondary-text);
+  overflow: visible;
+}
