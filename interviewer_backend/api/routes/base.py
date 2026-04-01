@@ -7,6 +7,7 @@ from api import __version__
 from api.settings import Settings, get_settings
 
 from .question import question as question_router
+from .roles import router as roles_router
 from .session import session as session_router
 from .template import template as template_router
 from .user import user as user_router
@@ -44,6 +45,7 @@ app.add_middleware(
 )
 
 app.include_router(user_router)
+app.include_router(roles_router)
 app.include_router(video_router)
 app.include_router(session_router)
 app.include_router(template_router)

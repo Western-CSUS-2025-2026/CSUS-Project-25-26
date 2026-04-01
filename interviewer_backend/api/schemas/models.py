@@ -236,3 +236,18 @@ class SessionGet(Base):
 
 class SessionsList(Base):
     sessions: list[SessionGet]
+
+
+class RoleGet(Base):
+    id: int
+    name: str
+    description: str | None = None
+
+
+class UserRolesGet(Base):
+    user_id: int
+    roles: list[RoleGet]
+
+
+class RoleAssignBulk(Base):
+    role_ids: list[int]
