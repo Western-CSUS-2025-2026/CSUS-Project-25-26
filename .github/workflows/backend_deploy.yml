@@ -124,6 +124,7 @@ jobs:
             --env DB_DSN='${{ secrets.DB_DSN }}' \
             --env EMAIL='${{ vars.EMAIL || '' }}' \
             --env EMAIL_PASS='${{ secrets.EMAIL_PASS }}' \
+            --env EMAIL_LOGO_URL='${{ vars.EMAIL_LOGO_URL || '' }}' \
             --env TWELVE_LABS_API_KEYS='${{ secrets.TWELVE_LABS_API_KEYS }}' \
             --env TWELVE_LABS_WEBHOOK_SECRET='${{ secrets.TWELVE_LABS_WEBHOOK_SECRET }}' \
             --env JWT_SECRET='${{ secrets.JWT_SECRET }}' \

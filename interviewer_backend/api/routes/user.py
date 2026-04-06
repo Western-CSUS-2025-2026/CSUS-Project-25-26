@@ -155,7 +155,7 @@ async def registration_initiate(
                 user_data.email,
                 client_ip,
                 "EmailRegConfirm.html",
-                "Email Verification | WesternPrep",
+                "Email Verification | Jobless.live",
                 txn,
                 background_tasks,
                 token=verification_token,
