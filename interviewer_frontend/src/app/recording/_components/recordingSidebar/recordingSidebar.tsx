@@ -84,7 +84,10 @@ export default function RecordingSidebar(props: RecordingSidebarProps) {
 
         <div className={styles.footer}>
           {!timeEnded && stage === "Preparing" && !props.hasStarted && (
-            <button className={`${styles.primaryButton} ${styles.animated}`} onClick={props.onStart}>
+            <button
+              className={`${styles.primaryButton} ${styles.animated}`}
+              onClick={props.onStart}
+            >
               Start
             </button>
           )}
@@ -99,7 +102,7 @@ export default function RecordingSidebar(props: RecordingSidebarProps) {
           {!timeEnded && stage === "Recording" && (
             <>
               <button className={styles.endButton} onClick={props.onEnd}>
-                End Question
+                Question In Progress
               </button>
               <p className={styles.warning}>
                 You cannot continue later after ending this question.
