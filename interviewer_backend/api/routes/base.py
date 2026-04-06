@@ -15,7 +15,7 @@ from .video import video as video_router
 
 settings: Settings = get_settings()
 app = FastAPI(
-    title='WesternPrep',
+    title='Jobless.live',
     version=__version__,
     root_path=settings.ROOT_PATH if __version__ != 'dev' else '/',
     docs_url='/' if __version__ != 'dev' else '/docs',
