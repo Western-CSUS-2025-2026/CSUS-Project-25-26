@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     EMAIL: str | None = None
     APPLICATION_HOST: str = "localhost"
     EMAIL_PASS: str | None = None
+    EMAIL_LOGO_URL: str | None = None
     SMTP_HOST: str = 'smtp.gmail.com'
     SMTP_PORT: int = 465
     TOKEN_LENGTH: Annotated[int, Gt(8)] = 64
@@ -84,7 +85,7 @@ class Settings(BaseSettings):
 
     model_config = ConfigDict(case_sensitive=True, env_file=".env", extra="ignore")
 
-    @field_validator("AUTH_COOKIE_DOMAIN", "CORS_ALLOW_ORIGIN_REGEX", "EMAIL")
+    @field_validator("AUTH_COOKIE_DOMAIN", "CORS_ALLOW_ORIGIN_REGEX", "EMAIL", "EMAIL_LOGO_URL")
     @classmethod
     def empty_string_to_none(cls, value: str | None) -> str | None:
         if value == "":
