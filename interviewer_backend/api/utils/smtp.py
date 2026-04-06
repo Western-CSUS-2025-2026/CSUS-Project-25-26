@@ -3,7 +3,6 @@ import smtplib
 from datetime import datetime, timedelta, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from html import escape
 
 from fastapi.background import BackgroundTasks
 from retrying import retry
@@ -99,32 +98,7 @@ class SendEmailMessage:
         with observe_background_task('email_task'):
             with open(f"api/templates/{file_name}") as f:
                 tmp = f.read()
-
-                template_data = dict(kwargs)
-                logo_url = cls.settings.EMAIL_LOGO_URL
-                if logo_url:
-                    template_data.setdefault(
-                        "email_logo_html",
-                        (
-                            f'<img src="{escape(logo_url, quote=True)}" width="64" height="64" alt="Jobless.live" '
-                            'style="display:block;width:64px;height:64px;border:0;outline:none;text-decoration:none;'
-                            'border-radius:12px;" />'
-                        ),
-                    )
-                else:
-                    template_data.setdefault(
-                        "email_logo_html",
-                        (
-                            '<table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr>'
-                            '<td align="center" valign="middle" '
-                            'style="width:64px;height:64px;border-radius:12px;background-color:#7f4ec9;'
-                            'color:#ffffff;font-family:Segoe UI,Roboto,Helvetica Neue,Arial,sans-serif;'
-                            'font-size:22px;line-height:64px;font-weight:700;text-align:center;">JL</td>'
-                            '</tr></table>'
-                        ),
-                    )
-
-                for key, value in template_data.items():
+                for key, value in kwargs.items():
                     if f'{{{{{key}}}}}' in tmp:
                         tmp = tmp.replace(f'{{{{{key}}}}}', str(value))
             message = MIMEMultipart('related')

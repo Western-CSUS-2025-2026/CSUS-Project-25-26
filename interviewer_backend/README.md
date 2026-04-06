@@ -141,10 +141,6 @@ The provisioned dashboard **Backend Observability** includes:
 - default: `true`
 - set repo/environment variable `METRICS_ENABLED=false` to disable `/metrics`
 
-Email branding:
-- set repo/environment variable `EMAIL_LOGO_URL` to a public `https://...` PNG URL for verification emails
-- leave `EMAIL_LOGO_URL` empty to use the built-in `JL` fallback mark in emails
-
 Grafana is configured for subpath hosting on the API domain:
 - default: `https://api.jobless.live/grafana/`
 - override with repo/environment variable `GRAFANA_ROOT_URL` if your server URL is different
