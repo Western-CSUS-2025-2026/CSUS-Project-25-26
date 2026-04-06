@@ -1,5 +1,6 @@
 from .base import Base, BaseDbModel
 from .db import *
+from .role import Role, UserRole
 
 
 __all__ = [

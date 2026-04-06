@@ -19,7 +19,7 @@ from api.schemas.models import (
 )
 from api.settings import get_settings
 from api.utils.s3 import delete_object
-from api.utils.security import Auth, AuthUser, CsrfProtect
+from api.utils.security import Auth, CsrfProtect, JwtAuthUser
 from api.utils.session_query import get_session_options, parse_include, serialize_session
 
 
@@ -32,7 +32,7 @@ settings = get_settings()
 async def create_session(
     payload: SessionCreateRequest,
     _: None = Depends(CsrfProtect()),
-    current_user: AuthUser = Depends(Auth()),
+    current_user: JwtAuthUser = Depends(Auth()),
 ) -> SessionCreateResponse:
     if settings.VIDEO_UPLOAD_LIMIT_ENABLED:
         now = datetime.now(tz=timezone.utc)
@@ -116,7 +116,7 @@ async def create_session(
 
 @session.get("", response_model=SessionsList, response_model_exclude_none=True)
 async def get_user_sessions(
-    current_user: AuthUser = Depends(Auth()),
+    current_user: JwtAuthUser = Depends(Auth()),
     limit: int = Query(default=10, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     include: Annotated[list[str], Query()] = [],
@@ -147,7 +147,7 @@ async def get_user_sessions(
 async def delete_session(
     session_id: int,
     _: None = Depends(CsrfProtect()),
-    current_user: AuthUser = Depends(Auth()),
+    current_user: JwtAuthUser = Depends(Auth()),
 ) -> SessionDeleteResponse:
     # Load session with components and videos (for s3_keys)
     session_obj: Optional[Session] = (
@@ -196,7 +196,7 @@ async def delete_session(
 @session.get("/{session_id}", response_model=SessionGet, response_model_exclude_none=True)
 async def get_session(
     session_id: int,
-    current_user: AuthUser = Depends(Auth()),
+    current_user: JwtAuthUser = Depends(Auth()),
     include: Annotated[list[str], Query()] = [],
 ) -> SessionGet:
     """

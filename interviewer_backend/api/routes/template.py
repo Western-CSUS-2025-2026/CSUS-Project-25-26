@@ -6,7 +6,7 @@ from fastapi_sqlalchemy import db
 from api.exceptions import ObjectNotFound
 from api.models.db import Template
 from api.schemas.models import StatusResponse, TemplateCreate, TemplateGet, TemplateUpdate
-from api.utils.security import Auth, AuthUser, CsrfProtect
+from api.utils.security import Auth, CsrfProtect, JwtAuthUser
 
 
 template: APIRouter = APIRouter(prefix="/templates", tags=["Templates"])
@@ -16,7 +16,7 @@ template: APIRouter = APIRouter(prefix="/templates", tags=["Templates"])
 def create_template(
     payload: TemplateCreate,
     _csrf: None = Depends(CsrfProtect()),
-    _auth: AuthUser = Depends(Auth()),
+    _auth: JwtAuthUser = Depends(Auth()),
 ):
     new_template: Template = Template(**payload.model_dump())
     db.session.add(new_template)
@@ -33,7 +33,7 @@ def create_template(
 
 
 @template.get("", response_model=List[TemplateGet])
-def list_templates(_: AuthUser = Depends(Auth())) -> List[TemplateGet]:
+def list_templates(_: JwtAuthUser = Depends(Auth())) -> List[TemplateGet]:
     templates: List[Template] = Template.query(session=db.session).all()
     response = [TemplateGet.model_validate(t) for t in templates]
 
@@ -42,7 +42,7 @@ def list_templates(_: AuthUser = Depends(Auth())) -> List[TemplateGet]:
 
 
 @template.get("/{template_id}", response_model=TemplateGet)
-def get_template(template_id: int, _: AuthUser = Depends(Auth())):
+def get_template(template_id: int, _: JwtAuthUser = Depends(Auth())):
     db_template: Optional[Template] = Template.query(session=db.session).get(template_id)
 
     if not db_template:
@@ -59,7 +59,7 @@ def update_template(
     template_id: int,
     payload: TemplateUpdate,
     _csrf: None = Depends(CsrfProtect()),
-    _auth: AuthUser = Depends(Auth()),
+    _auth: JwtAuthUser = Depends(Auth()),
 ) -> TemplateGet:
     db_template: Optional[Template] = Template.query(session=db.session).get(template_id)
 
@@ -86,7 +86,7 @@ def update_template(
 def delete_template(
     template_id: int,
     _csrf: None = Depends(CsrfProtect()),
-    _auth: AuthUser = Depends(Auth()),
+    _auth: JwtAuthUser = Depends(Auth()),
 ) -> StatusResponse:
     db_template: Optional[Template] = Template.query(session=db.session).get(template_id)
 
