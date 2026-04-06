@@ -46,18 +46,22 @@ async function authenticateUser(
 ): Promise<string | undefined> {
   const body = JSON.stringify({ email: email, password: password });
 
-  const res = await fetchAPI("user/login", {
-    headers: { "content-type": "application/json" },
-    method: "POST",
-    body: body,
-  });
+  try {
+    const res = await fetchAPI("user/login", {
+      headers: { "content-type": "application/json" },
+      method: "POST",
+      body: body,
+    });
 
-  console.log(res);
-  if (!res.ok) {
+    console.log(res);
+    if (!res.ok) {
+      return undefined;
+    }
+
+    const responseBody: { access_token: string } = await res.json();
+
+    return responseBody.access_token;
+  } catch {
     return undefined;
   }
-
-  const responseBody: { access_token: string } = await res.json();
-
-  return responseBody.access_token;
 }
